@@ -36,7 +36,7 @@
     </div>
       </div>
       <div class="file-list">
-        放文件列表
+        文件列表
       </div>
     </div>
     </div>

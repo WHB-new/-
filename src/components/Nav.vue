@@ -23,7 +23,6 @@ const props = defineProps({
 .container{
   padding:0 24px 0 20px;
   height: 64px;
-  margin-bottom:12px;
   .header{
     height: 64px;
     display:flex;

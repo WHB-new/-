@@ -57,6 +57,7 @@ onMounted(()=>{
   padding-top: 0;
   .el-main{
     padding:0!important;
+    height: 100vh;
   }
 }
 }
