@@ -1,5 +1,5 @@
 <template>
-  <div style="height: 100vh;">
+  <div style="height: 100vh;display: flex;flex-direction: column;">
     <Nav name="主页"></Nav>
     <div class="center">
       <div class="add">
@@ -78,7 +78,7 @@ margin-bottom:12px;
 }
 }
 .main{
-
+flex:1;
   padding-right:24px;
   .header{
     margin-left:12px;
