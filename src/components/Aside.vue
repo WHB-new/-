@@ -45,7 +45,12 @@
          </div>
          <div class="right">
            <div class="fileName">{{item.fileName}}</div>
-           1
+           <div class="tool">
+            <div class="add">
+              <svg t="1749800508302" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="7518" width="16" height="16"><path d="M469.333333 469.333333V170.666667h85.333334v298.666666h298.666666v85.333334h-298.666666v298.666666h-85.333334v-298.666666H170.666667v-85.333334h298.666666z" fill="#444444" p-id="7519"></path></svg>
+            </div>
+            <div class="more"><svg t="1749800207132" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="5631" width="16" height="16"><path d="M841.085552 395.21211c-62.669318 0-113.472378 49.541323-113.472378 110.642936 0 61.093427 50.80306 110.652146 113.472378 110.652146 62.685691 0 113.487727-49.559742 113.487727-110.652146C954.573279 444.75241 903.77022 395.21211 841.085552 395.21211zM500.653069 395.21211c-62.668295 0-113.487727 49.541323-113.487727 110.642936 0 61.093427 50.820456 110.652146 113.487727 110.652146 62.669318 0 113.472378-49.559742 113.472378-110.652146C614.125447 444.75241 563.322387 395.21211 500.653069 395.21211zM182.915471 395.21211c-62.686714 0-113.488751 49.541323-113.488751 110.642936 0 61.093427 50.802036 110.652146 113.488751 110.652146 62.669318 0 113.471354-49.559742 113.471354-110.652146C296.385802 444.75241 245.583766 395.21211 182.915471 395.21211z" p-id="5632"></path></svg></div>
+           </div>
          </div>
         </div>
       </div>
@@ -191,6 +196,11 @@ const fileList = ref([
       display: flex;
       align-items: center;
       justify-content: flex-start;
+      &:hover{
+        background-color: #dddedf;
+        cursor: pointer;
+        border-radius: 6px;
+      }
       .left{
         display: flex;
         .icon{
@@ -203,6 +213,7 @@ const fileList = ref([
         }
       }
       .right{
+        padding-right:5px;
         width: 266px;
         height: 35px;
         line-height: 35px;
@@ -213,6 +224,39 @@ const fileList = ref([
         font-size: 14px;
         display: flex;
         justify-content: space-between;
+        align-items: center;
+        .tool{
+          width: 52px;
+          height: 20px;
+          display: flex;
+          justify-content: flex-end;
+          align-items: center;
+          .add{
+           margin-right:5px;
+           width: 20px;
+           height: 20px;
+             display: flex;
+      justify-content: center;
+      align-items: center;
+      &:hover{
+        cursor: pointer;
+        background-color: #c7c8c9;
+        border-radius: 5px;
+      }
+          }
+          .more{
+           width: 20px;
+           height: 20px;
+             display: flex;
+      justify-content: center;
+      align-items: center;
+      &:hover{
+        cursor: pointer;
+        background-color: #c7c8c9;
+        border-radius: 5px;
+      }
+          }
+        }
       }
     }
   }
