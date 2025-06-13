@@ -15,13 +15,43 @@
     <div class="main">
       <div class="header">
         <div class="title">
-          <div class="recent">
+          <div class="recent" :style="{'color':isActive==1?'skyblue':'',fontWeight:isActive==1?'500':'normal',fontSize:isActive==1?'16px':'14px'}">
             最近访问
           </div>
         </div>
       </div>
       <div class="list">
-        列表的区域
+        <el-table :data="fileData" style="width: 100%" row-key="id">
+           <el-table-column type="selection" width="28px" :selectable="selectable" style="border-radius: 5px;"/>
+            <el-table-column  label="所有文档" min-width="200px">
+              <template #default>
+                <div style="display: flex;align-items: center;justify-content: flex-start;">
+                  <div style="margin-right:10px;height: 52px;width: 24px;display: flex;justify-content: center;align-items: center;"><svg t="1749795851737" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4408" width="22" height="22"><path d="M654.826667 117.333333l209.173333 209.173334V928h-704v-810.666667h494.826667zM586.666667 181.312h-362.666667V864h576v-469.333333h-213.333333V181.333333zM704 672v64H320v-64h384z m0-170.666667v64H320v-64h384z m-203.264-170.666666v64H320v-64h180.736z m276.928 0L650.666667 203.669333V330.666667h126.997333z" fill="#1677FF" p-id="4409"></path></svg></div>
+                <div class="right">
+                  <div class="name">
+                  首页
+                  </div>
+                  <div class="intro">
+                   文件介绍
+                  </div>
+                </div>
+                </div>
+              </template>
+            </el-table-column>
+            
+            <el-table-column property="name" label="不限归属" width="356px">
+            </el-table-column>
+            
+            <el-table-column property="time" label="最近打开" width="356px">
+            </el-table-column>
+            <el-table-column  label="操作" width="76px" >
+              <template #default>
+                <div class="caozuo" style="display:flex;align-items:center;margin-left:3px;">
+                  <svg t="1749795603824" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3324" width="16" height="16"><path d="M841.085552 395.21211c-62.669318 0-113.472378 49.541323-113.472378 110.642936 0 61.093427 50.80306 110.652146 113.472378 110.652146 62.685691 0 113.487727-49.559742 113.487727-110.652146C954.573279 444.75241 903.77022 395.21211 841.085552 395.21211zM500.653069 395.21211c-62.668295 0-113.487727 49.541323-113.487727 110.642936 0 61.093427 50.820456 110.652146 113.487727 110.652146 62.669318 0 113.472378-49.559742 113.472378-110.652146C614.125447 444.75241 563.322387 395.21211 500.653069 395.21211zM182.915471 395.21211c-62.686714 0-113.488751 49.541323-113.488751 110.642936 0 61.093427 50.802036 110.652146 113.488751 110.652146 62.669318 0 113.471354-49.559742 113.471354-110.652146C296.385802 444.75241 245.583766 395.21211 182.915471 395.21211z" p-id="3325"></path></svg>
+                </div>
+              </template>
+            </el-table-column>
+        </el-table>
       </div>
     </div>
   </div>
@@ -29,6 +59,16 @@
 
 <script setup>
 import Nav from '@/components/Nav.vue';
+import {ref} from 'vue'
+const isActive = ref(1)
+//假数据，后期更改
+const fileData =ref([
+  {id:1,
+    name:'文档1',
+    userName:'王皓彬',
+    time:'今天14:17',
+  }
+])
 </script>
 
 <style lang="scss" scoped>
@@ -108,4 +148,22 @@ height: 48px;
 
   }
 }
+.caozuo{
+  width: 24px;
+  height: 24px;
+  display: flex;
+  justify-content: center;
+  align-content: center;
+  &:hover{
+    cursor: pointer;
+    background-color: #d6d9dc;
+    border-radius: 5px;
+  }
+}
+</style>
+<style>
+.el-table__body tr:hover td {
+  cursor: pointer;
+}
+
 </style>

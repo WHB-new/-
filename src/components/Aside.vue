@@ -82,6 +82,7 @@ const activeIndex = ref(1)
     .txt{
       font-size: 14px;
       color:1F2329;
+      
     }
   }
   .search{
@@ -134,6 +135,7 @@ const activeIndex = ref(1)
     font-size: 12px;
     color:#646A73;
     margin-left:10px;
+    line-height: 24px;
   }
   .tool{
     margin-right:3px;
