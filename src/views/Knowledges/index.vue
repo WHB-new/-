@@ -21,7 +21,12 @@
       <div class="right"></div>
      </div>
      <div class="list">
-      知识库列表
+      <div class="li">后续内容</div>
+       <div class="li">后续内容</div>
+        <div class="li">后续内容</div>
+         <div class="li">后续内容</div>
+          <div class="li">后续内容</div>
+           <div class="li">后续内容</div>
      </div>
      </div>
   </div>
@@ -89,6 +94,7 @@ margin-bottom:12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      margin-bottom: 20px;
       .left{
         .txt{
         height: 21px;
@@ -99,6 +105,19 @@ margin-bottom:12px;
       .right{
 
       }
+    }
+    .list{
+      display: grid;
+      grid-template-columns: repeat(auto-fill,140px);
+      grid-column-gap:24px;
+    
+  .li{
+    width: 140px;
+    height: 196px;
+    background-color: skyblue;
+    border-radius: 8px;
+    box-shadow: 0px 2px 4px rgba(31, 35, 41, 0.12);
+  }
     }
   }
 </style>
