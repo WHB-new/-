@@ -2,10 +2,11 @@
     <div class="container">
       <div class="header">
         <div class="logo">
-          
+          <!-- 换logo -->
           <div class="img">图</div>
           <div class="txt">文档系统</div>
         </div>
+        <!-- 后续功能添加，暂时不管 -->
         <div class="search">
         <div class="search-box">
        <div class="img">

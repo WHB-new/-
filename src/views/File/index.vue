@@ -20,6 +20,7 @@
           </div>
         </div>
       </div>
+      <!-- 列表区域 -->
       <div class="list">
         <el-table :data="fileData" style="width: 100%" row-key="id">
            <el-table-column type="selection" width="28px" :selectable="selectable" style="border-radius: 5px;"/>
@@ -67,6 +68,11 @@ const fileData =ref([
     name:'文档1',
     userName:'王皓彬',
     time:'今天14:17',
+  },
+  {
+    id:2,
+    name:'文档2',
+    time:'今天20:37'
   }
 ])
 </script>
