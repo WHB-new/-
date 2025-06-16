@@ -18,6 +18,11 @@ const routes = [
         path:'/file',
         name:'file',
         component:()=>import('@/views/File/index.vue')
+      },
+      {
+        path:'/cotent',
+        name:'content',
+        component:()=>import('@/views/File/Content/index.vue')
       }
     ]
    },

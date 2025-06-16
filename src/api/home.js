@@ -2,6 +2,14 @@
 import request from "@/utils/request";
 // 参考形式
 // export const 方法名 = ()=>{
-//   url:'/getList',
+// return request({
+  //   url:'/getList',
 //   method:'get',
+// })
 // }
+export const ceshi = ()=>{
+  return request({
+url:'/user/testDBGet',
+method:'get'
+  })
+}
