@@ -125,7 +125,7 @@
 <script setup>
 // 富文本引入
 import Quill from 'quill';
-import { nextTick, onMounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import {
   Document,
   Sort,
@@ -134,6 +134,7 @@ import {
 } from '@element-plus/icons-vue'
 // quill的css文件
 import 'quill/dist/quill.snow.css';
+// codeMirror引入
 import { EditorView, keymap } from '@codemirror/view'
 import { EditorState } from '@codemirror/state'
 import { javascript } from '@codemirror/lang-javascript'
@@ -448,12 +449,12 @@ const renderCodeMirrorBlocks = () => {
 }
 
 // 4. 清理CodeMirror实例
-const cleanupCodeMirrorInstances = () => {
-  codeMirrorInstances.value.forEach(view => {
-    view.destroy()
-  })
-  codeMirrorInstances.value.clear()
-}
+// const cleanupCodeMirrorInstances = () => {
+//   codeMirrorInstances.value.forEach(view => {
+//     view.destroy()
+//   })
+//   codeMirrorInstances.value.clear()
+// }
 
 </script>
 <style lang="scss">
