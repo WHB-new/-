@@ -24,8 +24,10 @@ import Aside from '@/components/Aside.vue'
 import {RouterView} from 'vue-router'
 import { useHomeStore } from '@/store/home';
 import { onMounted } from 'vue';
+import {ceshi} from '@/api/home'
 const homeStore = useHomeStore()
 onMounted(()=>{
+  ceshi()
 })
 </script>
 
@@ -52,7 +54,7 @@ onMounted(()=>{
   .main {
     min-width:200px;
   background: RGBA(255, 255, 255, 1);
-  width: 100%;
+  width: calc(100vw - 300px);
   height: 100%;
   padding-top: 0;
   .el-main{
