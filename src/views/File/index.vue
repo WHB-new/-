@@ -81,7 +81,7 @@ const fileData =ref([
 ])
 const handleAdd = ()=>{
     addFile()
-  // router.push({name:'content',query:{id:1}})
+
 }
 </script>
 
