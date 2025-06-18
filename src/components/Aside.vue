@@ -68,10 +68,20 @@
 </template>
 
 <script setup>
-import {RouterLink} from 'vue-router'
-import {ref} from 'vue';
+import {RouterLink,useRoute} from 'vue-router'
+import {ref,onMounted} from 'vue';
 //控制菜单
 const activeIndex = ref(1)
+const route = useRoute()
+onMounted(()=>{
+  if(route.path === '/knowledges'){
+    activeIndex.value = 2
+  }else if(route.path === '/file'){
+    activeIndex.value = 1
+  }else{
+    activeIndex.value = 0
+  }
+})
 //假数据，后期替换
 const fileList = ref([
   {
