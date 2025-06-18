@@ -110,12 +110,11 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed,onMounted} from 'vue';
 import { useRouter } from 'vue-router';
 import { useKnowledgeStore } from '@/store/knowledgeStore';
 import Nav from '@/components/Nav.vue';
 import {addKnowledge} from '@/api/knowledge'
-import {ref,onMounted} from 'vue'
 import {addNewUser} from '@/api/user'
 import { ElMessage } from 'element-plus';
 //知识库新增弹窗
@@ -216,6 +215,23 @@ const goToEdit = (id) => {
 </script>
 
 <style lang="scss" scoped>
+.el-dialog{
+  .header{
+    display:flex;
+    align-items:center;
+    .icon{
+      width: 16px;
+      height: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .txt{
+      font-size: 16px;
+      margin-left:4px;
+    }
+  }
+}
 .knowledgeInfo{
   width: 100%;
 }
