@@ -3,7 +3,9 @@ import { ElMessage } from 'element-plus';
 const request = axios.create({
   baseURL: 'http://localhost:8000',
   timeout:10000,
-
+  headers: {
+    token:''
+  }
 })
 // 请求拦截器
 request.interceptors.request.use(config => {

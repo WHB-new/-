@@ -62,6 +62,7 @@
 import Nav from '@/components/Nav.vue';
 import {ref} from 'vue'
 import { useRouter } from 'vue-router';
+import {addFile} from '@/api/file'
 const isActive = ref(1)
 //假数据，后期更改
 const router = useRouter()
@@ -78,8 +79,8 @@ const fileData =ref([
   }
 ])
 const handleAdd = ()=>{
-  console.log('新建文档')
-  router.push({name:'content',query:{id:1}})
+    addFile()
+  // router.push({name:'content',query:{id:1}})
 }
 </script>
 
