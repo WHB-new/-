@@ -10,6 +10,6 @@ import request from "@/utils/request";
 export const ceshi = ()=>{
   return request({
 url:'/user/testDBGet',
-method:'get'
+method:'get',
   })
 }

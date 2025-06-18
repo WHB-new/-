@@ -18,11 +18,13 @@
     <div class="img">
       <svg t="1749739212870" class="icon" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="8439" width="24" height="24"><path d="M631.436 983.674l-533.843 0c-29.658 0-53.831-25.392-53.831-56.269l0-613.468 265.497-278.16 391.918 0c33.183-3.724 57.483 21.733 53.831 52.68l0.342 317.43-0.417 0 0 48.143-73.941 0 0-344.449-355.754 0 0 222.229-207.333 0 0 577.918 513.531 0 0 73.946zM991.997 679.239l-169.691 0 0-169.688-134.545 0 0 169.622-169.884 0 0 134.545 169.683 0 0 169.884 134.611 0 0-169.688 169.828 0 0-134.677z" fill="#1296db" p-id="8440"></path></svg>
     </div>
-    <div class="right">
+    <div class="right"  @click="handleAdd">
       <div class="title">新建知识库</div>
       <div class="intro">创建你的知识库吧</div>
         </div>
       </div>
+      <!-- //后期删掉 -->
+      <div class="button" @click="temphandle">点击一次获取ownerId</div>
     </div>
     <div class="footer">
       <div class="title">
@@ -77,6 +79,34 @@
       </div>
     </div>
   </div>
+  <el-dialog title="" v-model="dialogVisible" width="480px" :show-close="false">
+       <template #header>
+          <div class="header">
+        <div class="icon">
+         <svg t="1750248090100" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2783" width="16" height="16"><path d="M716.608 1010.112L218.88 512.384 717.376 13.888l45.248 45.248-453.248 453.248 452.48 452.48z" p-id="2784"></path></svg>
+        </div>
+        <div class="txt">完善知识库信息</div>
+      </div>
+        </template>
+    <template #default>
+      <el-form ref="formRef" :model="form" label-width="80px" :rules="rules" >
+          <el-form-item label="名称" label-position="Left" label-width="auto" prop="name">
+            <el-input v-model="form.name" placeholder="请输入名称"></el-input>
+          </el-form-item>
+          <el-form-item label="简介" label-position="Left" label-width="auto" style="margin-left:12px;" prop="intro">
+            <el-input v-model="form.intro" placeholder="请输入简介"></el-input>
+          </el-form-item>
+          <el-form-item label="权限" label-position="Left" label-width="auto" prop="permission">
+             后续功能添加
+          </el-form-item>
+      </el-form>
+    </template>
+    <template #footer>
+       <el-button type="default" @click="cancelAdd">取消</el-button>
+       <!-- 创建按钮做动态的，要看是否表单验证通过 -->
+      <el-button type="primary" @click="confirmAdd(formRef)">创建</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup>
@@ -84,6 +114,62 @@ import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useKnowledgeStore } from '@/store/knowledgeStore';
 import Nav from '@/components/Nav.vue';
+import {addKnowledge} from '@/api/knowledge'
+import {ref,onMounted} from 'vue'
+import {addNewUser} from '@/api/user'
+import { ElMessage } from 'element-plus';
+//知识库新增弹窗
+const dialogVisible = ref(false)
+//知识库表单信息
+const form = ref({
+  name:'',
+  intro:'',
+})
+//表单组件
+const formRef = ref(null)
+//表单验证
+const rules = ref({
+name:[{required:true,message:'请输入名称',trigger:'blur'}],
+//后续权限的选择也要做验证
+})
+const ownerId = ref(null)
+onMounted(()=>{
+
+})
+const temphandle =async ()=>{
+ let res = await addNewUser({
+    name:'whb',
+    password:158,
+  })
+ ownerId.value = res.data.data
+}
+//点击新增知识库
+const handleAdd=()=>{
+  dialogVisible.value = true
+}
+//点击取消
+const cancelAdd = ()=>{
+dialogVisible.value = false
+//清除表单
+ formRef.value.resetFields()
+}
+//点击确定
+const confirmAdd = async()=>{
+  console.log(formRef.value, 'formRef.value')
+  try{
+   let res =  await formRef.value.validate()
+   if(res){
+ let result = await addKnowledge({ownerId:ownerId.value})
+   }
+  }catch(error){
+ElMessage.error('表单验证失败')
+  }finally{
+ formRef.value.resetFields()
+dialogVisible.value = false
+  }
+
+}
+
 
 const router = useRouter();
 const knowledgeStore = useKnowledgeStore();
@@ -130,6 +216,9 @@ const goToEdit = (id) => {
 </script>
 
 <style lang="scss" scoped>
+.knowledgeInfo{
+  width: 100%;
+}
 .center{
   height: 64px;
 margin:8px 0;
