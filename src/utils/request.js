@@ -3,9 +3,6 @@ import { ElMessage } from 'element-plus';
 const request = axios.create({
   baseURL: 'http://localhost:8000',
   timeout:10000,
-  headers: {
-    token:''
-  }
 })
 // 请求拦截器
 request.interceptors.request.use(config => {
@@ -21,10 +18,11 @@ request.interceptors.response.use(res => {
     ElMessage.warning('没有权限，请先登录')
     return Promise.reject(new Error(message))
    }
-   if(status != 200){
-    ElMessage.warning('错误码' + status + "" + message)
-    return Promise.reject(new Error(message))
-   }
+  //  if(status != 200){
+  //   ElMessage.warning('错误码' + status + "" + message)
+  //   return Promise.reject(new Error(message))
+  //  }
+  return res
 },err=>{
   // 错误处理
   ElMessage.warning('接口请求失败')

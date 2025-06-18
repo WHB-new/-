@@ -11,6 +11,5 @@ export const ceshi = ()=>{
   return request({
 url:'/user/testDBGet',
 method:'get',
-
   })
 }

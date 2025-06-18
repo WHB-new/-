@@ -23,6 +23,8 @@
       <div class="intro">创建你的知识库吧</div>
     </div>
       </div>
+      <!-- //后期删掉 -->
+      <div class="button" @click="temphandle">点击一次获取ownerId</div>
     </div>
     <div class="footer">
      <div class="title">
@@ -75,17 +77,22 @@
       </div>
         </template>
     <template #default>
-      <el-form ref="form" :model="form" label-width="80px">
-          <el-form-item label="名称">
+      <el-form ref="formRef" :model="form" label-width="80px" :rules="rules" >
+          <el-form-item label="名称" label-position="Left" label-width="auto" prop="name">
             <el-input v-model="form.name" placeholder="请输入名称"></el-input>
           </el-form-item>
-          <el-form-item label="简介">
+          <el-form-item label="简介" label-position="Left" label-width="auto" style="margin-left:12px;" prop="intro">
             <el-input v-model="form.intro" placeholder="请输入简介"></el-input>
           </el-form-item>
-          <el-form-item label="可见范围">
-
+          <el-form-item label="权限" label-position="Left" label-width="auto" prop="permission">
+             后续功能添加
           </el-form-item>
       </el-form>
+    </template>
+    <template #footer>
+       <el-button type="default" @click="cancelAdd">取消</el-button>
+       <!-- 创建按钮做动态的，要看是否表单验证通过 -->
+      <el-button type="primary" @click="confirmAdd(formRef)">创建</el-button>
     </template>
   </el-dialog>
 </template>
@@ -93,8 +100,9 @@
 <script setup>
 import Nav from '@/components/Nav.vue';
 import {addKnowledge} from '@/api/knowledge'
-import {ceshi} from '@/api/home'
 import {ref,onMounted} from 'vue'
+import {addNewUser} from '@/api/user'
+import { ElMessage } from 'element-plus';
 //知识库新增弹窗
 const dialogVisible = ref(false)
 //知识库表单信息
@@ -102,13 +110,51 @@ const form = ref({
   name:'',
   intro:'',
 })
-onMounted(()=>{
-  ceshi()
+//表单组件
+const formRef = ref(null)
+//表单验证
+const rules = ref({
+name:[{required:true,message:'请输入名称',trigger:'blur'}],
+//后续权限的选择也要做验证
 })
+const ownerId = ref(null)
+onMounted(()=>{
+
+})
+const temphandle =async ()=>{
+ let res = await addNewUser({
+    name:'whb',
+    password:158,
+  })
+ ownerId.value = res.data.data
+}
+//点击新增知识库
 const handleAdd=()=>{
   dialogVisible.value = true
-  // addKnowledge()
 }
+//点击取消
+const cancelAdd = ()=>{
+dialogVisible.value = false
+//清除表单
+ formRef.value.resetFields()
+}
+//点击确定
+const confirmAdd = async()=>{
+  console.log(formRef.value, 'formRef.value')
+  try{
+   let res =  await formRef.value.validate()
+   if(res){
+ let result = await addKnowledge({ownerId:ownerId.value})
+   }
+  }catch(error){
+ElMessage.error('表单验证失败')
+  }finally{
+ formRef.value.resetFields()
+dialogVisible.value = false
+  }
+
+}
+
 </script>
 
 <style lang="scss" scoped>
