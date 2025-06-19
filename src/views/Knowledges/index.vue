@@ -23,8 +23,6 @@
       <div class="intro">创建你的知识库吧</div>
     </div>
       </div>
-      <!-- //后期删掉 -->
-      <div class="button" @click="temphandle">点击一次获取ownerId</div>
     </div>
     <div class="footer">
      <div class="title">
@@ -119,15 +117,15 @@ name:[{required:true,message:'请输入名称',trigger:'blur'}],
 })
 const ownerId = ref(null)
 onMounted(()=>{
-
+  ownerId.value = localStorage.getItem('defaultKnowledgeId')
 })
-const temphandle =async ()=>{
- let res = await addNewUser({
-    name:'whb',
-    password:158,
-  })
- ownerId.value = res.data.data
-}
+// const temphandle =async ()=>{
+//  let res = await addNewUser({
+//     name:'whb',
+//     password:158,
+//   })
+//  ownerId.value = res.data.data
+// }
 //点击新增知识库
 const handleAdd=()=>{
   dialogVisible.value = true

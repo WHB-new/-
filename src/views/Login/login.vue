@@ -39,6 +39,7 @@
           type="submit" 
           class="login-btn"
           :disabled="loading"
+          @click="handleLogin"
         >
           {{ loading ? '登录中...' : '登录' }}
         </button>
@@ -61,7 +62,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-
+import {login} from '@/api/login'
 const router = useRouter()
 
 // 响应式数据
@@ -72,22 +73,27 @@ const loginForm = ref({
 
 const loading = ref(false)
 const rememberMe = ref(false)
-
-const handleLogin = () => {
-  loading.value = true
-  console.log('登录数据:', {
-    ...loginForm.value,
-    rememberMe: rememberMe.value
-  })
-  
-  setTimeout(() => {
+//登录
+const handleLogin =async () => {
+ try{
+   loading.value = true
+   let res = await login({
+    username: loginForm.value.account,
+    password: loginForm.value.password
+   })
+   if(res.data.code == 201){
+ router.push('/file')
+    ElMessage.success('登陆成功')
+   }
+ }catch(err){
+  ElMessage.error('登录失败')
+ }finally{
     loading.value = false
-    router.push('/')
-  }, 800)
+ }
 }
 
 const goToRegister = () => {
-  router.push('/test-register')
+  router.push('/register')
 }
 </script>
 

@@ -61,7 +61,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-
+import {register} from '@/api/login'
 const router = useRouter()
 
 // 注册表单数据
@@ -103,21 +103,42 @@ const validateAccount = () => {
 }
 
 // 提交注册
-const handleRegister = () => {
-  if (!formValid.value) return
+const handleRegister =async () => {
+  try{
+    if (!formValid.value) return
   
   loading.value = true
   console.log('注册数据:', registerForm.value)
-  
-  setTimeout(() => {
+  let res = await register({
+    username:registerForm.value.account,
+    password:registerForm.value.password
+  })
+  //成功
+  if(res.data.code == 200){
+    if(localStorage.getItem('Authorization')){
+      localStorage.removeItem('Authorization')
+    }
+    if(localStorage.getItem('defaultKnowledgeId')){
+      localStorage.removeItem('defaultKnowledgeId')
+    }
+       localStorage.setItem('Authorization', res.data.token)
+   localStorage.setItem('defaultKnowledgeId', res.data.defaultKnowledgeBaseId)
+    router.push('/login')
+  ElMessage.success('注册成功，请登录')
+  }else if(res.data.code == 400){
+    //已注册
+    ElMessage.info(res.data.message)
+  }
+  }catch(err){
+ ElMessage.error('注册失败')
+  }finally{
     loading.value = false
-    router.push('/test-login')
-  }, 800)
+  }
 }
 
 // 跳转登录
 const goToLogin = () => {
-  router.push('/test-login')
+  router.push('/login')
 }
 </script>
 

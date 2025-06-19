@@ -20,11 +20,13 @@
 </template>
 
 <script setup>
+import router from '@/router'
 import Aside from '@/components/Aside.vue'
-import {RouterView} from 'vue-router'
 import { useHomeStore } from '@/store/home';
 import { onMounted } from 'vue';
 const homeStore = useHomeStore()
+const Authorization = localStorage.getItem('Authorization')
+
 </script>
 
 <style lang="scss" scoped>
