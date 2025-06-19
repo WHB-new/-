@@ -113,7 +113,6 @@ import { useRouter } from 'vue-router';
 import { useKnowledgeStore } from '@/store/knowledgeStore';
 import Nav from '@/components/Nav.vue';
 import {addKnowledge} from '@/api/knowledge'
-import {ref,onMounted} from 'vue'
 import { ElMessage } from 'element-plus';
 import { addFile } from '@/api/file';
 //知识库新增弹窗
