@@ -27,40 +27,40 @@
       <div class="button" @click="temphandle">点击一次获取ownerId</div>
     </div>
     <div class="footer">
-      <div class="title">
-        <div class="left">
-          <div class="txt">全部知识库</div>
-        </div>
-        <div class="right">
-          <div class="search-box">
-            <input type="text" placeholder="搜索知识库..." v-model="searchQuery">
-          </div>
-        </div>
+    <div class="title">
+      <div class="left">
+        <div class="txt">全部知识库</div>
       </div>
-      <div class="list">
-        <div 
-          v-for="item in filteredKnowledge" 
-          :key="item.id" 
-          class="li"
-          @click="goToEdit(item.id)"
-        >
-          <div class="card-header" :style="{ background: item.color }"></div>
-          <div class="card-content">
-            <div class="card-title">{{ item.title }}</div>
-            <div class="card-desc">{{ item.description }}</div>
-            <div class="card-meta">
-              <span>{{ item.directory.length }} 个文档</span>
-              <span>更新于 {{ item.updated }}</span>
-            </div>
-          </div>
-          <div class="delete-btn" @click.stop="confirmDelete(item.id)">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18">
-              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="#8F959E"/>
-            </svg>
-          </div>
+      <div class="right">
+        <div class="search-box">
+          <input type="text" placeholder="搜索知识库..." v-model="searchQuery">
         </div>
       </div>
     </div>
+    <div class="list">
+      <div 
+        v-for="item in filteredKnowledge" 
+        :key="item.id" 
+        class="li"
+        @click="goToEdit(item.id)"
+      >
+        <div class="card-header" :style="{ background: item.color }"></div>
+        <div class="card-content">
+          <div class="card-title">{{ item.title }}</div>
+          <div class="card-desc">{{ item.description || '无描述' }}</div>
+          <div class="card-meta">
+            <span>{{ item.directory.length }} 个文档</span>
+            <span>更新于 {{ item.updated }}</span>
+          </div>
+        </div>
+        <div class="delete-btn" @click.stop="confirmDelete(item.id)">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="#8F959E"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
     
     <!-- 删除确认模态框 -->
     <div v-if="showDeleteModal" class="modal-mask">
@@ -177,14 +177,18 @@ const searchQuery = ref('');
 const showDeleteModal = ref(false);
 const repoToDelete = ref(null);
 
+onMounted(async () => {
+  await knowledgeStore.fetchKnowledgeList();
+});
+
 // 过滤后的知识库
 const filteredKnowledge = computed(() => {
   if (!searchQuery.value) return knowledgeStore.knowledgeList;
   
   const query = searchQuery.value.toLowerCase();
   return knowledgeStore.knowledgeList.filter(repo => 
-    repo.title.toLowerCase().includes(query) || 
-    repo.description.toLowerCase().includes(query)
+    (repo.title && repo.title.toLowerCase().includes(query)) || 
+    (repo.description && repo.description.toLowerCase().includes(query))
   );
 });
 
@@ -195,16 +199,18 @@ const handleCreate = (type) => {
 
 // 确认删除
 const confirmDelete = (id) => {
-  repoToDelete.value = knowledgeStore.getKnowledgeById(id);
+  repoToDelete.value = knowledgeStore.knowledgeList.find(k => k.id === id);
   showDeleteModal.value = true;
 };
 
 // 执行删除
-const handleDelete = () => {
+const handleDelete = async () => {
   if (repoToDelete.value) {
-    knowledgeStore.deleteKnowledge(repoToDelete.value.id);
-    showDeleteModal.value = false;
-    repoToDelete.value = null;
+    const success = await knowledgeStore.deleteRepo(repoToDelete.value.id);
+    if (success) {
+      showDeleteModal.value = false;
+      repoToDelete.value = null;
+    }
   }
 };
 
