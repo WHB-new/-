@@ -9,3 +9,31 @@ export function addKnowledge(data){
     data
   })
 }
+export const getKnowledgeList = () => {
+  return request({
+    url: '/getKnowledgeBase', 
+    method: 'get'
+  })
+}
+
+export const deleteKnowledge = (id) => {
+  return request({
+    url: `/deleteBase/${id}`, 
+    method: 'delete'
+  })
+}
+
+export const updateKnowledge = (id, data) => {
+  return request({
+    url: `/updateBase/${id}`, 
+    method: 'put',
+    data
+  })
+}
+
+export const getKnowledgeDetail = (id) => {
+  return request({
+    url: `/getKnowledgeBase?id=${id}`, 
+    method: 'get'
+  })
+}

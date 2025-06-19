@@ -92,14 +92,11 @@ const knowledgeStore = useKnowledgeStore();
 const knowledge = ref(null);
 const selectedItem = ref(null);
 
-// 初始化知识库数据
-onMounted(() => {
+onMounted(async () => {
   const id = route.params.id;
-  const repo = knowledgeStore.getKnowledgeById(id);
-  
-  if (repo) {
-    knowledge.value = { ...repo };
-  } else {
+  try {
+    knowledge.value = await knowledgeStore.getRepoDetail(id);
+  } catch (error) {
     router.push({ name: 'knowledges' });
   }
 });
@@ -131,26 +128,40 @@ const deleteItem = () => {
 };
 
 // 保存更改
-const saveChanges = () => {
+const saveChanges = async () => {
   if (knowledge.value.title.trim()) {
-    knowledgeStore.updateKnowledge(knowledge.value);
-    
-    // 显示保存成功提示
-    showToast('知识库已成功更新！');
-    
-    // 返回列表
-    setTimeout(() => {
-      goBack();
-    }, 1500);
+    try {
+      // 确保目录中的文档有必要的字段
+      const directory = knowledge.value.directory.map(doc => ({
+        id: doc.id || `doc${Date.now()}`,
+        name: doc.name || '未命名文档',
+        content: doc.content || ''
+      }));
+      
+      await knowledgeStore.updateRepo(knowledge.value.id, {
+        title: knowledge.value.title,
+        description: knowledge.value.description,
+        directory
+      });
+      
+      showToast('知识库已成功更新！');
+      
+      setTimeout(() => {
+        goBack();
+      }, 1500);
+    } catch (error) {
+      showToast('保存失败，请重试');
+    }
+  } else {
+    showToast('请填写知识库标题');
   }
 };
 
-// 返回列表
+
 const goBack = () => {
   router.push({ name: 'knowledges' });
 };
 
-// 显示提示
 const showToast = (message) => {
   const toast = document.createElement('div');
   toast.className = 'toast';
@@ -287,7 +298,7 @@ const showToast = (message) => {
   padding: 24px;
   gap: 24px;
   overflow: hidden;
-  height: calc(100vh - 180px); /* 增加高度以容纳描述字段 */
+  height: calc(100vh - 180px);
 }
 
 .sidebar {
