@@ -115,14 +115,7 @@ const handleRegister =async () => {
   })
   //成功
   if(res.data.code == 200){
-    if(localStorage.getItem('Authorization')){
-      localStorage.removeItem('Authorization')
-    }
-    if(localStorage.getItem('defaultKnowledgeId')){
-      localStorage.removeItem('defaultKnowledgeId')
-    }
-       localStorage.setItem('Authorization', res.data.token)
-   localStorage.setItem('defaultKnowledgeId', res.data.defaultKnowledgeBaseId)
+    
     router.push('/login')
   ElMessage.success('注册成功，请登录')
   }else if(res.data.code == 400){
