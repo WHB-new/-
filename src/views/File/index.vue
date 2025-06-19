@@ -80,8 +80,10 @@ const fileData =ref([
   }
 ])
 const handleAdd = ()=>{
-    addFile()
-    router.push({name:'content',})
+  const baseId=localStorage.getItem('defaultKnowledgeId')
+    addFile({
+      baseId,
+    })
 }
 </script>
 
