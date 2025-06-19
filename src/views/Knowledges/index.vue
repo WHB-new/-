@@ -164,8 +164,8 @@ const confirmAdd = async () => {
     
     console.log('创建响应:', response);
  
-    if (response.code === 201 && response.data) {
-      const newKnowledgeId = String(response.data);
+    if (response.data.code === 201 && response.data.data) {
+      const newKnowledgeId = String(response.data.data);
       ElMessage.success('知识库创建成功');
       console.log('创建成功，新知识库ID:', newKnowledgeId);
 
@@ -174,7 +174,8 @@ const confirmAdd = async () => {
       router.push({ 
         name: 'edit', 
         params: { id: newKnowledgeId }
-      }).then(() => {
+      })
+      .then(() => {
         console.log('路由跳转成功');
       }).catch(err => {
         console.error('路由跳转失败:', err);

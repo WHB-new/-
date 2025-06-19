@@ -26,7 +26,7 @@ const routes = [
         component:()=>import('@/views/File/Content/index.vue')
       },
       {
-        path: '/edit/:id',
+        path: '/edit/:id?',
         name: 'edit',
         component: () => import('@/views/Edit.vue'),
         props: true

@@ -94,11 +94,11 @@ const selectedItem = ref(null);
 
 onMounted(async () => {
   const id = route.params.id;
-  try {
-    knowledge.value = await knowledgeStore.getRepoDetail(id);
-  } catch (error) {
-    router.push({ name: 'knowledges' });
-  }
+  // try {
+  //   knowledge.value = await knowledgeStore.getRepoDetail(id);
+  // } catch (error) {
+  //   router.push({ name: 'knowledges' });
+  // }
 });
 
 // 选择项目
