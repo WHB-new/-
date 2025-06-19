@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+
 const routes = [
   {
     path:'/',
@@ -33,11 +34,30 @@ const routes = [
       }
     ]
   },
+   {
+    path: '/login',
+    name: 'login',
+    component: () => import('@/views/Login/login.vue')
+  },
+  {
+    path: '/register',
+    name: 'register',
+    component: () => import('@/views/Register/register.vue')
+  }
+
 ]
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
 })
-
+//当没有token同时去的不是登录注册页面，跳转到登录页面
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('Authorization')
+  if (!token && to.path !== '/login' && to.path !== '/register') {
+    next('/login')
+  } else {
+    next()
+  }
+})
 export default router
