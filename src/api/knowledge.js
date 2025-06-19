@@ -11,7 +11,7 @@ export function addKnowledge(data){
 }
 export const getKnowledgeList = () => {
   return request({
-    url: '/getKnowledgeBase', 
+    url: '/knowledgeBase/getKnowledgeBase', 
     method: 'get'
   })
 }
