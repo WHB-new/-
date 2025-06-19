@@ -55,31 +55,29 @@ export const useKnowledgeStore = defineStore('knowledge', () => {
   };
 
   const updateRepo = async (id, updatedData) => {
-    try {
-      const dataToSend = {
-        name: updatedData.title,
+  try {
+    await updateKnowledge({
+      id,
+      name: updatedData.title,
+      description: updatedData.description,
+      docs: updatedData.directory
+    });
+    
+    const index = knowledgeList.value.findIndex(r => r.id === id);
+    if (index !== -1) {
+      knowledgeList.value[index] = {
+        ...knowledgeList.value[index],
+        title: updatedData.title,
         description: updatedData.description,
-        docs: updatedData.directory
+        directory: updatedData.directory,
+        updated: formatDate(new Date())
       };
-      
-      const res = await updateKnowledge(id, dataToSend);
-      
-      const index = knowledgeList.value.findIndex(r => r.id === id);
-      if (index !== -1) {
-        knowledgeList.value[index] = {
-          ...knowledgeList.value[index],
-          title: updatedData.title,
-          description: updatedData.description,
-          directory: updatedData.directory,
-          updated: formatDate(new Date())
-        };
-      }
-      return res.data;
-    } catch (error) {
-      console.error('更新知识库失败:', error);
-      throw error;
     }
-  };
+  } catch (error) {
+    console.error('更新知识库失败:', error);
+    throw error;
+  }
+};
 
   const getRepoDetail = async (id) => {
     try {

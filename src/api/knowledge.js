@@ -18,14 +18,14 @@ export const getKnowledgeList = () => {
 
 export const deleteKnowledge = (id) => {
   return request({
-    url: `/deleteBase/${id}`, 
+    url: '/knowledgeBase/deleteBase/${id}', 
     method: 'delete'
   })
 }
 
-export const updateKnowledge = (id, data) => {
+export const updateKnowledge = ({ id, ...data }) => {
   return request({
-    url: `/updateBase/${id}`, 
+    url: `/knowledgeBase/updateBase/${id}`, 
     method: 'put',
     data
   })
@@ -33,7 +33,7 @@ export const updateKnowledge = (id, data) => {
 
 export const getKnowledgeDetail = (id) => {
   return request({
-    url: `/getKnowledgeBase?id=${id}`, 
+    url: `/knowledgeBase/getKnowledgeBase?id=${id}`, 
     method: 'get'
   })
 }

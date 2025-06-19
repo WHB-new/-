@@ -153,22 +153,44 @@ dialogVisible.value = false
  formRef.value.resetFields()
 }
 //点击确定
-const confirmAdd = async()=>{
-  console.log(formRef.value, 'formRef.value')
-  try{
-   let res =  await formRef.value.validate()
-   if(res){
- let result = await addKnowledge({ownerId:ownerId.value})
-   }
-  }catch(error){
-ElMessage.error('表单验证失败')
-  }finally{
- formRef.value.resetFields()
-dialogVisible.value = false
+const confirmAdd = async () => {
+  try {
+    await formRef.value.validate();
+    const response = await addKnowledge({
+      ownerId: ownerId.value,
+      name: form.value.name,
+      description: form.value.intro
+    });
+    
+    console.log('创建响应:', response);
+ 
+    if (response.code === 201 && response.data) {
+      const newKnowledgeId = String(response.data);
+      ElMessage.success('知识库创建成功');
+      console.log('创建成功，新知识库ID:', newKnowledgeId);
+
+      dialogVisible.value = false;
+
+      router.push({ 
+        name: 'edit', 
+        params: { id: newKnowledgeId }
+      }).then(() => {
+        console.log('路由跳转成功');
+      }).catch(err => {
+        console.error('路由跳转失败:', err);
+      });
+    } else {
+      console.warn('创建失败响应:', response);
+      ElMessage.error(`创建失败: ${response.message || '未知错误'}`);
+    }
+    
+  } catch(error) {
+    console.error('创建知识库失败:', error);
+    ElMessage.error('创建知识库失败');
+  } finally {
+    formRef.value.resetFields();
   }
-
 }
-
 
 const router = useRouter();
 const knowledgeStore = useKnowledgeStore();
