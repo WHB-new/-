@@ -1,7 +1,8 @@
 import request from "@/utils/request";
-export function addFile(){
+export function addFile(data){
   return request({
-    url:'/documents/insert',
-    method:'post'
+    url:'/document/addDoc',
+    method:'post',
+    data
   })
 }

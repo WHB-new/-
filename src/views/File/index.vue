@@ -80,7 +80,10 @@ const fileData =ref([
   }
 ])
 const handleAdd = ()=>{
-    addFile()
+  const baseId=localStorage.getItem('defaultKnowledgeId')
+    addFile({
+      baseId,
+    })
 }
 </script>
 
