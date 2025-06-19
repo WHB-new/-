@@ -99,7 +99,6 @@
 import Nav from '@/components/Nav.vue';
 import {addKnowledge} from '@/api/knowledge'
 import {ref,onMounted} from 'vue'
-import {addNewUser} from '@/api/user'
 import { ElMessage } from 'element-plus';
 //知识库新增弹窗
 const dialogVisible = ref(false)
@@ -119,13 +118,7 @@ const ownerId = ref(null)
 onMounted(()=>{
   ownerId.value = localStorage.getItem('defaultKnowledgeId')
 })
-// const temphandle =async ()=>{
-//  let res = await addNewUser({
-//     name:'whb',
-//     password:158,
-//   })
-//  ownerId.value = res.data.data
-// }
+
 //点击新增知识库
 const handleAdd=()=>{
   dialogVisible.value = true
