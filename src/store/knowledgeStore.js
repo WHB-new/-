@@ -5,7 +5,7 @@ import {
   deleteKnowledge, 
   updateKnowledge,
   getKnowledgeDetail
-} from '@/api/home';
+} from '@/api/knowledge';
 
 export const useKnowledgeStore = defineStore('knowledge', () => {
   const knowledgeList = ref([]);
