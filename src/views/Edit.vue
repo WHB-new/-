@@ -87,6 +87,7 @@ import Nav from '@/components/Nav.vue';
 import { 
   updateKnowledge,
 } from '@/api/knowledge';
+import { ElMessage } from 'element-plus';
 const route = useRoute();
 const router = useRouter();
 const knowledgeStore = useKnowledgeStore();
@@ -144,7 +145,7 @@ const saveChanges = async () => {
       content: doc.content || ''
     }));
     
-    await knowledgeStore.updateRepo(
+    let res = await knowledgeStore.updateRepo(
       route.params.id, 
       ownerId.value,
       {
@@ -153,12 +154,15 @@ const saveChanges = async () => {
         directory
       }
     );
-    
-    await knowledgeStore.fetchKnowledgeList(ownerId.value);
+   
+    // await knowledgeStore.fetchKnowledgeList(ownerId.value);
 
-    showToast('知识库已成功更新！');
+    // showToast('知识库已成功更新！');
   } catch (error) {
-    showToast('保存失败，请重试');
+    // showToast('保存失败，请重试');
+    ElMessage.error('保存失败，请重试');
+  }finally{
+    router.push({name:'knowledges'})
   }
 }
 

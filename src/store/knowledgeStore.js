@@ -54,17 +54,20 @@ export const useKnowledgeStore = defineStore('knowledge', () => {
 
   const updateRepo = async (id, ownerId, updatedData) => {
     try {
-      await updateKnowledge(id,{
+     let res =  await updateKnowledge(id,{
         ownerId,
         baseName: updatedData.title,
-        description: updatedData.description,
+        baseDesc: updatedData.description,
         docs: updatedData.directory.map(doc => ({
         id: doc.id,
         name: doc.name,
         content: doc.content
         }))
       });
-      
+       if(res.data.code ==200){
+      console.log('失败了')
+      ElMessage.success('知识库已成功更新！');
+    }
       const index = knowledgeList.value.findIndex(r => r.id === id);
       if (index !== -1) {
         knowledgeList.value[index] = {
