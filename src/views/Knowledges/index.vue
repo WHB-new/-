@@ -154,7 +154,7 @@ const confirmAdd = async () => {
   try {
     await formRef.value.validate();
     const response = await addKnowledge({
-    ownerId: userId.value,
+    ownerId: ownerId.value,
     name: form.value.name,
     intro: form.value.intro  
     });

@@ -91,7 +91,7 @@ const knowledgeStore = useKnowledgeStore();
 
 const knowledge = ref(null);
 const selectedItem = ref(null);
-const ownerId = ref(localStorage.getItem('userId'));
+const ownerId = ref(sessionStorage.getItem('defaultKnowledgeId'));
 
 onMounted(async () => {
   const id = route.params.id;
