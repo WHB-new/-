@@ -137,18 +137,18 @@ const saveChanges = async () => {
       content: doc.content || ''
     }));
     
-    // await knowledgeStore.updateRepo(
-    //   knowledge.value.id, 
-    //   ownerId.value,
-    //   {
-    //     title: knowledge.value.title,
-    //     description: knowledge.value.description,
-    //     directory
-    //   }
-    // );
-    updateKnowledge(route.params.id,{
-      // 参数
-    })
+    await knowledgeStore.updateRepo(
+      route.params.id, 
+      ownerId.value,
+      {
+        title: knowledge.value.title,
+        description: knowledge.value.description,
+        directory
+      }
+    );
+    // updateKnowledge(route.params.id,{
+    //   // 参数
+    // })
     showToast('知识库已成功更新！');
   } catch (error) {
     showToast('保存失败，请重试');
