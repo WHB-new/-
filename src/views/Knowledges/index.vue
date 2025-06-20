@@ -154,15 +154,15 @@ const confirmAdd = async () => {
   try {
     await formRef.value.validate();
     const response = await addKnowledge({
-      ownerId: ownerId.value,
-      name: form.value.name,
-      description: form.value.intro
+    ownerId: userId.value,
+    name: form.value.name,
+    intro: form.value.intro  
     });
     
     console.log('创建响应:', response);
  
-    if (response.data.code === 201 && response.data.data) {
-      const newKnowledgeId = String(response.data.data);
+    if (response.data.code === 201) {
+      const newKnowledgeId = response.data.data;
       ElMessage.success('知识库创建成功');
       console.log('创建成功，新知识库ID:', newKnowledgeId);
 
@@ -172,23 +172,12 @@ const confirmAdd = async () => {
         name: 'edit', 
         params: { id: newKnowledgeId }
       })
-      .then(() => {
-        console.log('路由跳转成功');
-      }).catch(err => {
-        console.error('路由跳转失败:', err);
-      });
-    } else {
-      console.warn('创建失败响应:', response);
-      ElMessage.error(`创建失败: ${response.message || '未知错误'}`);
-    }
-    
+    } 
   } catch(error) {
-    console.error('创建知识库失败:', error);
     ElMessage.error('创建知识库失败');
-  } finally {
-    formRef.value.resetFields();
   }
 }
+
 
 const router = useRouter();
 const knowledgeStore = useKnowledgeStore();
@@ -198,7 +187,10 @@ const showDeleteModal = ref(false);
 const repoToDelete = ref(null);
 
 onMounted(async () => {
-  await knowledgeStore.fetchKnowledgeList();
+  if (!ownerId.value) {
+    await temphandle();
+  }
+  await knowledgeStore.fetchKnowledgeList(ownerId.value);
 });
 
 // 过滤后的知识库
@@ -225,13 +217,7 @@ const confirmDelete = (id) => {
 
 // 执行删除
 const handleDelete = async () => {
-  if (repoToDelete.value) {
-    const success = await knowledgeStore.deleteRepo(repoToDelete.value.id);
-    if (success) {
-      showDeleteModal.value = false;
-      repoToDelete.value = null;
-    }
-  }
+  await knowledgeStore.deleteRepo(repoToDelete.value.id);
 };
 
 // 跳转到编辑页面
