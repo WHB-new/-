@@ -68,13 +68,14 @@
 </template>
 
 <script setup>
-import {RouterLink,useRoute} from 'vue-router'
+import {RouterLink,useRoute,useRouter} from 'vue-router'
 import {ref,onMounted} from 'vue';
 import { addFile ,getFileList} from '@/api/file';
 import { ElMessage } from 'element-plus';
 //控制菜单
 const activeIndex = ref(1)
 const route = useRoute()
+const router = useRouter()
 const fileList = ref([
   
 ])
@@ -98,11 +99,20 @@ onMounted(()=>{
   })
 })
 
-const handleAddFile = ()=>{
+const handleAddFile = async()=>{
   const baseId=sessionStorage.getItem('defaultKnowledgeId')
-    addFile({
+   let res = await addFile({
       baseId,
     })
+    if(res.data.code === 201){
+      router.push({
+        name:'content',
+        params:{
+          insertedId:res.data.insertedId
+        },
+      })
+      ElMessage.success('添加文件成功')
+    }
 }
 </script>
 

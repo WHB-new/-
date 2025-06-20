@@ -164,10 +164,10 @@ class CodeMirrorBlock extends BlockEmbed {
     }
   }
 }
-const ydoc= new Y.Doc()
-const ytext = ydoc.getText('quill')
-const binding = new QuillBinding(ytext, quill)
-const provider = new QuillProvider('quill-demo-room', ydoc)
+// const ydoc= new Y.Doc()
+// const ytext = ydoc.getText('quill')
+// const binding = new QuillBinding(ytext, quill)
+// const provider = new QuillProvider('quill-demo-room', ydoc)
 const handleFormatChange = (value) => {
   // 清除可能冲突的格式
   quill.format('header', false);

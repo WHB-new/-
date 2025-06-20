@@ -21,7 +21,7 @@ const routes = [
         component:()=>import('@/views/File/index.vue')
       },
       {
-        path:'/cotent',
+        path:'/cotent/:insertedId?',
         name:'content',
         component:()=>import('@/views/File/Content/index.vue')
       }
