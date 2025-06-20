@@ -1,32 +1,39 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 const routes = [
-   {
+  {
     path:'/',
     name:'/',
     redirect: '/file',
-   },
-   {
+  },
+  {
     path:'/home',
     name:'home',
-    component:()=>import('@/views/Main.vue'),
-    children:[
-      {path:'/knowledges',
-        name:'knowledges',
-        component:()=>import('@/views/Knowledges/index.vue')
+    component:() => import('@/views/Main.vue'),
+    children: [
+      {
+        path: '/knowledges',
+        name: 'knowledges',
+        component: () => import('@/views/Knowledges/index.vue')
       },
       {
-        path:'/file',
-        name:'file',
-        component:()=>import('@/views/File/index.vue')
+        path: '/file',
+        name: 'file',
+        component: () => import('@/views/File/index.vue')
       },
       {
         path:'/cotent/:insertedId?',
         name:'content',
-        component:()=>import('@/views/File/Content/index.vue')
+        component:()=>import('@/views/File/content/index.vue')
+      },
+      {
+        path: '/edit/:id?',
+        name: 'edit',
+        component: () => import('@/views/Edit.vue'),
+        props: true
       }
     ]
-   },
+  },
    {
     path: '/login',
     name: 'login',
@@ -38,8 +45,8 @@ const routes = [
     component: () => import('@/views/Register/register.vue')
   }
 
-    
-  ]
+]
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,

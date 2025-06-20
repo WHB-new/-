@@ -23,15 +23,18 @@ const props = defineProps({
 .container{
   padding:0 24px 0 20px;
   height: 64px;
-  .header{
+  
+  .header {
     height: 64px;
-    display:flex;
+    display: flex;
     justify-content: space-between;
     align-items: center;
-    .name{
-      
+    
+    .name {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1f2329;
     }
   }
-
 }
 </style>
