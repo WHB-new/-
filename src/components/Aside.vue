@@ -51,7 +51,7 @@
           </div>
          </div>
          <div class="right">
-           <div class="fileName">{{item.fileName}}</div>
+           <div class="fileName">{{item.title}}</div>
            <div class="tool">
             <div class="add" >
               <svg t="1749800508302" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="7518" width="16" height="16"><path d="M469.333333 469.333333V170.666667h85.333334v298.666666h298.666666v85.333334h-298.666666v298.666666h-85.333334v-298.666666H170.666667v-85.333334h298.666666z" fill="#444444" p-id="7519"></path></svg>
@@ -70,10 +70,14 @@
 <script setup>
 import {RouterLink,useRoute} from 'vue-router'
 import {ref,onMounted} from 'vue';
-import { addFile } from '@/api/file';
+import { addFile ,getFileList} from '@/api/file';
+import { ElMessage } from 'element-plus';
 //控制菜单
 const activeIndex = ref(1)
 const route = useRoute()
+const fileList = ref([
+  
+])
 onMounted(()=>{
   if(route.path === '/knowledges'){
     activeIndex.value = 2
@@ -82,28 +86,20 @@ onMounted(()=>{
   }else{
     activeIndex.value = 0
   }
+  const id = sessionStorage.getItem('defaultKnowledgeId')
+  getFileList(id).then(res=>{
+    if(res.data.code === 200){
+      fileList.value = res.data.data
+    console.log(res.data.data)
+    }
+  }).catch(err=>{
+    console.log(err)
+    ElMessage.error('获取文件列表失败')
+  })
 })
-//假数据，后期替换
-const fileList = ref([
-  {
-    fileName:'知识问答',
-    id:1,
-  },
-  {
-    fileName:'知识问答',
-    id:2,
-  },
-  {
-    fileName:'知识问答',
-    id:3,
-  },
-  {
-    fileName:'知识问答',
-    id:4,
-  },
-])
+
 const handleAddFile = ()=>{
-  const baseId=localStorage.getItem('defaultKnowledgeId')
+  const baseId=sessionStorage.getItem('defaultKnowledgeId')
     addFile({
       baseId,
     })

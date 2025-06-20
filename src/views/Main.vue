@@ -23,10 +23,9 @@
 import router from '@/router'
 import Aside from '@/components/Aside.vue'
 import { useHomeStore } from '@/store/home';
-import { onMounted } from 'vue';
+import { onMounted ,onUnmounted} from 'vue';
 const homeStore = useHomeStore()
-const Authorization = localStorage.getItem('Authorization')
-
+const Authorization = sessionStorage.getItem('Authorization')
 </script>
 
 <style lang="scss" scoped>

@@ -117,10 +117,10 @@ name:[{required:true,message:'请输入名称',trigger:'blur'}],
 })
 const ownerId = ref(null)
 onMounted(()=>{
-  ownerId.value = localStorage.getItem('defaultKnowledgeId')
+  ownerId.value = sessionStorage.getItem('defaultKnowledgeId')
 })
 const handleAddFile = ()=>{
-  const baseId=localStorage.getItem('defaultKnowledgeId')
+  const baseId=sessionStorage.getItem('defaultKnowledgeId')
     addFile({
       baseId,
     })
