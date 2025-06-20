@@ -84,7 +84,9 @@ import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useKnowledgeStore } from '@/store/knowledgeStore';
 import Nav from '@/components/Nav.vue';
-
+import { 
+  updateKnowledge,
+} from '@/api/knowledge';
 const route = useRoute();
 const router = useRouter();
 const knowledgeStore = useKnowledgeStore();
@@ -135,16 +137,18 @@ const saveChanges = async () => {
       content: doc.content || ''
     }));
     
-    await knowledgeStore.updateRepo(
-      knowledge.value.id, 
-      ownerId.value,
-      {
-        title: knowledge.value.title,
-        description: knowledge.value.description,
-        directory
-      }
-    );
-    
+    // await knowledgeStore.updateRepo(
+    //   knowledge.value.id, 
+    //   ownerId.value,
+    //   {
+    //     title: knowledge.value.title,
+    //     description: knowledge.value.description,
+    //     directory
+    //   }
+    // );
+    updateKnowledge(route.params.id,{
+      // 参数
+    })
     showToast('知识库已成功更新！');
   } catch (error) {
     showToast('保存失败，请重试');

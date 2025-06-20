@@ -27,8 +27,11 @@ export const deleteKnowledge = (id) => {
 export function updateKnowledge(id, data) {
   return request({
     url: `/knowledgeBase/updateBase/${id}`, 
-    method: 'put',
-    data
+    method: 'post',
+    data,
+    headers: {
+      "Content-Type": "application/json"
+    }
   });
 }
 
