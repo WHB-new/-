@@ -11,33 +11,31 @@ export const useKnowledgeStore = defineStore('knowledge', () => {
   const knowledgeList = ref([]);
   
   const transformKnowledgeData = (data) => {
-    return data.map(kb => ({
-      id: kb._id,
-      title: kb.name || '未命名知识库', 
-      description: kb.description || '无描述',
-      directory: kb.docs || [],
-      updated: formatDate(kb.updateTime),
-      color: getRandomColor()
-    }));
-  };
+  return data.map(kb => ({
+    id: kb._id,
+    title: kb.baseName || '未命名知识库',  
+    description: kb.baseDesc || '无描述', 
+    directory: kb.docs || [],
+    updated: kb.updateTime ? formatDate(kb.updateTime) : '未知时间',
+    color: getRandomColor()
+  }));
+};
   
-  // 格式化日期
   const formatDate = (dateString) => {
     if (!dateString) return '未知时间';
     const date = new Date(dateString);
     return `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`;
   };
   
-  // 随机生成颜色
   const getRandomColor = () => {
     const colors = ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#1abc9c', '#9b59b6'];
     return colors[Math.floor(Math.random() * colors.length)];
   };
   
-  const fetchKnowledgeList = async () => {
+  const fetchKnowledgeList = async (userId) => {
     try {
-      const res = await getKnowledgeList();
-      knowledgeList.value = transformKnowledgeData(res.data);
+      const res = await getKnowledgeList(userId);
+      knowledgeList.value = transformKnowledgeData(res.data.data);
     } catch (error) {
       console.error('获取知识库列表失败:', error);
     }
@@ -54,46 +52,47 @@ export const useKnowledgeStore = defineStore('knowledge', () => {
     }
   };
 
-  const updateRepo = async (id, updatedData) => {
-  try {
-    await updateKnowledge({
-      id,
-      name: updatedData.title,
-      description: updatedData.description,
-      docs: updatedData.directory
-    });
-    
-    const index = knowledgeList.value.findIndex(r => r.id === id);
-    if (index !== -1) {
-      knowledgeList.value[index] = {
-        ...knowledgeList.value[index],
-        title: updatedData.title,
-        description: updatedData.description,
-        directory: updatedData.directory,
-        updated: formatDate(new Date())
-      };
-    }
-  } catch (error) {
-    console.error('更新知识库失败:', error);
-    throw error;
-  }
-};
-
-  const getRepoDetail = async (id) => {
+  const updateRepo = async (id, ownerId, updatedData) => {
     try {
-      const res = await getKnowledgeDetail(id);
-      const kb = res.data;
-      return {
-        id: kb._id,
-        title: kb.name || '未命名知识库',
-        description: kb.description || '无描述',
-        directory: kb.docs || []
-      };
+      await updateKnowledge({
+        id,
+        ownerId,
+        baseName: updatedData.title,
+        description: updatedData.description,
+        docs: updatedData.directory
+      });
+      
+      const index = knowledgeList.value.findIndex(r => r.id === id);
+      if (index !== -1) {
+        knowledgeList.value[index] = {
+          ...knowledgeList.value[index],
+          title: updatedData.title,
+          description: updatedData.description,
+          directory: updatedData.directory,
+          updated: formatDate(new Date())
+        };
+      }
     } catch (error) {
-      console.error('获取知识库详情失败:', error);
+      console.error('更新知识库失败:', error);
       throw error;
     }
   };
+
+  const getRepoDetail = async (id) => {
+  try {
+    const res = await getKnowledgeDetail(id);
+    const kb = res.data.data;
+    return {
+      id: kb._id,
+      title: kb.baseName || '未命名知识库', 
+      description: kb.baseDesc || '无描述',
+      directory: kb.docs || [] 
+    };
+  } catch (error) {
+    console.error('获取知识库详情失败:', error);
+    throw error;
+  }
+};
 
   return {
     knowledgeList,

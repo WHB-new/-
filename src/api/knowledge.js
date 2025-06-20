@@ -9,31 +9,33 @@ export function addKnowledge(data){
     data
   })
 }
-export const getKnowledgeList = () => {
+export const getKnowledgeList = (userId) => {
   return request({
-    url: '/knowledgeBase/getKnowledgeBase', 
-    method: 'get'
+    url: '/knowledgeBase/getKnowledgeBases', 
+    method: 'get',
+    params: { userId } 
   })
 }
 
 export const deleteKnowledge = (id) => {
   return request({
-    url: '/knowledgeBase/deleteBase/${id}', 
+    url: `/knowledgeBase/deleteBase/${id}`,
     method: 'delete'
   })
 }
 
-export const updateKnowledge = ({ id, ...data }) => {
+export function updateKnowledge(id, data) {
   return request({
     url: `/knowledgeBase/updateBase/${id}`, 
     method: 'put',
     data
-  })
+  });
 }
 
-export const getKnowledgeDetail = (id) => {
+export function getKnowledgeDetail(id) {
   return request({
-    url: `/knowledgeBase/getKnowledgeBase?id=${id}`, 
-    method: 'get'
-  })
+    url: '/knowledgeBase/getKnowledgeBase',
+    method: 'get',
+    params: { id } 
+  });
 }

@@ -24,7 +24,7 @@ const routes = [
       {
         path:'/cotent',
         name:'content',
-        component:()=>import('@/views/File/Content/index.vue')
+        component:()=>import('@/views/File/content/index.vue')
       },
       {
         path: '/edit/:id?',

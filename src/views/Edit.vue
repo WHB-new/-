@@ -91,14 +91,13 @@ const knowledgeStore = useKnowledgeStore();
 
 const knowledge = ref(null);
 const selectedItem = ref(null);
+const ownerId = ref(localStorage.getItem('userId'));
 
 onMounted(async () => {
   const id = route.params.id;
-  // try {
-  //   knowledge.value = await knowledgeStore.getRepoDetail(id);
-  // } catch (error) {
-  //   router.push({ name: 'knowledges' });
-  // }
+   if (ownerId.value) {
+    knowledge.value = await knowledgeStore.getRepoDetail(id);
+  }
 });
 
 // 选择项目
@@ -129,34 +128,28 @@ const deleteItem = () => {
 
 // 保存更改
 const saveChanges = async () => {
-  if (knowledge.value.title.trim()) {
-    try {
-      // 确保目录中的文档有必要的字段
-      const directory = knowledge.value.directory.map(doc => ({
-        id: doc.id || `doc${Date.now()}`,
-        name: doc.name || '未命名文档',
-        content: doc.content || ''
-      }));
-      
-      await knowledgeStore.updateRepo(knowledge.value.id, {
+  try {
+    const directory = knowledge.value.directory.map(doc => ({
+      id: doc.id || `doc${Date.now()}`,
+      name: doc.name || '未命名文档',
+      content: doc.content || ''
+    }));
+    
+    await knowledgeStore.updateRepo(
+      knowledge.value.id, 
+      ownerId.value,
+      {
         title: knowledge.value.title,
         description: knowledge.value.description,
         directory
-      });
-      
-      showToast('知识库已成功更新！');
-      
-      setTimeout(() => {
-        goBack();
-      }, 1500);
-    } catch (error) {
-      showToast('保存失败，请重试');
-    }
-  } else {
-    showToast('请填写知识库标题');
+      }
+    );
+    
+    showToast('知识库已成功更新！');
+  } catch (error) {
+    showToast('保存失败，请重试');
   }
-};
-
+}
 
 const goBack = () => {
   router.push({ name: 'knowledges' });
