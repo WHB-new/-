@@ -137,6 +137,15 @@ const saveChanges = async () => {
       content: doc.content || ''
     }));
     
+    await updateRepo(
+      route.params.id, 
+      ownerId.value, 
+      {                       
+        title: knowledge.value.title,
+        description: knowledge.value.description,
+        directory: directory 
+      }
+    );
     // await knowledgeStore.updateRepo(
     //   knowledge.value.id, 
     //   ownerId.value,
@@ -146,9 +155,9 @@ const saveChanges = async () => {
     //     directory
     //   }
     // );
-    updateKnowledge(route.params.id,{
+    //updateKnowledge(route.params.id,{
       // 参数
-    })
+    //})
     showToast('知识库已成功更新！');
   } catch (error) {
     showToast('保存失败，请重试');

@@ -54,8 +54,7 @@ export const useKnowledgeStore = defineStore('knowledge', () => {
 
   const updateRepo = async (id, ownerId, updatedData) => {
     try {
-      await updateKnowledge({
-        id,
+      await updateKnowledge( id,{
         ownerId,
         baseName: updatedData.title,
         description: updatedData.description,
