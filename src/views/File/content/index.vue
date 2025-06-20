@@ -117,7 +117,6 @@
         </div>
 
       </div>
-
     </div>
   </div>
 </template>
@@ -134,6 +133,7 @@ import {
 } from '@element-plus/icons-vue'
 // quill的css文件
 import 'quill/dist/quill.snow.css';
+import QuillCursors from 'quill-cursors'
 // codeMirror引入
 import { EditorView, keymap } from '@codemirror/view'
 import { EditorState } from '@codemirror/state'
@@ -142,10 +142,15 @@ import { oneDark } from '@codemirror/theme-one-dark'
 import { fileListDetail } from '@/api/file';
 import { useRoute } from 'vue-router';
 let quill
+//yjs部分
+import * as Y from 'yjs'
+import { QuillBinding } from 'y-quill';
+import { WebsocketProvider } from 'y-websocket';
 // 1. 自定义CodeMirror Block
 const BlockEmbed = Quill.import('blots/block/embed')
 const quillEditor = ref(null)
 const route = useRoute()
+//代码块
 const codeMirrorInstances = ref(new Map())
 class CodeMirrorBlock extends BlockEmbed {
   static blotName = 'code-mirror'
@@ -167,10 +172,7 @@ class CodeMirrorBlock extends BlockEmbed {
     }
   }
 }
-// const ydoc= new Y.Doc()
-// const ytext = ydoc.getText('quill')
-// const binding = new QuillBinding(ytext, quill)
-// const provider = new QuillProvider('quill-demo-room', ydoc)
+
 const handleFormatChange = (value) => {
   // 清除可能冲突的格式
   quill.format('header', false);
@@ -198,17 +200,27 @@ const handleFormatChange = (value) => {
   }
 };
 onMounted(() => {
+  //注册代码块
   Quill.register(CodeMirrorBlock)
+  //注册用户光标
+  Quill.register('modules/cursors', QuillCursors)
   const options = {
     debug: 'info',
     modules: {
       toolbar: '#toolbar',
+      cursors:true,
       keyboard: {
         bindings: {
           tab: false,
           enter: false,
           backspace: false
         }
+      },
+      //回撤
+       history: {
+        userOnly: true, // 关键配置
+        delay: 500,
+        maxStack: 200
       }
     },
     clipboard: {
@@ -226,10 +238,8 @@ onMounted(() => {
     placeholder: '请输入内容',
     theme: 'snow'
   };
-
   const quillToolbar = document.querySelector('#toolbar');
   quill = new Quill('#children', options);
-
   // 选中的时候显示工具栏并根据选中的位置来决定工具栏位置
   quill.on('selection-change', (range) => {
     const bounds = quill.getBounds(range.index, range.length);
@@ -275,9 +285,15 @@ onMounted(() => {
   }).catch(
     console.log('获取数据失败')
   )
+  //yjs部分
+const ydoc= new Y.Doc()
+const yText = ydoc.getText('quill')
+const binding = new QuillBinding(yText,quill)
+const wsProvider = new WebsocketProvider()
+wsProvider.on('status',event=>{
+  console.log(event.status,'gogogo')
 })
-
-
+})
 
 // 2. 将选中文本转换为代码块
 const convertToCodeBlock = () => {
@@ -460,15 +476,6 @@ const renderCodeMirrorBlocks = () => {
     block.classList.add('cm-initialized')
   })
 }
-
-// 4. 清理CodeMirror实例
-// const cleanupCodeMirrorInstances = () => {
-//   codeMirrorInstances.value.forEach(view => {
-//     view.destroy()
-//   })
-//   codeMirrorInstances.value.clear()
-// }
-
 </script>
 <style lang="scss">
 .ql-container {
