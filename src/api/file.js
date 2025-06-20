@@ -17,8 +17,12 @@ export function getFileList(baseId){
   })
 }
 //根据id查询文件
-export function fileListDetail(){
+export function fileListDetail(id){
   return request({
-    url:'/document/getDoc'
+    url:'/document/getDoc',
+    params:{
+      id
+    },
+    method:'get'
   })
 }

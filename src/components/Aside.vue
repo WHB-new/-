@@ -43,7 +43,7 @@
     </div>
       </div>
       <div class="file-list">
-        <div class="li" v-for="(item,index) in fileList" :key="item.id">
+        <div class="li" v-for="(item,index) in fileList" :key="item._id" @click="handleEnterFile(item._id)">
          <div class="left">
           <div style="width: 20px;height: 20px;"></div>
           <div class="icon">
@@ -113,6 +113,15 @@ const handleAddFile = async()=>{
       })
       ElMessage.success('添加文件成功')
     }
+}
+const handleEnterFile = async(id)=>{
+  console.log(id,'id')
+  router.push({
+    name:'content',
+    params:{
+      insertedId:id
+    }
+  })
 }
 </script>
 

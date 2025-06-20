@@ -139,10 +139,13 @@ import { EditorView, keymap } from '@codemirror/view'
 import { EditorState } from '@codemirror/state'
 import { javascript } from '@codemirror/lang-javascript'
 import { oneDark } from '@codemirror/theme-one-dark'
+import { fileListDetail } from '@/api/file';
+import { useRoute } from 'vue-router';
 let quill
 // 1. 自定义CodeMirror Block
 const BlockEmbed = Quill.import('blots/block/embed')
 const quillEditor = ref(null)
+const route = useRoute()
 const codeMirrorInstances = ref(new Map())
 class CodeMirrorBlock extends BlockEmbed {
   static blotName = 'code-mirror'
@@ -265,6 +268,13 @@ onMounted(() => {
       })
     }
   })
+ 
+ //判断有没有数据，有的话则添加进quill
+  fileListDetail(route.params.insertedId).then(res=>{
+    console.log(res)
+  }).catch(
+    console.log('获取数据失败')
+  )
 })
 
 
