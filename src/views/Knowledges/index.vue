@@ -221,10 +221,10 @@ const handleDelete = async () => {
     let res = await knowledgeStore.deleteRepo(repoToDelete.value.id);
     if(res.data.code == 200){
       showDeleteModal = false
-       ElMessage.success('删除成功');
+      ElMessage.success('删除成功');
     }
   }catch(error){
-ElMessage.error('删除失败');
+  ElMessage.error('删除失败');
   }finally{
  showDeleteModal = false
   }
