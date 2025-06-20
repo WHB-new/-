@@ -155,8 +155,8 @@ const confirmAdd = async () => {
     await formRef.value.validate();
     const response = await addKnowledge({
     ownerId: ownerId.value,
-    name: form.value.name,
-    intro: form.value.intro  
+    baseName: form.value.name,
+    baseDesc: form.value.intro 
     });
     
     console.log('创建响应:', response);
@@ -167,6 +167,7 @@ const confirmAdd = async () => {
       console.log('创建成功，新知识库ID:', newKnowledgeId);
 
       dialogVisible.value = false;
+      formRef.value.resetFields();
 
       router.push({ 
         name: 'edit', 
@@ -217,18 +218,18 @@ const confirmDelete = (id) => {
 
 // 执行删除
 const handleDelete = async () => {
-  try{
-    let res = await knowledgeStore.deleteRepo(repoToDelete.value.id);
-    if(res.data.code == 200){
-      showDeleteModal = false
+  try {
+    const res = await knowledgeStore.deleteRepo(repoToDelete.value.id);
+    if (res) {
       ElMessage.success('删除成功');
+    } else {
+      ElMessage.error('删除失败');
     }
-  }catch(error){
-  ElMessage.error('删除失败');
-  }finally{
- showDeleteModal = false
+  } catch (error) {
+    ElMessage.error('删除失败');
+  } finally {
+    showDeleteModal.value = false; 
   }
- 
 };
 
 // 跳转到编辑页面

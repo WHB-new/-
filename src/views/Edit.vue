@@ -97,8 +97,15 @@ const ownerId = ref(sessionStorage.getItem('defaultKnowledgeId'));
 
 onMounted(async () => {
   const id = route.params.id;
-   if (ownerId.value) {
-    knowledge.value = await knowledgeStore.getRepoDetail(id);
+  if (ownerId.value) {
+    const detail = await knowledgeStore.getRepoDetail(id);
+    knowledge.value = {
+      ...detail,
+      directory: detail.directory.map(doc => ({
+        ...doc,
+        content: doc.content || '' 
+      }))
+    };
   }
 });
 
@@ -146,9 +153,9 @@ const saveChanges = async () => {
         directory
       }
     );
-    // updateKnowledge(route.params.id,{
-    //   // 参数
-    // })
+    
+    await knowledgeStore.fetchKnowledgeList(ownerId.value);
+
     showToast('知识库已成功更新！');
   } catch (error) {
     showToast('保存失败，请重试');

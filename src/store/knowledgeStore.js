@@ -58,7 +58,11 @@ export const useKnowledgeStore = defineStore('knowledge', () => {
         ownerId,
         baseName: updatedData.title,
         description: updatedData.description,
-        docs: updatedData.directory
+        docs: updatedData.directory.map(doc => ({
+        id: doc.id,
+        name: doc.name,
+        content: doc.content
+        }))
       });
       
       const index = knowledgeList.value.findIndex(r => r.id === id);
