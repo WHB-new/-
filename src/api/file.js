@@ -6,3 +6,19 @@ export function addFile(data){
     data
   })
 }
+//文件列表
+export function getFileList(baseId){
+  return request({
+   url:'/document/getDocByBaseId',
+   method:'get',
+   params:{
+    baseId
+   }
+  })
+}
+//根据id查询文件
+export function fileListDetail(){
+  return request({
+    url:'/document/getDoc'
+  })
+}

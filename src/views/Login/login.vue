@@ -82,14 +82,14 @@ const handleLogin =async () => {
     password: loginForm.value.password
    })
    if(res.data.code == 201){
-    if(localStorage.getItem('Authorization')){
-      localStorage.removeItem('Authorization')
+    if(sessionStorage.getItem('Authorization')){
+      sessionStorage.removeItem('Authorization')
     }
-    if(localStorage.getItem('defaultKnowledgeId')){
-      localStorage.removeItem('defaultKnowledgeId')
+    if(sessionStorage.getItem('defaultKnowledgeId')){
+      sessionStorage.removeItem('defaultKnowledgeId')
     }
-       localStorage.setItem('Authorization', res.data.token)
-   localStorage.setItem('defaultKnowledgeId', res.data.defaultKnowledgeBaseId)
+       sessionStorage.setItem('Authorization', res.data.token)
+   sessionStorage.setItem('defaultKnowledgeId', res.data.defaultKnowledgeBaseId)
  router.push('/file')
     ElMessage.success('登陆成功')
    }

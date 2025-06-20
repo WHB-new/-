@@ -10,7 +10,7 @@ let whiteSpace = ['/login/register','/login/login']
 request.interceptors.request.use(config => {
   // 不在白名单内需要请求头添加token
   if(!whiteSpace.includes(config.url)){
-    const token = localStorage.getItem('Authorization')
+    const token = sessionStorage.getItem('Authorization')
     if(token){
       //请求头添加token
       config.headers.Authorization=token
