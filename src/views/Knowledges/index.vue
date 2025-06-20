@@ -217,7 +217,18 @@ const confirmDelete = (id) => {
 
 // 执行删除
 const handleDelete = async () => {
-  await knowledgeStore.deleteRepo(repoToDelete.value.id);
+  try{
+    let res = await knowledgeStore.deleteRepo(repoToDelete.value.id);
+    if(res.data.code == 200){
+      showDeleteModal = false
+       ElMessage.success('删除成功');
+    }
+  }catch(error){
+ElMessage.error('删除失败');
+  }finally{
+ showDeleteModal = false
+  }
+ 
 };
 
 // 跳转到编辑页面
