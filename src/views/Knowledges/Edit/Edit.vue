@@ -27,7 +27,7 @@
           <div class="sidebar-header">
             <h3>文档列表</h3>
             <div class="actions">
-              <button class="btn btn-sm" @click="addFile">
+              <button class="btn btn-sm" @click="addNewFile">
                 <i class="fas fa-file-alt"></i> 新建文档
               </button>
             </div>
@@ -35,14 +35,16 @@
           
           <div class="directory-tree">
             <div 
-              v-for="item in knowledge.directory" 
-              :key="item.id"
+              v-for="item in knowledgeFileList" 
+              :key="item._id"
               class="tree-item"
-              :class="{ 'selected': selectedItem?.id === item.id }"
+              :class="{ 'selected': selectedItem?.id === item._id }"
+              
             >
               <div class="item-content" @click="selectItem(item)">
                 <i class="fas fa-file"></i>
-                <span>{{ item.name }}</span>
+                <span>{{ item.title }}</span>
+                <svg t="1750512919025" class="delete-icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3607" width="16" height="16" @click=handleDelete(item._id)><path d="M380 455a8 8 0 0 1 8-8h64a8 8 0 0 1 8 8v240a8 8 0 0 1-8 8h-64a8 8 0 0 1-8-8V455zM644 455a8 8 0 0 0-8-8h-64a8 8 0 0 0-8 8v240a8 8 0 0 0 8 8h64a8 8 0 0 0 8-8V455z" fill="#323338" p-id="3608"></path><path d="M321 212V96c0-17.673 14.327-32 32-32h320c17.673 0 32 14.327 32 32v116h183a8 8 0 0 1 8 8v64a8 8 0 0 1-8 8h-55v635c0 17.673-14.327 32-32 32H225c-17.673 0-32-14.327-32-32V292h-58a8 8 0 0 1-8-8v-64a8 8 0 0 1 8-8h186z m80-68v68h224v-68H401zM273 292v587h480V292H273z" fill="#323338" p-id="3609"></path></svg>
               </div>
             </div>
           </div>
@@ -84,6 +86,7 @@ import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useKnowledgeStore } from '@/store/knowledgeStore';
 import Nav from '@/components/Nav.vue';
+import {addFile,getFileList} from '@/api/file'
 import { 
   updateKnowledge,
 } from '@/api/knowledge';
@@ -95,7 +98,7 @@ const knowledgeStore = useKnowledgeStore();
 const knowledge = ref(null);
 const selectedItem = ref(null);
 const ownerId = ref(sessionStorage.getItem('defaultKnowledgeId'));
-
+const knowledgeFileList = ref([])
 onMounted(async () => {
   const id = route.params.id;
   if (ownerId.value) {
@@ -108,22 +111,37 @@ onMounted(async () => {
       }))
     };
   }
+  getList()
 });
+const handleDelete = (id)=>{
 
+}
+//查询知识库文件列表
+const getList = ()=>{
+  getFileList(route.params.id).then(res=>{
+knowledgeFileList.value =res.data.data
+  }).catch(err=>{
+    ElMessage.error('获取知识库文件列表失败，请重试');
+  })
+}
 // 选择项目
 const selectItem = (item) => {
-  selectedItem.value = item;
+  // sessionStorage.setItem('lastUrl',window.location.href)
+  console.log(route,'route')
+  const url = `/edit/${route.params.id}`
+  sessionStorage.setItem('lastUrl',url)
+  router.push({name:'content',params:{insertedId:item._id}})
 };
 
 // 添加文件
-const addFile = () => {
-  const newFile = {
-    id: 'doc' + Date.now(),
-    name: '新建文档',
-    content: ''
-  };
-  knowledge.value.directory.push(newFile);
-  selectedItem.value = newFile;
+const addNewFile =async () => {
+ let res = await addFile({
+    baseId:route.params.id
+  })
+  if(res.data.code == 201){
+getList()
+  }
+  
 };
 
 // 删除当前选中的项目
@@ -139,25 +157,17 @@ const deleteItem = () => {
 // 保存更改
 const saveChanges = async () => {
   try {
-    const directory = knowledge.value.directory.map(doc => ({
-      id: doc.id || `doc${Date.now()}`,
-      name: doc.name || '未命名文档',
-      content: doc.content || ''
-    }));
-    
-    let res = await knowledgeStore.updateRepo(
-      route.params.id, 
-      ownerId.value,
-      {
-        title: knowledge.value.title,
-        description: knowledge.value.description,
-        directory
-      }
-    );
-   
-    // await knowledgeStore.fetchKnowledgeList(ownerId.value);
+   updateKnowledge(route.params.id,{
+    ownerId:sessionStorage.getItem('defaultKnowledgeId'),
+     baseName: knowledge.value.title,
+     baseDesc: knowledge.value.description,
+   }).then(res=>{
+    ElMessage.success('知识库已成功更新！')
+   }).catch(err=>{
+    ElMessage.error('更新知识库失败，请重试')
+   })
 
-    // showToast('知识库已成功更新！');
+ 
   } catch (error) {
     // showToast('保存失败，请重试');
     ElMessage.error('保存失败，请重试');
@@ -190,6 +200,15 @@ const showToast = (message) => {
 </script>
 
 <style lang="scss" scoped>
+.delete-icon{
+  width: 16px;
+  height: 16px;
+  &:hover{
+    border-radius: 3px;
+    cursor: pointer;
+    background-color:#d6d9dc;
+  }
+}
 .edit-container {
   flex: 1;
   display: flex;

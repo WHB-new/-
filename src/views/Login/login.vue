@@ -88,9 +88,13 @@ const handleLogin =async () => {
     if(sessionStorage.getItem('defaultKnowledgeId')){
       sessionStorage.removeItem('defaultKnowledgeId')
     }
+    if(sessionStorage.getItem('username')){
+    sessionStorage.removeItem('username')
+    }
        sessionStorage.setItem('Authorization', res.data.token)
    sessionStorage.setItem('defaultKnowledgeId', res.data.defaultKnowledgeBaseId)
- router.push('/file')
+   sessionStorage.setItem('username', loginForm.value.account)
+   router.push('/file')
     ElMessage.success('登陆成功')
    }
  }catch(err){

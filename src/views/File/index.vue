@@ -146,9 +146,8 @@ height: 48px;
   display: flex;
   align-items: center;
   .recent{
-    width: 64px;
-    height: 22px;
-    line-height: 22px;
+    width: 72px;
+    height: 28px;
     font-size: 16px;
     padding:2px 4px;
     text-align: center;

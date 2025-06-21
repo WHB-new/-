@@ -3,19 +3,23 @@
     <!-- <div class="nav">
       预留区域
     </div> -->
+     <div class="close" v-if="isShowClose" @click="handleClose">
+          <svg t="1750512589823" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2618" width="16" height="16"><path d="M729.6 931.2l-416-425.6 416-416c9.6-9.6 9.6-25.6 0-35.2-9.6-9.6-25.6-9.6-35.2 0l-432 435.2c-9.6 9.6-9.6 25.6 0 35.2l432 441.6c9.6 9.6 25.6 9.6 35.2 0C739.2 956.8 739.2 940.8 729.6 931.2z" p-id="2619"></path></svg>
+         </div>
     <div class="content">
       <div class="content-center">
-        <div class="page-header"></div>
-        <div class="page-children" id="children" ref="quillEditor">
+        <!-- <div class="page-header">
+        
+        </div> -->
+        <div class="page-children" id="children" ref="quillEditor" style="padding:15px 15px;">
 
         </div>
 
         <!-- Quill 工具栏 -->
         <div id="toolbar">
           <!-- 标题和排序 -->
-          <el-select v-model="formatValue" placeholder="正文" size="small" style="width: 150px"
+          <el-select v-model="formatValue" placeholder="正文" size="small" style="width:150px;margin-bottom:10px;"
             @change="handleFormatChange">
-
             <el-option-group label="标题">
               <el-option label="正文" value="paragraph">
                 <span style="display: flex; align-items: center">
@@ -50,7 +54,6 @@
                 </span>
               </el-option>
             </el-option-group>
-
 
             <el-option-group label="列表">
               <el-option label="有序列表" value="ordered">
@@ -140,7 +143,7 @@ import { EditorState } from '@codemirror/state'
 import { javascript } from '@codemirror/lang-javascript'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { fileListDetail } from '@/api/file';
-import { useRoute } from 'vue-router';
+import { useRoute,useRouter} from 'vue-router';
 //yjs部分
 import * as Y from 'yjs'
 import { QuillBinding } from 'y-quill';
@@ -155,22 +158,14 @@ let binding
 const BlockEmbed = Quill.import('blots/block/embed')
 const quillEditor = ref(null)
 const route = useRoute()
-
+const router = useRouter()
+const isShowClose = ref(false)
 // 初始化Yjs连接的函数
 const initYjsConnection = (fileId, quillInstance) => {
-  console.log('initYjsConnection 被调用，fileId:', fileId)
-  console.log('quillInstance:', quillInstance)
-
   // 确保quill实例存在且有效
   if (!quillInstance) {
-    console.log('Quill实例为空，跳过Yjs连接')
     return
   }
-
-  // 检查quill实例的结构
-  console.log('quillInstance.quill:', quillInstance.quill)
-  console.log('quillInstance.getContents:', quillInstance.getContents)
-
   // 先销毁旧的连接
   if (binding) {
     try {
@@ -220,12 +215,24 @@ const initYjsConnection = (fileId, quillInstance) => {
         if (!binding && quillInstance) {
           // 尝试使用quillInstance.quill
           const quillEditor = quillInstance.quill || quillInstance
+          wsProvider.awareness.setLocalState({
+            user: {
+              id: sessionStorage.getItem('defaultKnowledgeId'),
+              name: sessionStorage.getItem('username'),
+              color: '#ff0000',
+            }
+          })
           binding = new QuillBinding(yText, quillEditor, wsProvider.awareness)
           console.log('建立新连接成功:', fileId)
         }
       }
     })
-
+    wsProvider.awareness.on('change', () => {
+      const users = Array.from(wsProvider.awareness.getStates().values());
+      //后期补用户信息这一块
+      console.log('当前在线用户:', users.length);
+      console.log('用户详情:', users);
+    })
     // 连接错误处理
     wsProvider.on('connection-error', (err) => {
       console.error('WebSocket连接错误:', err)
@@ -300,6 +307,9 @@ const handleFormatChange = (value) => {
 };
 
 onMounted(() => {
+  if(sessionStorage.getItem('lastUrl')){
+    isShowClose.value = true
+  }
   //注册代码块
   Quill.register(CodeMirrorBlock)
   //注册用户光标
@@ -340,14 +350,9 @@ onMounted(() => {
   };
   const quillToolbar = document.querySelector('#toolbar');
   quill = new Quill('#children', options);
-
-  console.log('Quill实例创建完成:', quill)
-  console.log('quill.quill:', quill.quill)
-
   // 延迟初始化Yjs连接，确保Quill完全初始化
   nextTick(() => {
     if (route.params.insertedId) {
-      console.log('onMounted中初始化Yjs连接，insertedId:', route.params.insertedId)
       initYjsConnection(route.params.insertedId, quill)
     }
   })
@@ -438,7 +443,13 @@ onBeforeUnmount(() => {
   binding = null
   ydoc = null
 });
-
+// 当从知识库进来的删除
+const handleClose=()=>{
+  const url = sessionStorage.getItem('lastUrl')
+  isShowClose.value = false
+  router.push(url)
+  sessionStorage.removeItem('lastUrl')
+}
 // 2. 将选中文本转换为代码块
 const convertToCodeBlock = () => {
   if (!quill) return
@@ -835,7 +846,14 @@ button:hover {
   display: flex;
   flex-direction: column;
   height: 100vh;
-
+.close{
+  position:absolute;
+  top:30px;
+  left:50px;
+  &:hover{
+    cursor:pointer
+  }
+}
   .nav {
     position: absolute;
     top: 0;
@@ -848,11 +866,12 @@ button:hover {
   .content {
     box-sizing: border-box;
     flex: 1;
-    margin-top: 64px;
+    margin-top: 61px;
 
     &-center {
+      box-sizing: content-box;
       height: calc(100vh - 86px);
-      max-width: 820px;
+      min-width: 820px !important;
       padding: 0 268px;
       position: relative;
 

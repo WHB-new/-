@@ -29,7 +29,7 @@ const routes = [
       {
         path: '/edit/:id?',
         name: 'edit',
-        component: () => import('@/views/Edit.vue'),
+        component: () => import('@/views/Knowledges/Edit/Edit.vue'),
         props: true
       }
     ]
