@@ -124,7 +124,7 @@
 <script setup>
 // 富文本引入
 import Quill from 'quill';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, onBeforeUnmount, watch, onUnmounted, nextTick } from 'vue';
 import {
   Document,
   Sort,
@@ -141,15 +141,114 @@ import { javascript } from '@codemirror/lang-javascript'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { fileListDetail } from '@/api/file';
 import { useRoute } from 'vue-router';
-let quill
 //yjs部分
 import * as Y from 'yjs'
 import { QuillBinding } from 'y-quill';
 import { WebsocketProvider } from 'y-websocket';
+import { WebrtcProvider } from 'y-webrtc';
+let quill
+let ydoc
+let wsProvider
+let binding
+
 // 1. 自定义CodeMirror Block
 const BlockEmbed = Quill.import('blots/block/embed')
 const quillEditor = ref(null)
 const route = useRoute()
+
+// 初始化Yjs连接的函数
+const initYjsConnection = (fileId, quillInstance) => {
+  console.log('initYjsConnection 被调用，fileId:', fileId)
+  console.log('quillInstance:', quillInstance)
+
+  // 确保quill实例存在且有效
+  if (!quillInstance) {
+    console.log('Quill实例为空，跳过Yjs连接')
+    return
+  }
+
+  // 检查quill实例的结构
+  console.log('quillInstance.quill:', quillInstance.quill)
+  console.log('quillInstance.getContents:', quillInstance.getContents)
+
+  // 先销毁旧的连接
+  if (binding) {
+    try {
+      binding.destroy()
+      binding = null
+    } catch (e) {
+      console.log('销毁binding时出错:', e)
+    }
+  }
+
+  if (wsProvider) {
+    try {
+      wsProvider.disconnect()
+      wsProvider.destroy()
+      wsProvider = null
+    } catch (e) {
+      console.log('销毁wsProvider时出错:', e)
+    }
+  }
+
+  if (ydoc) {
+    try {
+      ydoc.destroy()
+      ydoc = null
+    } catch (e) {
+      console.log('销毁ydoc时出错:', e)
+    }
+  }
+
+  try {
+    // 创建新的连接
+    ydoc = new Y.Doc()
+    const yText = ydoc.getText('quill')
+
+    // 创建WebSocket连接，不传递awareness配置
+    wsProvider = new WebsocketProvider(
+      'ws://localhost:8001/onlineEdit',
+      fileId,
+      ydoc
+    )
+
+    // 等待连接建立后再创建binding
+    wsProvider.on('status', (event) => {
+      console.log('WebSocket状态:', event.status)
+      if (event.status === 'connected') {
+        // 连接成功后创建binding
+        if (!binding && quillInstance) {
+          // 尝试使用quillInstance.quill
+          const quillEditor = quillInstance.quill || quillInstance
+          binding = new QuillBinding(yText, quillEditor, wsProvider.awareness)
+          console.log('建立新连接成功:', fileId)
+        }
+      }
+    })
+
+    // 连接错误处理
+    wsProvider.on('connection-error', (err) => {
+      console.error('WebSocket连接错误:', err)
+    })
+
+    console.log('开始建立连接:', fileId)
+  } catch (e) {
+    console.error('建立Yjs连接时出错:', e)
+  }
+}
+
+// 监听路由参数变化
+watch(() => route.params.insertedId, (newId, oldId) => {
+  if (newId && newId !== oldId && quill) {
+    console.log('路由参数变化:', oldId, '->', newId)
+    console.log('当前quill实例:', quill)
+    // 延迟执行，确保DOM更新完成
+    nextTick(() => {
+      initYjsConnection(newId, quill)
+    })
+  }
+}, { immediate: false })
+
 //代码块
 const codeMirrorInstances = ref(new Map())
 class CodeMirrorBlock extends BlockEmbed {
@@ -199,6 +298,7 @@ const handleFormatChange = (value) => {
     // 无需操作（已清除格式）
   }
 };
+
 onMounted(() => {
   //注册代码块
   Quill.register(CodeMirrorBlock)
@@ -208,7 +308,7 @@ onMounted(() => {
     debug: 'info',
     modules: {
       toolbar: '#toolbar',
-      cursors:true,
+      cursors: true,
       keyboard: {
         bindings: {
           tab: false,
@@ -217,7 +317,7 @@ onMounted(() => {
         }
       },
       //回撤
-       history: {
+      history: {
         userOnly: true, // 关键配置
         delay: 500,
         maxStack: 200
@@ -240,8 +340,22 @@ onMounted(() => {
   };
   const quillToolbar = document.querySelector('#toolbar');
   quill = new Quill('#children', options);
+
+  console.log('Quill实例创建完成:', quill)
+  console.log('quill.quill:', quill.quill)
+
+  // 延迟初始化Yjs连接，确保Quill完全初始化
+  nextTick(() => {
+    if (route.params.insertedId) {
+      console.log('onMounted中初始化Yjs连接，insertedId:', route.params.insertedId)
+      initYjsConnection(route.params.insertedId, quill)
+    }
+  })
+
   // 选中的时候显示工具栏并根据选中的位置来决定工具栏位置
   quill.on('selection-change', (range) => {
+    if (!range) return // 添加空值检查
+
     const bounds = quill.getBounds(range.index, range.length);
     if (range && range.length > 0) {
       quillToolbar.style.display = 'block';
@@ -253,12 +367,20 @@ onMounted(() => {
   })
 
   //当位置改变时，工具栏跟着变动
-  quill.on('text-change', () => {
+  quill.on('text-change', (delta, oldDelta, source) => {
     const range = quill.getSelection();
+    if (!range) return // 添加空值检查
+
     const bounds = quill.getBounds(range.index, range.length);
     if (range && range.length > 0) {
       quillToolbar.style.top = bounds.top - 48 + 'px';
       quillToolbar.style.left = bounds.left + 'px';
+    }
+    if (source === 'user') {
+      console.log(delta, 'delta')
+      if (ydoc) {
+        console.log(ydoc, '数据')
+      }
     }
   })
 
@@ -274,26 +396,48 @@ onMounted(() => {
     if (!codeBlock) {
       // 如果点击的不是代码块，则移除所有代码块的焦点
       codeMirrorInstances.value.forEach(view => {
-        view.dom.blur()
+        if (view && view.dom) {
+          view.dom.blur()
+        }
       })
     }
   })
- 
- //判断有没有数据，有的话则添加进quill
-  fileListDetail(route.params.insertedId).then(res=>{
-    console.log(res)
-  }).catch(
-    console.log('获取数据失败')
-  )
-  //yjs部分
-const ydoc= new Y.Doc()
-const yText = ydoc.getText('quill')
-const binding = new QuillBinding(yText,quill)
-const wsProvider = new WebsocketProvider()
-wsProvider.on('status',event=>{
-  console.log(event.status,'gogogo')
 })
-})
+
+onBeforeUnmount(() => {
+  // 清理Yjs连接
+  if (binding) {
+    try {
+      binding.destroy()
+      binding = null
+    } catch (e) {
+      console.log('销毁binding时出错:', e)
+    }
+  }
+
+  if (wsProvider) {
+    try {
+      wsProvider.disconnect()
+      wsProvider.destroy()
+      console.log('销毁WebSocket连接')
+    } catch (e) {
+      console.log('销毁wsProvider时出错:', e)
+    }
+  }
+
+  if (ydoc) {
+    try {
+      ydoc.destroy()
+    } catch (e) {
+      console.log('销毁ydoc时出错:', e)
+    }
+  }
+
+  // 重置变量
+  wsProvider = null
+  binding = null
+  ydoc = null
+});
 
 // 2. 将选中文本转换为代码块
 const convertToCodeBlock = () => {
