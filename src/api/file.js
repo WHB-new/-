@@ -22,3 +22,21 @@ export function fileListDetail(){
     url:'/document/getDoc'
   })
 }
+
+export function deleteFile(id) {
+  return request({
+    url: `/document/delete/${id}`,
+    method: 'delete'
+  })
+}
+
+export function updateDocument(id, data) {
+  return request({
+    url: `/document/put/${id}`,
+    method: 'put',
+    data,
+    headers: {
+      "Content-Type": "application/json"
+    }
+  });
+}

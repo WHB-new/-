@@ -27,7 +27,7 @@
           <div class="sidebar-header">
             <h3>文档列表</h3>
             <div class="actions">
-              <button class="btn btn-sm" @click="addFile">
+              <button class="btn btn-sm" @click="handleAddFile">
                 <i class="fas fa-file-alt"></i> 新建文档
               </button>
             </div>
@@ -86,8 +86,13 @@ import { useKnowledgeStore } from '@/store/knowledgeStore';
 import Nav from '@/components/Nav.vue';
 import { 
   updateKnowledge,
+  getDocsByBaseId
 } from '@/api/knowledge';
 import { ElMessage } from 'element-plus';
+import{addFile,
+  deleteFile,
+  updateDocument
+}from '@/api/file'
 const route = useRoute();
 const router = useRouter();
 const knowledgeStore = useKnowledgeStore();
@@ -100,11 +105,15 @@ onMounted(async () => {
   const id = route.params.id;
   if (ownerId.value) {
     const detail = await knowledgeStore.getRepoDetail(id);
+    const docsRes = await getDocsByBaseId(detail.id);
+    const docs = docsRes.data.data || [];
+    
     knowledge.value = {
       ...detail,
-      directory: detail.directory.map(doc => ({
-        ...doc,
-        content: doc.content || '' 
+      directory: docs.map(doc => ({
+        id: doc._id,
+        name: doc.title || '未命名文档',
+        content: doc.content || ''
       }))
     };
   }
@@ -116,55 +125,93 @@ const selectItem = (item) => {
 };
 
 // 添加文件
-const addFile = () => {
-  const newFile = {
-    id: 'doc' + Date.now(),
-    name: '新建文档',
-    content: ''
-  };
-  knowledge.value.directory.push(newFile);
-  selectedItem.value = newFile;
+const handleAddFile = async () => {
+  try {
+    const newDoc = {
+      title: '新建文档',
+      baseId: route.params.id,
+      content: ''
+    };
+    
+    const res = await addFile(newDoc);
+    
+    if (res.data.code === 201) {
+      const newId = res.data.insertedId || res.data.data?.id;
+      
+      if (!newId) {
+        throw new Error('未获取到新文档ID');
+      }
+      const newFile = {
+        id: newId,
+        name: newDoc.title,
+        content: newDoc.content,
+      };
+
+      knowledge.value.directory = [
+        ...knowledge.value.directory,
+        newFile
+      ];
+      selectedItem.value = newFile;
+      
+      ElMessage.success('文档创建成功');
+    }
+  } catch (error) {
+    ElMessage.error('创建文档失败');
+    console.error('创建文档失败:', error);
+  }
 };
 
 // 删除当前选中的项目
-const deleteItem = () => {
+const deleteItem = async () => {
   if (selectedItem.value) {
-    knowledge.value.directory = knowledge.value.directory.filter(
-      item => item.id !== selectedItem.value.id
-    );
-    selectedItem.value = null;
+    try {
+      await deleteFile(selectedItem.value.id);
+
+      knowledge.value.directory = knowledge.value.directory.filter(
+        item => item.id !== selectedItem.value.id
+      );
+      
+      selectedItem.value = null;
+      ElMessage.success('文档已删除');
+    } catch (error) {
+      ElMessage.error('删除文档失败');
+      console.error('删除文档失败:', error);
+    }
   }
 };
+
 
 // 保存更改
 const saveChanges = async () => {
   try {
-    const directory = knowledge.value.directory.map(doc => ({
-      id: doc.id || `doc${Date.now()}`,
-      name: doc.name || '未命名文档',
-      content: doc.content || ''
-    }));
-    
-    let res = await knowledgeStore.updateRepo(
+    const updatePromises = knowledge.value.directory.map(doc => {
+      const updateData = {
+        title: doc.name, 
+        content: doc.content
+      };
+      
+      return updateDocument(doc.id, updateData);
+    });
+
+    await Promise.all(updatePromises);
+
+    await knowledgeStore.updateRepo(
       route.params.id, 
       ownerId.value,
       {
         title: knowledge.value.title,
         description: knowledge.value.description,
-        directory
+        directory: knowledge.value.directory
       }
     );
-   
-    // await knowledgeStore.fetchKnowledgeList(ownerId.value);
-
-    // showToast('知识库已成功更新！');
+    
+    ElMessage.success('知识库已保存');
+    router.push({ name: 'knowledges' });
   } catch (error) {
-    // showToast('保存失败，请重试');
     ElMessage.error('保存失败，请重试');
-  }finally{
-    router.push({name:'knowledges'})
+    console.error('保存失败:', error);
   }
-}
+};
 
 const goBack = () => {
   router.push({ name: 'knowledges' });
