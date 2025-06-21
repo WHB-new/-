@@ -82,18 +82,10 @@ const handleLogin =async () => {
     password: loginForm.value.password
    })
    if(res.data.code == 201){
-    if(sessionStorage.getItem('Authorization')){
-      sessionStorage.removeItem('Authorization')
-    }
-    if(sessionStorage.getItem('defaultKnowledgeId')){
-      sessionStorage.removeItem('defaultKnowledgeId')
-    }
-    if(sessionStorage.getItem('username')){
-    sessionStorage.removeItem('username')
-    }
-       sessionStorage.setItem('Authorization', res.data.token)
+    sessionStorage.setItem('Authorization', res.data.token)
    sessionStorage.setItem('defaultKnowledgeId', res.data.defaultKnowledgeBaseId)
    sessionStorage.setItem('username', loginForm.value.account)
+   sessionStorage.setItem('refreshToken', res.data.refreshToken)
    router.push('/file')
     ElMessage.success('登陆成功')
    }

@@ -54,7 +54,8 @@ const router = createRouter({
 //当没有token同时去的不是登录注册页面，跳转到登录页面
 router.beforeEach((to, from, next) => {
   const token = sessionStorage.getItem('Authorization')
-  if (!token && to.path !== '/login' && to.path !== '/register') {
+  const refreshToken = sessionStorage.getItem('refreshToken')
+  if (!token && to.path !== '/login' && to.path !== '/register' && !refreshToken) {
     next('/login')
   } else {
     next()
