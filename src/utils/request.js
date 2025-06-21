@@ -26,8 +26,6 @@ request.interceptors.response.use(res => {
   return res
 },err=>{
   // 错误处理
-  ElMessage.warning('接口请求失败')
-  console.log(err)
   const status = err.status|| 200
   //无感刷新，当token过期时，用refreshToken顶上
   if(status === 401){
@@ -36,6 +34,8 @@ request.interceptors.response.use(res => {
     originalRequest.headers.Authorization = refreshToken
     return request(originalRequest)
   }else{
+     ElMessage.warning('接口请求失败')
+  console.log(err)
  return Promise.reject(new Error(err))
   }
  

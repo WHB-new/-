@@ -17,12 +17,23 @@ export function getFileList(baseId){
   })
 }
 //根据id查询文件
-export function fileListDetail(id){
+export function fileListDetail(id,userId){
   return request({
     url:'/document/getDoc',
     params:{
-      id
+      docId:id,
+      userId
     },
     method:'get'
   })
+}
+//查询最近访问文件
+export function getRecentFile(userId){
+ return request({
+  url:'/document/getRecentlyDoc',
+  method:'get',
+  params:{
+    userId
+  }
+ })
 }

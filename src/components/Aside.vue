@@ -99,7 +99,7 @@
 <script setup>
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { ref, onMounted, watch } from 'vue';
-import { addFile, getFileList } from '@/api/file';
+import { addFile, getFileList,fileListDetail} from '@/api/file';
 import { ElMessage } from 'element-plus';
 //控制菜单
 const activeIndex = ref('file')
@@ -115,6 +115,8 @@ const handleMenuClick = (index) => {
 // 处理文件点击
 const handleEnterFile = async (id, index) => {
   activeIndex.value = `file-${id}`
+  const userId = sessionStorage.getItem('userId')
+  const res = await fileListDetail(id,userId)
   router.push({
     name: 'content',
     params: {
@@ -146,8 +148,12 @@ watch(() => route.params.insertedId, (newId) => {
 }, { immediate: true })
 
 onMounted(() => {
+ getList()
+})
+//获取文档列表
+const getList = ()=>{
   const id = sessionStorage.getItem('defaultKnowledgeId')
-  getFileList(id).then(res => {
+   getFileList(id).then(res => {
     console.log(res)
     if (res.data.code === 200) {
       fileList.value = res.data.data
@@ -155,10 +161,9 @@ onMounted(() => {
     }
   }).catch(err => {
     console.log(err)
-    ElMessage.error('获取文件列表失败')
+  
   })
-})
-
+}
 const handleAddFile = async () => {
   const baseId = sessionStorage.getItem('defaultKnowledgeId')
   let res = await addFile({
@@ -171,6 +176,7 @@ const handleAddFile = async () => {
         insertedId: res.data.insertedId
       },
     })
+     getList(id)
     ElMessage.success('添加文件成功')
   }
 }
@@ -308,7 +314,7 @@ const handleAddFile = async () => {
         padding: 0 8px;
         flex: 1;
         overflow-y: scroll;
-
+    
         .li {
           height: 35px;
           display: flex;

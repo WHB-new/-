@@ -82,10 +82,15 @@ const handleLogin =async () => {
     password: loginForm.value.password
    })
    if(res.data.code == 201){
+    //token
     sessionStorage.setItem('Authorization', res.data.token)
+    //默认知识库ID
    sessionStorage.setItem('defaultKnowledgeId', res.data.defaultKnowledgeBaseId)
+  //  用户的账号名，用于协同
    sessionStorage.setItem('username', loginForm.value.account)
+   //刷新的token
    sessionStorage.setItem('refreshToken', res.data.refreshToken)
+   sessionStorage.setItem('userId', res.data.userId)
    router.push('/file')
     ElMessage.success('登陆成功')
    }

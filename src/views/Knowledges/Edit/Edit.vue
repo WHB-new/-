@@ -121,7 +121,7 @@ const getList = ()=>{
   getFileList(route.params.id).then(res=>{
 knowledgeFileList.value =res.data.data
   }).catch(err=>{
-    ElMessage.error('获取知识库文件列表失败，请重试');
+    
   })
 }
 // 选择项目
@@ -164,13 +164,12 @@ const saveChanges = async () => {
    }).then(res=>{
     ElMessage.success('知识库已成功更新！')
    }).catch(err=>{
-    ElMessage.error('更新知识库失败，请重试')
+   
    })
 
  
   } catch (error) {
-    // showToast('保存失败，请重试');
-    ElMessage.error('保存失败，请重试');
+   
   }finally{
     router.push({name:'knowledges'})
   }

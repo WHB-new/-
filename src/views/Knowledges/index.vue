@@ -114,7 +114,7 @@ import { useKnowledgeStore } from '@/store/knowledgeStore';
 import Nav from '@/components/Nav.vue';
 import {addKnowledge} from '@/api/knowledge'
 import { ElMessage } from 'element-plus';
-import { addFile } from '@/api/file';
+import { addFile,getFileList} from '@/api/file';
 //知识库新增弹窗
 const dialogVisible = ref(false)
 //知识库表单信息
@@ -137,7 +137,13 @@ const handleAddFile = ()=>{
   const baseId=sessionStorage.getItem('defaultKnowledgeId')
     addFile({
       baseId,
+    }).then(res=>{
+      router.push({name:'content',params:{insertedId:res.data.insertedId}})
+      getFileList(baseId)
+    }).catch(err=>{
+      console.log(err)
     })
+    
 }
 //点击新增知识库
 const handleAdd=()=>{
@@ -175,7 +181,7 @@ const confirmAdd = async () => {
       })
     } 
   } catch(error) {
-    ElMessage.error('创建知识库失败');
+    
   }
 }
 
@@ -223,10 +229,10 @@ const handleDelete = async () => {
     if (res) {
       ElMessage.success('删除成功');
     } else {
-      ElMessage.error('删除失败');
+      
     }
   } catch (error) {
-    ElMessage.error('删除失败');
+   
   } finally {
     showDeleteModal.value = false; 
   }
@@ -310,6 +316,8 @@ margin-bottom:12px;
 .footer{
   margin-top:20px;
     flex:1;
+    display:flex;
+    flex-direction: column;
     padding:0 24px;
     .title{
     box-sizing: border-box;
@@ -349,10 +357,14 @@ margin-bottom:12px;
     }
   }
     .list{
+flex:1;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     grid-gap: 24px;
-    
+    overflow-y:scroll;
+    &::-webkit-scrollbar{
+      display:none;
+    }
     .li {
       position: relative;
       height: 220px;
