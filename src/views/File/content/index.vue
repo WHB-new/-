@@ -198,28 +198,24 @@ const initYjsConnection = (fileId, quillInstance) => {
     // 创建新的连接
     ydoc = new Y.Doc()
     const yText = ydoc.getText('quill')
+const update = Y.encodeStateAsUpdate(ydoc);
+console.log('前端生成的更新:', update.length > 0); // 应为 true
     wsProvider = new WebsocketProvider(
       `ws://localhost:8001/onlineEdit/${sessionStorage.getItem('userId')}`,
       fileId,
-      ydoc
+      ydoc,
+       {
+    autoConnect:false, // 禁用自动连接
+    disableBc: true, // 禁用自动广播
+    params: { 
+      version: '1.3' 
+    }
+  }
     )
+    wsProvider.connect()
      ydoc.on('update', (update) => {
       console.log(update,'update')
      })
-      quill.on('text-change', (delta, oldDelta, source) => {
-    const range = quill.getSelection();
-    if (!range) return // 添加空值检查
-
-    const bounds = quill.getBounds(range.index, range.length);
-    if (range && range.length > 0) {
-      quillToolbar.style.top = bounds.top - 48 + 'px';
-      quillToolbar.style.left = bounds.left + 'px';
-    }
-    if (source === 'user') {
-      console.log(delta, 'delta')
-      yText.applyDelta(delta.ops); 
-    }
-  })
     // 等待连接建立后再创建binding
     wsProvider.on('status', (event) => {
       console.log('WebSocket状态:', event.status)
@@ -383,20 +379,22 @@ onMounted(() => {
   })
 
   //当位置改变时，工具栏跟着变动
-  // quill.on('text-change', (delta, oldDelta, source) => {
-  //   const range = quill.getSelection();
-  //   if (!range) return // 添加空值检查
+  quill.on('text-change', (delta, oldDelta, source) => {
+    const range = quill.getSelection();
+    if (!range) return // 添加空值检查
 
-  //   const bounds = quill.getBounds(range.index, range.length);
-  //   if (range && range.length > 0) {
-  //     quillToolbar.style.top = bounds.top - 48 + 'px';
-  //     quillToolbar.style.left = bounds.left + 'px';
-  //   }
-  //   if (source === 'user') {
-  //     console.log(delta, 'delta')
-  //     yText.applyDelta(delta.ops); 
-  //   }
-  // })
+    const bounds = quill.getBounds(range.index, range.length);
+    if (range && range.length > 0) {
+      quillToolbar.style.top = bounds.top - 48 + 'px';
+      quillToolbar.style.left = bounds.left + 'px';
+    }
+    if (source === 'user') {
+      console.log(delta, 'delta')
+      if (ydoc) {
+        console.log(ydoc, '数据')
+      }
+    }
+  })
 
   renderCodeMirrorBlocks()
   const observer = new MutationObserver(() => {
