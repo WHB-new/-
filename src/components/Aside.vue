@@ -145,7 +145,7 @@
 <script setup>
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { ref, onMounted, watch } from 'vue';
-import { addFile, getFileList,editFile} from '@/api/file';
+import { addFile, getFileList,editFile,fileListDetail} from '@/api/file';
 import { ElMessage } from 'element-plus';
 //控制菜单
 const activeIndex = ref('file')
@@ -166,8 +166,8 @@ isShowName.value = true
 // 处理文件点击
 const handleEnterFile = async (id, index) => {
   activeIndex.value = `file-${id}`
-  // const userId = sessionStorage.getItem('userId')
-  // const res = await fileListDetail(id,userId)
+  const userId = sessionStorage.getItem('userId')
+  const res = await fileListDetail(id,userId)
   router.push({
     name: 'content',
     params: {
