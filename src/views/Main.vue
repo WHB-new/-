@@ -20,12 +20,9 @@
 </template>
 
 <script setup>
-import router from '@/router'
 import Aside from '@/components/Aside.vue'
 import { useHomeStore } from '@/store/home';
-import { onMounted ,onUnmounted} from 'vue';
 const homeStore = useHomeStore()
-const Authorization = sessionStorage.getItem('Authorization')
 </script>
 
 <style lang="scss" scoped>

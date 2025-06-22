@@ -142,7 +142,6 @@ import { EditorView, keymap } from '@codemirror/view'
 import { EditorState } from '@codemirror/state'
 import { javascript } from '@codemirror/lang-javascript'
 import { oneDark } from '@codemirror/theme-one-dark'
-import { fileListDetail } from '@/api/file';
 import { useRoute,useRouter} from 'vue-router';
 //yjs部分
 import * as Y from 'yjs'
@@ -202,7 +201,7 @@ const initYjsConnection = (fileId, quillInstance) => {
 
     // 创建WebSocket连接，不传递awareness配置
     wsProvider = new WebsocketProvider(
-      'ws://localhost:8001/onlineEdit',
+      `ws://localhost:8001/onlineEdit/${sessionStorage.getItem('userId')}`,
       fileId,
       ydoc
     )
