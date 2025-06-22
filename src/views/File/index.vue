@@ -22,7 +22,7 @@
       </div>
       <!-- 列表区域 -->
       <div class="list">
-        <el-table :data="fileData" style="width: 100%" row-key="_id">
+        <el-table :data="fileData" style="width: 100%" row-key="_id" @row-click="handleClick">
            <el-table-column type="selection" width="28px" :selectable="selectable" style="border-radius: 5px;"/>
             <el-table-column  label="所有文档" min-width="200px" prop="title">
               <template #default="scope">
@@ -82,11 +82,12 @@
 <script setup>
 import Nav from '@/components/Nav.vue';
 import {ref,onMounted} from 'vue'
-import { useRouter } from 'vue-router';
+import { useRouter,useRoute } from 'vue-router';
 import {addFile,getFileList,getRecentFile} from '@/api/file'
 const isActive = ref(1)
 //假数据，后期更改
 const router = useRouter()
+const route = useRoute()
 const fileData =ref([
 ])
 const handleAdd = ()=>{
@@ -104,16 +105,20 @@ const handleAdd = ()=>{
 const handleDelete = ()=>{
 
 }
+//点击文件新开页面
+const handleClick = (row)=>{
+   const url = router.resolve({name:'content',params:{insertedId:row._id}})
+   window.open(url.href,'_blank')
+}
 onMounted(()=>{
   const userId=sessionStorage.getItem('userId')
  getRecentFile(userId).then(res=>{
   res.data.data.forEach(item=>{
     item.recentlyOpen[0].recentlyOpenTime = changeTime(item.recentlyOpen[0].recentlyOpenTime)
   })
-  console.log(res.data.data)
   fileData.value = res.data.data
  }).catch(err=>{
-  console.log(err)
+
  })
  
 })

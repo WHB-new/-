@@ -187,7 +187,7 @@ const initYjsConnection = (fileId, quillInstance) => {
 
   if (ydoc) {
     try {
-      ydoc.destroy()
+      // ydoc.destroy()
       ydoc = null
     } catch (e) {
       console.log('销毁ydoc时出错:', e)
@@ -198,14 +198,28 @@ const initYjsConnection = (fileId, quillInstance) => {
     // 创建新的连接
     ydoc = new Y.Doc()
     const yText = ydoc.getText('quill')
-
-    // 创建WebSocket连接，不传递awareness配置
     wsProvider = new WebsocketProvider(
       `ws://localhost:8001/onlineEdit/${sessionStorage.getItem('userId')}`,
       fileId,
       ydoc
     )
+     ydoc.on('update', (update) => {
+      console.log(update,'update')
+     })
+      quill.on('text-change', (delta, oldDelta, source) => {
+    const range = quill.getSelection();
+    if (!range) return // 添加空值检查
 
+    const bounds = quill.getBounds(range.index, range.length);
+    if (range && range.length > 0) {
+      quillToolbar.style.top = bounds.top - 48 + 'px';
+      quillToolbar.style.left = bounds.left + 'px';
+    }
+    if (source === 'user') {
+      console.log(delta, 'delta')
+      yText.applyDelta(delta.ops); 
+    }
+  })
     // 等待连接建立后再创建binding
     wsProvider.on('status', (event) => {
       console.log('WebSocket状态:', event.status)
@@ -236,8 +250,6 @@ const initYjsConnection = (fileId, quillInstance) => {
     wsProvider.on('connection-error', (err) => {
       console.error('WebSocket连接错误:', err)
     })
-
-    console.log('开始建立连接:', fileId)
   } catch (e) {
     console.error('建立Yjs连接时出错:', e)
   }
@@ -371,22 +383,20 @@ onMounted(() => {
   })
 
   //当位置改变时，工具栏跟着变动
-  quill.on('text-change', (delta, oldDelta, source) => {
-    const range = quill.getSelection();
-    if (!range) return // 添加空值检查
+  // quill.on('text-change', (delta, oldDelta, source) => {
+  //   const range = quill.getSelection();
+  //   if (!range) return // 添加空值检查
 
-    const bounds = quill.getBounds(range.index, range.length);
-    if (range && range.length > 0) {
-      quillToolbar.style.top = bounds.top - 48 + 'px';
-      quillToolbar.style.left = bounds.left + 'px';
-    }
-    if (source === 'user') {
-      console.log(delta, 'delta')
-      if (ydoc) {
-        console.log(ydoc, '数据')
-      }
-    }
-  })
+  //   const bounds = quill.getBounds(range.index, range.length);
+  //   if (range && range.length > 0) {
+  //     quillToolbar.style.top = bounds.top - 48 + 'px';
+  //     quillToolbar.style.left = bounds.left + 'px';
+  //   }
+  //   if (source === 'user') {
+  //     console.log(delta, 'delta')
+  //     yText.applyDelta(delta.ops); 
+  //   }
+  // })
 
   renderCodeMirrorBlocks()
   const observer = new MutationObserver(() => {
