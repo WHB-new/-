@@ -94,9 +94,9 @@
           <el-form-item label="简介" label-position="Left" label-width="auto" style="margin-left:12px;" prop="intro">
             <el-input v-model="form.intro" placeholder="请输入简介"></el-input>
           </el-form-item>
-          <el-form-item label="权限" label-position="Left" label-width="auto" prop="permission">
+          <!-- <el-form-item label="权限" label-position="Left" label-width="auto" prop="permission">
              后续功能添加
-          </el-form-item>
+          </el-form-item> -->
       </el-form>
     </template>
     <template #footer>
@@ -137,6 +137,7 @@ const handleAddFile = ()=>{
   const baseId=sessionStorage.getItem('defaultKnowledgeId')
     addFile({
       baseId,
+       ownerId: sessionStorage.getItem('userId'),
     }).then(res=>{
       router.push({name:'content',params:{insertedId:res.data.insertedId}})
       getFileList(baseId)

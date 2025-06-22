@@ -3,7 +3,9 @@
     <div class="header">
       <div class="logo">
         <!-- 换logo -->
-        <div class="img">图</div>
+        <div class="img">
+          <svg t="1750581584828" class="icon" viewBox="0 0 1088 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="11226" width="16" height="16"><path d="M1056 512h-64V32A32 32 0 0 0 960 0H448a32 32 0 0 0-32 32V128H128a32 32 0 0 0-32 32V512h-64a32 32 0 0 0-32 32v448a32 32 0 0 0 32 32h1024a32 32 0 0 0 32-32v-448a32 32 0 0 0-32-32z m-576-448h448v448h-192a32 32 0 0 0-32 32V640H480z m-320 128h256v448H384V544a32 32 0 0 0-32-32h-192zM1024 960H64V576h256v96a32 32 0 0 0 32 32h384a32 32 0 0 0 32-32V576h256z" fill="#115ECE" p-id="11227"></path><path d="M576 256h256a32 32 0 0 0 32-32 32 32 0 0 0-32-32H576a32.64 32.64 0 0 0-32 32.64A32 32 0 0 0 576 256zM576 448h256a32 32 0 0 0 32-32 32 32 0 0 0-32-32H576a32.64 32.64 0 0 0-32 32.64A32 32 0 0 0 576 448z" fill="#115ECE" p-id="11228"></path></svg>
+        </div>
         <div class="txt">文档系统</div>
       </div>
       <!-- 后续功能添加，暂时不管 -->
@@ -80,12 +82,42 @@
                       fill="#444444" p-id="7519"></path>
                   </svg>
                 </div>
-                <div class="more"><svg t="1749800207132" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                
+                  <el-dropdown placement="bottom">
+      <template #default>
+        <div class="more"><svg t="1749800207132" class="icon" viewBox="0 0 1024 1024" version="1.1"
                     xmlns="http://www.w3.org/2000/svg" p-id="5631" width="16" height="16">
                     <path
                       d="M841.085552 395.21211c-62.669318 0-113.472378 49.541323-113.472378 110.642936 0 61.093427 50.80306 110.652146 113.472378 110.652146 62.685691 0 113.487727-49.559742 113.487727-110.652146C954.573279 444.75241 903.77022 395.21211 841.085552 395.21211zM500.653069 395.21211c-62.668295 0-113.487727 49.541323-113.487727 110.642936 0 61.093427 50.820456 110.652146 113.487727 110.652146 62.669318 0 113.472378-49.559742 113.472378-110.652146C614.125447 444.75241 563.322387 395.21211 500.653069 395.21211zM182.915471 395.21211c-62.686714 0-113.488751 49.541323-113.488751 110.642936 0 61.093427 50.802036 110.652146 113.488751 110.652146 62.669318 0 113.471354-49.559742 113.471354-110.652146C296.385802 444.75241 245.583766 395.21211 182.915471 395.21211z"
                       p-id="5632"></path>
                   </svg></div>
+      </template>
+      <template #dropdown>
+        <el-dropdown-menu>
+          <el-dropdown-item>
+           <div style="display:flex;align-items: center;" @click="changeFileName(item._id)">
+              <div style="display: flex;justify-content: center;align-items: center;margin-right:5px;width:16px;height: 16px;">
+                <svg t="1750569827551" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="6423" width="16" height="16"><path d="M950.857143 950.857143H73.142857V73.142857h373.028572v73.142857H146.285714v731.428572h731.428572V548.571429h73.142857z" fill="" p-id="6424"></path><path d="M899.657143 160.914286l-51.2-51.2L292.571429 665.6l51.2 51.2 555.885714-555.885714z" fill="" p-id="6425"></path></svg>
+              </div>
+              <div style="font-size: 14px;">
+                重命名
+              </div>
+            </div>
+          </el-dropdown-item>
+       
+          <el-dropdown-item>
+            <div style="display:flex;align-items: center;">
+              <div style="display: flex;justify-content: center;align-items: center;margin-right:5px;width:16px;height: 16px;">
+                <svg t="1750569983191" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="7415" width="16" height="16"><path d="M380 455a8 8 0 0 1 8-8h64a8 8 0 0 1 8 8v240a8 8 0 0 1-8 8h-64a8 8 0 0 1-8-8V455zM644 455a8 8 0 0 0-8-8h-64a8 8 0 0 0-8 8v240a8 8 0 0 0 8 8h64a8 8 0 0 0 8-8V455z" fill="#323338" p-id="7416"></path><path d="M321 212V96c0-17.673 14.327-32 32-32h320c17.673 0 32 14.327 32 32v116h183a8 8 0 0 1 8 8v64a8 8 0 0 1-8 8h-55v635c0 17.673-14.327 32-32 32H225c-17.673 0-32-14.327-32-32V292h-58a8 8 0 0 1-8-8v-64a8 8 0 0 1 8-8h186z m80-68v68h224v-68H401zM273 292v587h480V292H273z" fill="#323338" p-id="7417"></path></svg>
+              </div>
+              <div style="font-size: 14px;">
+               删除
+              </div>
+            </div>
+          </el-dropdown-item>
+        </el-dropdown-menu>
+      </template>
+    </el-dropdown>
               </div>
             </div>
           </div>
@@ -93,25 +125,44 @@
       </div>
     </div>
   </div>
-
+  <!-- 重命名 -->
+   <el-dialog  width="500" align-center v-model="isShowName" :show-close="false">
+       <template #default>
+        <el-input v-model="changedName" placeholder="请输入你想修改的名字"></el-input>
+       </template>
+       <template #footer>
+       <el-button size="small">取消</el-button>
+      <el-button
+        type="primary"
+        size="small"
+      >
+        确定
+      </el-button>
+       </template>
+   </el-dialog>
 </template>
 
 <script setup>
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { ref, onMounted, watch } from 'vue';
-import { addFile, getFileList,} from '@/api/file';
+import { addFile, getFileList,editFile} from '@/api/file';
 import { ElMessage } from 'element-plus';
 //控制菜单
 const activeIndex = ref('file')
 const route = useRoute()
 const router = useRouter()
 const fileList = ref([])
-
+const isShowName = ref(false)
+const changedName = ref('')
 // 处理菜单点击
 const handleMenuClick = (index) => {
   activeIndex.value = index
 }
-
+// 重命名
+const changeFileName = async(id)=>{
+//  let res= await editFile(id,'修改后的名字')
+isShowName.value = true
+}
 // 处理文件点击
 const handleEnterFile = async (id, index) => {
   activeIndex.value = `file-${id}`
@@ -168,6 +219,7 @@ const handleAddFile = async () => {
   const baseId = sessionStorage.getItem('defaultKnowledgeId')
   let res = await addFile({
     baseId,
+    ownerId: sessionStorage.getItem('userId'),
   })
   if (res.data.code === 201) {
     router.push({
@@ -212,7 +264,10 @@ const handleAddFile = async () => {
       .img {
         width: 20px;
         height: 20px;
-        margin-left: 34px;
+        margin-left: 25px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
       }
 
       .txt {

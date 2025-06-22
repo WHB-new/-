@@ -37,3 +37,14 @@ export function getRecentFile(userId){
   }
  })
 }
+//编辑文档数据
+export function editFile(id,title){
+  return request({
+    url:'/document/updateDoc',
+    method:'get',
+    params:{
+      id,
+      title
+    }
+  })
+}

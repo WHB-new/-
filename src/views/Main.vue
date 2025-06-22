@@ -35,7 +35,7 @@ const homeStore = useHomeStore()
     padding:4px;
     position:absolute;
     left:20px;
-    top:20px;
+    top:24px;
     display: flex;
     justify-content: center;
     align-items: center;

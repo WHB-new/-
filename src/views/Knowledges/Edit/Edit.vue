@@ -136,7 +136,8 @@ const selectItem = (item) => {
 // 添加文件
 const addNewFile =async () => {
  let res = await addFile({
-    baseId:route.params.id
+    baseId:route.params.id,
+     ownerId: sessionStorage.getItem('userId'),
   })
   if(res.data.code == 201){
 getList()

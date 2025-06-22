@@ -33,23 +33,44 @@
                   {{scope.row.title}}
                   </div>
                   <div class="intro">
-                   文件介绍
+                   {{scope.row.baseName }}
                   </div>
                 </div>
                 </div>
               </template>
             </el-table-column>
             
-            <el-table-column property="name" label="不限归属" width="356px">
+            <el-table-column property="name" label="不限归属" width="356px" prop="recentlyOpen[0].recentlyOpenUserId">
             </el-table-column>
             
             <el-table-column property="time" label="最近打开" width="356px" prop="recentlyOpen[0].recentlyOpenTime">
             </el-table-column>
             <el-table-column  label="操作" width="76px" >
               <template #default>
-                <div class="caozuo" style="display:flex;align-items:center;margin-left:3px;">
+                
+                <el-dropdown placement="bottom-start">
+      <template #default>
+<div class="caozuo" style="display:flex;align-items:center;margin-left:3px;">
                   <svg t="1749795603824" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3324" width="16" height="16"><path d="M841.085552 395.21211c-62.669318 0-113.472378 49.541323-113.472378 110.642936 0 61.093427 50.80306 110.652146 113.472378 110.652146 62.685691 0 113.487727-49.559742 113.487727-110.652146C954.573279 444.75241 903.77022 395.21211 841.085552 395.21211zM500.653069 395.21211c-62.668295 0-113.487727 49.541323-113.487727 110.642936 0 61.093427 50.820456 110.652146 113.487727 110.652146 62.669318 0 113.472378-49.559742 113.472378-110.652146C614.125447 444.75241 563.322387 395.21211 500.653069 395.21211zM182.915471 395.21211c-62.686714 0-113.488751 49.541323-113.488751 110.642936 0 61.093427 50.802036 110.652146 113.488751 110.652146 62.669318 0 113.471354-49.559742 113.471354-110.652146C296.385802 444.75241 245.583766 395.21211 182.915471 395.21211z" p-id="3325"></path></svg>
                 </div>
+      </template>
+      <template #dropdown>
+        <el-dropdown-menu>
+          <el-dropdown-item>
+          <template #default>
+ <div style="display:flex;align-items:center;" @click="handleDelete">
+            <div style="display: flex;align-items: center;justify-content: flex-start;width: 16px;height: 16px;">
+               <svg t="1750569983191" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="7415" width="16" height="16"><path d="M380 455a8 8 0 0 1 8-8h64a8 8 0 0 1 8 8v240a8 8 0 0 1-8 8h-64a8 8 0 0 1-8-8V455zM644 455a8 8 0 0 0-8-8h-64a8 8 0 0 0-8 8v240a8 8 0 0 0 8 8h64a8 8 0 0 0 8-8V455z" fill="#323338" p-id="7416"></path><path d="M321 212V96c0-17.673 14.327-32 32-32h320c17.673 0 32 14.327 32 32v116h183a8 8 0 0 1 8 8v64a8 8 0 0 1-8 8h-55v635c0 17.673-14.327 32-32 32H225c-17.673 0-32-14.327-32-32V292h-58a8 8 0 0 1-8-8v-64a8 8 0 0 1 8-8h186z m80-68v68h224v-68H401zM273 292v587h480V292H273z" fill="#323338" p-id="7417"></path></svg>
+            </div>
+            <div style="font-size: 14px;margin-left:6px;">
+              删除
+            </div>
+           </div>
+          </template>
+          </el-dropdown-item>
+        </el-dropdown-menu>
+      </template>
+    </el-dropdown>
               </template>
             </el-table-column>
         </el-table>
@@ -72,6 +93,7 @@ const handleAdd = ()=>{
  const baseId=sessionStorage.getItem('defaultKnowledgeId')
     addFile({
       baseId,
+       ownerId: sessionStorage.getItem('userId'),
     }).then(res=>{
        getFileList(baseId)
       router.push({name:'content',params:{insertedId:res.data.insertedId}})
@@ -79,7 +101,9 @@ const handleAdd = ()=>{
       console.log(err)
     })
 }
+const handleDelete = ()=>{
 
+}
 onMounted(()=>{
   const userId=sessionStorage.getItem('userId')
  getRecentFile(userId).then(res=>{
@@ -213,6 +237,20 @@ height: 48px;
   }
 }
 
+  }
+  .list{
+    .right{
+      .name{
+        font-size: 14px;
+        line-height: 14px;
+        margin-bottom: 3px;
+        color:#1f2329
+      }
+      .intro{
+        font-size: 12px;
+        color:#646A73;
+      }
+    }
   }
 }
 .caozuo{
