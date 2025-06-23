@@ -114,7 +114,9 @@ import { useKnowledgeStore } from '@/store/knowledgeStore';
 import Nav from '@/components/Nav.vue';
 import {addKnowledge} from '@/api/knowledge'
 import { ElMessage } from 'element-plus';
-import { addFile,getFileList} from '@/api/file';
+import { addFile} from '@/api/file';
+import {useHomeStore} from '@/store/home'
+const homeStore = useHomeStore()
 //知识库新增弹窗
 const dialogVisible = ref(false)
 //知识库表单信息
@@ -139,8 +141,9 @@ const handleAddFile = ()=>{
       baseId,
        ownerId: sessionStorage.getItem('userId'),
     }).then(res=>{
+      homeStore.getFileList()
       router.push({name:'content',params:{insertedId:res.data.insertedId}})
-      getFileList(baseId)
+      
     }).catch(err=>{
       console.log(err)
     })

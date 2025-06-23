@@ -16,8 +16,8 @@
         <!-- <div class="page-header">
         
         </div> -->
-        <div class="page-children" id="children" ref="quillEditor" style="padding:15px 15px;">
-
+        <div class="page-children" id="children" ref="quillEditor" style="padding:0!important;">
+        
         </div>
 
         <!-- Quill 工具栏 -->

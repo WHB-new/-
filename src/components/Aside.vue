@@ -55,7 +55,7 @@
           </div>
         </div>
         <div class="file-list">
-          <div class="li" v-for="(item, index) in fileList" :key="item._id" @click="handleEnterFile(item._id, index)"
+          <div class="li" v-for="(item, index) in homeStore.fileList" :key="item._id" @click="handleEnterFile(item._id, index)"
             :class="{ active: activeIndex === `file-${item._id}` }">
             <div class="left">
               <div style="width: 20px;height: 20px;"></div>
@@ -145,13 +145,15 @@
 <script setup>
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { ref, onMounted, watch } from 'vue';
-import { addFile, getFileList,editFile,fileListDetail} from '@/api/file';
+import { addFile, getFileList,fileListDetail} from '@/api/file';
 import { ElMessage } from 'element-plus';
+import {useHomeStore} from '@/store/home'
+const homeStore = useHomeStore()
 //控制菜单
 const activeIndex = ref('file')
 const route = useRoute()
 const router = useRouter()
-const fileList = ref([])
+// const fileList = ref([])
 const isShowName = ref(false)
 const changedName = ref('')
 // 处理菜单点击
@@ -160,7 +162,6 @@ const handleMenuClick = (index) => {
 }
 // 重命名
 const changeFileName = async(id)=>{
-//  let res= await editFile(id,'修改后的名字')
 isShowName.value = true
 }
 // 处理文件点击
@@ -199,22 +200,9 @@ watch(() => route.params.insertedId, (newId) => {
 }, { immediate: true })
 
 onMounted(() => {
- getList()
+homeStore.getFileList()
 })
-//获取文档列表
-const getList = ()=>{
-  const id = sessionStorage.getItem('defaultKnowledgeId')
-   getFileList(id).then(res => {
-    console.log(res)
-    if (res.data.code === 200) {
-      fileList.value = res.data.data
-      console.log(res.data.data)
-    }
-  }).catch(err => {
-    console.log(err)
-  
-  })
-}
+
 const handleAddFile = async () => {
   const baseId = sessionStorage.getItem('defaultKnowledgeId')
   let res = await addFile({
@@ -228,7 +216,7 @@ const handleAddFile = async () => {
         insertedId: res.data.insertedId
       },
     })
-     getList(id)
+     homeStore.getFileList()
     ElMessage.success('添加文件成功')
   }
 }

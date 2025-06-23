@@ -12,11 +12,11 @@ export function getFileList(baseId){
    url:'/document/getDocByBaseId',
    method:'get',
    params:{
-    baseId:'685936a2a0caaf9d70b99d64'
+    baseId
    }
   })
 }
-// 根据id查询文件
+//根据id查询文件
 export function fileListDetail(id,userId){
   return request({
     url:'/document/getDoc',
@@ -36,15 +36,4 @@ export function getRecentFile(userId){
     userId
   }
  })
-}
-//编辑文档数据
-export function editFile(id,title){
-  return request({
-    url:'/document/updateDoc',
-    method:'get',
-    params:{
-      id,
-      title
-    }
-  })
 }

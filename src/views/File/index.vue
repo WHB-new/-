@@ -83,7 +83,9 @@
 import Nav from '@/components/Nav.vue';
 import {ref,onMounted} from 'vue'
 import { useRouter,useRoute } from 'vue-router';
-import {addFile,getFileList,getRecentFile} from '@/api/file'
+import {addFile,getRecentFile} from '@/api/file'
+import { useHomeStore } from '@/store/home';
+const homeStore = useHomeStore();
 const isActive = ref(1)
 //假数据，后期更改
 const router = useRouter()
@@ -96,7 +98,7 @@ const handleAdd = ()=>{
       baseId,
        ownerId: sessionStorage.getItem('userId'),
     }).then(res=>{
-       getFileList(baseId)
+       homeStore.getFileList()
       router.push({name:'content',params:{insertedId:res.data.insertedId}})
     }).catch(err=>{
       console.log(err)
