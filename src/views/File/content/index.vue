@@ -188,6 +188,7 @@ const initYjsConnection = (fileId, quillInstance) => {
   try {
     ydoc = new Y.Doc()
     const yText = ydoc.getText('quill')
+    console.log(yText,'权威')
     wsProvider = new WebsocketProvider(
       `ws://localhost:8001/onlineEdit/${sessionStorage.getItem('userId')}`,
       fileId,
@@ -204,6 +205,12 @@ const initYjsConnection = (fileId, quillInstance) => {
           const quillEditor = quillInstance.quill || quillInstance
           binding = new QuillBinding(yText, quillEditor, wsProvider.awareness)
         }
+        if(yText.length == 1){
+          fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
+    console.log(res.data.content,'res')
+    quill.setContents(JSON.parse(res.data.content))
+  })
+        }
       }
     })
     wsProvider.on('connection-error', (err) => {
@@ -217,6 +224,7 @@ const initYjsConnection = (fileId, quillInstance) => {
 
 // 监听路由参数变化
 watch(() => route.params.insertedId, (newId, oldId) => {
+  console.log('变化了吗')
   if (newId && newId !== oldId && quill) {
     console.log('路由参数变化:', oldId, '->', newId)
     console.log('当前quill实例:', quill)
@@ -226,10 +234,11 @@ watch(() => route.params.insertedId, (newId, oldId) => {
     }).then((res)=>{
       console.log('保存成功',res)
     })
-    fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
-    console.log(res.data.content,'res')
-    quill.setContents(res.data.content)
-  })
+  //   fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
+  //   console.log(res.data.content,'res')
+  //   quill.setContents(JSON.parse(res.data.content))
+
+  // })
     // 延迟执行，确保DOM更新完成
     nextTick(() => {
       initYjsConnection(newId, quill)
@@ -237,6 +246,7 @@ watch(() => route.params.insertedId, (newId, oldId) => {
   }
 }, { immediate: false })
 onBeforeRouteLeave((to,from)=>{
+  console.log('onMounted文件挂载了')
    saveFile(from.params.insertedId,{
       content:JSON.stringify(quill.getContents())
     }).then((res)=>{
@@ -294,6 +304,7 @@ const handleFormatChange = (value) => {
 };
 let routeId = ref(null)
 onMounted(() => {
+  console.log('onMounted文件挂载了')
   if (sessionStorage.getItem('lastUrl')) {
     isShowClose.value = true
   }
@@ -338,10 +349,9 @@ onMounted(() => {
   const quillToolbar = document.querySelector('#toolbar');
   quill = new Quill('#children', options);
   // 延迟初始化Yjs连接，确保Quill完全初始化
-  fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
-    console.log(res.data.content,'res')
-    quill.setContents(res.data.content)
-  })
+  // fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
+  //     quill.setContents(JSON.parse(res.data.content))
+  // })
   nextTick(() => {
     if (route.params.insertedId) {
       initYjsConnection(route.params.insertedId, quill)
