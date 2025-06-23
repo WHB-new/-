@@ -130,6 +130,7 @@
 </template>
 
 <script setup>
+import { onBeforeRouteLeave } from 'vue-router';
 // 富文本引入
 import Quill from 'quill';
 import { onMounted, ref, onBeforeUnmount, watch, onUnmounted, nextTick } from 'vue';
@@ -153,6 +154,7 @@ import * as Y from 'yjs'
 import { QuillBinding } from 'y-quill';
 import { WebsocketProvider } from 'y-websocket';
 import { WebrtcProvider } from 'y-webrtc';
+import {saveFile,fileListDetail} from '@/api/file'
 let quill
 let ydoc
 let wsProvider
@@ -218,13 +220,29 @@ watch(() => route.params.insertedId, (newId, oldId) => {
   if (newId && newId !== oldId && quill) {
     console.log('路由参数变化:', oldId, '->', newId)
     console.log('当前quill实例:', quill)
+    //用于保存跳转到另一文件的情况
+    saveFile(oldId,{
+      content:JSON.stringify(quill.getContents())
+    }).then((res)=>{
+      console.log('保存成功',res)
+    })
+    fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
+    console.log(res.data.content,'res')
+    quill.setContents(res.data.content)
+  })
     // 延迟执行，确保DOM更新完成
     nextTick(() => {
       initYjsConnection(newId, quill)
     })
   }
 }, { immediate: false })
-
+onBeforeRouteLeave((to,from)=>{
+   saveFile(from.params.insertedId,{
+      content:JSON.stringify(quill.getContents())
+    }).then((res)=>{
+      console.log(from,'from')
+    })
+})
 //代码块
 const codeMirrorInstances = ref(new Map())
 class CodeMirrorBlock extends BlockEmbed {
@@ -274,7 +292,7 @@ const handleFormatChange = (value) => {
     // 无需操作（已清除格式）
   }
 };
-
+let routeId = ref(null)
 onMounted(() => {
   if (sessionStorage.getItem('lastUrl')) {
     isShowClose.value = true
@@ -320,6 +338,10 @@ onMounted(() => {
   const quillToolbar = document.querySelector('#toolbar');
   quill = new Quill('#children', options);
   // 延迟初始化Yjs连接，确保Quill完全初始化
+  fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
+    console.log(res.data.content,'res')
+    quill.setContents(res.data.content)
+  })
   nextTick(() => {
     if (route.params.insertedId) {
       initYjsConnection(route.params.insertedId, quill)
@@ -379,6 +401,12 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  // saveFile(route.params.insertedId,{
+  //     content:JSON.stringify(quill.getContents())
+  //   }).then((res)=>{
+  //     console.log('保存成功',res)
+  //   })
+
   // 清理Yjs连接
   if (binding) {
     try {
@@ -411,6 +439,7 @@ onBeforeUnmount(() => {
   wsProvider = null
   binding = null
   ydoc = null
+   
 });
 // 当从知识库进来的删除
 const handleClose = () => {

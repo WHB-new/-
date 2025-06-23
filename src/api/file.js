@@ -17,11 +17,11 @@ export function getFileList(baseId){
   })
 }
 //根据id查询文件
-export function fileListDetail(id,userId){
+export function fileListDetail(docId,userId){
   return request({
     url:'/document/getDoc',
     params:{
-      docId:id,
+      docId,
       userId
     },
     method:'get'
@@ -36,4 +36,12 @@ export function getRecentFile(userId){
     userId
   }
  })
+}
+//保存文档内容
+export function saveFile(params,data){
+  return request({
+    url:`/document/updateDoc/${params}`,
+    method:'put',
+    data
+  })
 }

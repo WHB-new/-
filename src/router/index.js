@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-
+import {saveFile} from '@/api/file'
 const routes = [
   {
     path:'/',
@@ -60,5 +60,6 @@ router.beforeEach((to, from, next) => {
   } else {
     next()
   }
+ 
 })
 export default router
