@@ -3,9 +3,14 @@
     <!-- <div class="nav">
       预留区域
     </div> -->
-     <div class="close" v-if="isShowClose" @click="handleClose">
-          <svg t="1750512589823" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2618" width="16" height="16"><path d="M729.6 931.2l-416-425.6 416-416c9.6-9.6 9.6-25.6 0-35.2-9.6-9.6-25.6-9.6-35.2 0l-432 435.2c-9.6 9.6-9.6 25.6 0 35.2l432 441.6c9.6 9.6 25.6 9.6 35.2 0C739.2 956.8 739.2 940.8 729.6 931.2z" p-id="2619"></path></svg>
-         </div>
+    <div class="close" v-if="isShowClose" @click="handleClose">
+      <svg t="1750512589823" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
+        p-id="2618" width="16" height="16">
+        <path
+          d="M729.6 931.2l-416-425.6 416-416c9.6-9.6 9.6-25.6 0-35.2-9.6-9.6-25.6-9.6-35.2 0l-432 435.2c-9.6 9.6-9.6 25.6 0 35.2l432 441.6c9.6 9.6 25.6 9.6 35.2 0C739.2 956.8 739.2 940.8 729.6 931.2z"
+          p-id="2619"></path>
+      </svg>
+    </div>
     <div class="content">
       <div class="content-center">
         <!-- <div class="page-header">
@@ -142,7 +147,7 @@ import { EditorView, keymap } from '@codemirror/view'
 import { EditorState } from '@codemirror/state'
 import { javascript } from '@codemirror/lang-javascript'
 import { oneDark } from '@codemirror/theme-one-dark'
-import { useRoute,useRouter} from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 //yjs部分
 import * as Y from 'yjs'
 import { QuillBinding } from 'y-quill';
@@ -161,91 +166,79 @@ const router = useRouter()
 const isShowClose = ref(false)
 // 初始化Yjs连接的函数
 const initYjsConnection = (fileId, quillInstance) => {
-  // 确保quill实例存在且有效
+  console.log('initYjsConnection 被调用，fileId:', fileId)
+
   if (!quillInstance) {
+    console.log('Quill实例为空，跳过Yjs连接')
     return
   }
-  // 先销毁旧的连接
+
+  // 1. 销毁旧的实例，顺序很重要
   if (binding) {
-    try {
-      binding.destroy()
-      binding = null
-    } catch (e) {
-      console.log('销毁binding时出错:', e)
-    }
+    binding.destroy()
+    binding = null
   }
-
   if (wsProvider) {
-    try {
-      wsProvider.disconnect()
-      wsProvider.destroy()
-      wsProvider = null
-    } catch (e) {
-      console.log('销毁wsProvider时出错:', e)
-    }
+    wsProvider.disconnect()
+    wsProvider.destroy()
+    wsProvider = null
   }
-
+  // 必须销毁旧的 ydoc
   if (ydoc) {
-    try {
-      // ydoc.destroy()
-      ydoc = null
-    } catch (e) {
-      console.log('销毁ydoc时出错:', e)
-    }
+    ydoc.destroy()
+    ydoc = null
   }
 
+  // 2. 创建新的实例
   try {
-    // 创建新的连接
     ydoc = new Y.Doc()
     const yText = ydoc.getText('quill')
-const update = Y.encodeStateAsUpdate(ydoc);
-console.log('前端生成的更新:', update.length > 0); // 应为 true
+
+    
+    // 你的 WebSocket URL 结构比较特殊，请确保后端服务能处理 /onlineEdit/:userId/:fileId 这样的路径
     wsProvider = new WebsocketProvider(
       `ws://localhost:8001/onlineEdit/${sessionStorage.getItem('userId')}`,
       fileId,
       ydoc,
-       {
-    autoConnect:false, // 禁用自动连接
-    disableBc: true, // 禁用自动广播
-    params: { 
-      version: '1.3' 
-    }
-  }
+      {
+        params:{
+          debug:true,
+          encoding: 'binary' 
+        }
+      }
     )
-    wsProvider.connect()
-     ydoc.on('update', (update) => {
-      console.log(update,'update')
-     })
-    // 等待连接建立后再创建binding
+  //  wsProvider.binaryType = 'arraybuffer'
+// 这个监听器是用来调试的。如果你在前端输入内容，这里应该会打印日志。
+const doc1 = new Y.Doc()
+    ydoc.on('update', (update) => {
+       console.log('前端发送数据长度:', update.length,update);
+  // const newDate = Y.encodeStateAsUpdate(ydoc);
+  // 通过WebSocket发送二进制数据
+  // wsProvider.ws.send(newDate);
+  // console.log(newDate,'newDate')
+  // Y.applyUpdate(doc1, newDate)
+  // wsProvider.ws.send(newDate)
+  // console.log(doc1,'doc1')
+  // const testDoc = new Y.Doc()
+  // const newDate1 = Y.encodeStateAsUpdate(testDoc);
+  // wsProvider.ws.send(newDate,{fin:true})
+  // Y.applyUpdate(testDoc, newDate)
+  // console.log(newDate1,'newDate1')
+  // console.log('更新验证通过')
+    })
     wsProvider.on('status', (event) => {
-      console.log('WebSocket状态:', event.status)
       if (event.status === 'connected') {
-        // 连接成功后创建binding
         if (!binding && quillInstance) {
-          // 尝试使用quillInstance.quill
           const quillEditor = quillInstance.quill || quillInstance
-          wsProvider.awareness.setLocalState({
-            user: {
-              id: sessionStorage.getItem('defaultKnowledgeId'),
-              name: sessionStorage.getItem('username'),
-              color: '#ff0000',
-            }
-          })
           binding = new QuillBinding(yText, quillEditor, wsProvider.awareness)
-          console.log('建立新连接成功:', fileId)
         }
       }
     })
-    wsProvider.awareness.on('change', () => {
-      const users = Array.from(wsProvider.awareness.getStates().values());
-      //后期补用户信息这一块
-      console.log('当前在线用户:', users.length);
-      console.log('用户详情:', users);
-    })
-    // 连接错误处理
+
     wsProvider.on('connection-error', (err) => {
-      console.error('WebSocket连接错误:', err)
+      console.error('WebSocket 连接错误:', err)
     })
+
   } catch (e) {
     console.error('建立Yjs连接时出错:', e)
   }
@@ -314,7 +307,7 @@ const handleFormatChange = (value) => {
 };
 
 onMounted(() => {
-  if(sessionStorage.getItem('lastUrl')){
+  if (sessionStorage.getItem('lastUrl')) {
     isShowClose.value = true
   }
   //注册代码块
@@ -451,7 +444,7 @@ onBeforeUnmount(() => {
   ydoc = null
 });
 // 当从知识库进来的删除
-const handleClose=()=>{
+const handleClose = () => {
   const url = sessionStorage.getItem('lastUrl')
   isShowClose.value = false
   router.push(url)
@@ -853,14 +846,17 @@ button:hover {
   display: flex;
   flex-direction: column;
   height: 100vh;
-.close{
-  position:absolute;
-  top:30px;
-  left:50px;
-  &:hover{
-    cursor:pointer
+
+  .close {
+    position: absolute;
+    top: 30px;
+    left: 50px;
+
+    &:hover {
+      cursor: pointer
+    }
   }
-}
+
   .nav {
     position: absolute;
     top: 0;
