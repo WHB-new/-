@@ -19,3 +19,13 @@ export function login(data){
     data
   })
 }
+//刷新令牌
+export function refreshToken(refreshToken){
+  return request({
+    url:'/login/refreshToken',
+    method:'get',
+    params:{
+      refreshToken
+    }
+  })
+}

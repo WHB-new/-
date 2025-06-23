@@ -106,11 +106,12 @@ const handleDelete = ()=>{
 
 }
 //点击文件新开页面
-const handleClick = (row)=>{
+const handleClick = async(row)=>{
    const url = router.resolve({name:'content',params:{insertedId:row._id}})
    window.open(url.href,'_blank')
 }
 onMounted(()=>{
+  
   const userId=sessionStorage.getItem('userId')
  getRecentFile(userId).then(res=>{
   res.data.data.forEach(item=>{

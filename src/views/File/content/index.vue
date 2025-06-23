@@ -166,14 +166,9 @@ const router = useRouter()
 const isShowClose = ref(false)
 // 初始化Yjs连接的函数
 const initYjsConnection = (fileId, quillInstance) => {
-  console.log('initYjsConnection 被调用，fileId:', fileId)
-
   if (!quillInstance) {
-    console.log('Quill实例为空，跳过Yjs连接')
     return
   }
-
-  // 1. 销毁旧的实例，顺序很重要
   if (binding) {
     binding.destroy()
     binding = null
@@ -183,58 +178,32 @@ const initYjsConnection = (fileId, quillInstance) => {
     wsProvider.destroy()
     wsProvider = null
   }
-  // 必须销毁旧的 ydoc
   if (ydoc) {
     ydoc.destroy()
     ydoc = null
   }
 
-  // 2. 创建新的实例
   try {
     ydoc = new Y.Doc()
     const yText = ydoc.getText('quill')
-
-    
-    // 你的 WebSocket URL 结构比较特殊，请确保后端服务能处理 /onlineEdit/:userId/:fileId 这样的路径
     wsProvider = new WebsocketProvider(
       `ws://localhost:8001/onlineEdit/${sessionStorage.getItem('userId')}`,
       fileId,
       ydoc,
-      {
-        params:{
-          debug:true,
-          encoding: 'binary' 
-        }
-      }
     )
-  //  wsProvider.binaryType = 'arraybuffer'
-// 这个监听器是用来调试的。如果你在前端输入内容，这里应该会打印日志。
-const doc1 = new Y.Doc()
-    ydoc.on('update', (update) => {
-       console.log('前端发送数据长度:', update.length,update);
-  // const newDate = Y.encodeStateAsUpdate(ydoc);
-  // 通过WebSocket发送二进制数据
-  // wsProvider.ws.send(newDate);
-  // console.log(newDate,'newDate')
-  // Y.applyUpdate(doc1, newDate)
-  // wsProvider.ws.send(newDate)
-  // console.log(doc1,'doc1')
-  // const testDoc = new Y.Doc()
-  // const newDate1 = Y.encodeStateAsUpdate(testDoc);
-  // wsProvider.ws.send(newDate,{fin:true})
-  // Y.applyUpdate(testDoc, newDate)
-  // console.log(newDate1,'newDate1')
-  // console.log('更新验证通过')
+    ydoc.on('update', (update,origin) => {
+    console.log('收到更新',{origin,update})
     })
+  
     wsProvider.on('status', (event) => {
       if (event.status === 'connected') {
+        console.log('WebSocket 已连接',route.params.insertedId)
         if (!binding && quillInstance) {
           const quillEditor = quillInstance.quill || quillInstance
           binding = new QuillBinding(yText, quillEditor, wsProvider.awareness)
         }
       }
     })
-
     wsProvider.on('connection-error', (err) => {
       console.error('WebSocket 连接错误:', err)
     })
