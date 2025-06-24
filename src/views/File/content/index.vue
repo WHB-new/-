@@ -205,7 +205,8 @@ const initYjsConnection = (fileId, quillInstance) => {
           const quillEditor = quillInstance.quill || quillInstance
           binding = new QuillBinding(yText, quillEditor, wsProvider.awareness)
         }
-        if(yText.length == 1){
+        console.log(yText.length,'权威')
+        if(yText.length == 0 && yText.length == 1){
           fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
     console.log(res.data.content,'res')
     quill.setContents(JSON.parse(res.data.content))
