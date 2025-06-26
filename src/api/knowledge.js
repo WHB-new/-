@@ -42,3 +42,11 @@ export function getKnowledgeDetail(id) {
     params: { id } 
   });
 }
+
+export function getDocsByBaseId(baseId) {
+  return request({
+    url: '/document/getDocByBaseId',
+    method: 'get',
+    params: { baseId }
+  });
+}

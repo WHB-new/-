@@ -89,8 +89,13 @@ import Nav from '@/components/Nav.vue';
 import {addFile,getFileList} from '@/api/file'
 import { 
   updateKnowledge,
+  getDocsByBaseId
 } from '@/api/knowledge';
 import { ElMessage } from 'element-plus';
+import{addFile,
+  deleteFile,
+  updateDocument
+}from '@/api/file'
 const route = useRoute();
 const router = useRouter();
 const knowledgeStore = useKnowledgeStore();
@@ -103,11 +108,15 @@ onMounted(async () => {
   const id = route.params.id;
   if (ownerId.value) {
     const detail = await knowledgeStore.getRepoDetail(id);
+    const docsRes = await getDocsByBaseId(detail.id);
+    const docs = docsRes.data.data || [];
+    
     knowledge.value = {
       ...detail,
-      directory: detail.directory.map(doc => ({
-        ...doc,
-        content: doc.content || '' 
+      directory: docs.map(doc => ({
+        id: doc._id,
+        name: doc.title || '未命名文档',
+        content: doc.content || ''
       }))
     };
   }
@@ -146,14 +155,24 @@ getList()
 };
 
 // 删除当前选中的项目
-const deleteItem = () => {
+const deleteItem = async () => {
   if (selectedItem.value) {
-    knowledge.value.directory = knowledge.value.directory.filter(
-      item => item.id !== selectedItem.value.id
-    );
-    selectedItem.value = null;
+    try {
+      await deleteFile(selectedItem.value.id);
+
+      knowledge.value.directory = knowledge.value.directory.filter(
+        item => item.id !== selectedItem.value.id
+      );
+      
+      selectedItem.value = null;
+      ElMessage.success('文档已删除');
+    } catch (error) {
+      ElMessage.error('删除文档失败');
+      console.error('删除文档失败:', error);
+    }
   }
 };
+
 
 // 保存更改
 const saveChanges = async () => {
@@ -174,7 +193,7 @@ const saveChanges = async () => {
   }finally{
     router.push({name:'knowledges'})
   }
-}
+};
 
 const goBack = () => {
   router.push({ name: 'knowledges' });
