@@ -17,3 +17,4 @@ app.use(pinia)
 // 使用 Element Plus
 app.use(ElementPlus)
 app.mount('#app')
+
