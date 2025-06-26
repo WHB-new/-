@@ -92,10 +92,10 @@ import {
   getDocsByBaseId
 } from '@/api/knowledge';
 import { ElMessage } from 'element-plus';
-import{addFile,
-  deleteFile,
-  updateDocument
-}from '@/api/file'
+// import{addFile,
+//   deleteFile,
+//   updateDocument
+// }from '@/api/file'
 const route = useRoute();
 const router = useRouter();
 const knowledgeStore = useKnowledgeStore();
