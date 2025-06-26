@@ -5,6 +5,7 @@ state:()=>({
 //控制侧边栏的展开与收入
 isCollapse:false,
 fileList:[],
+isShowHistory:true,
 }),
 actions:{
 getFileList(){

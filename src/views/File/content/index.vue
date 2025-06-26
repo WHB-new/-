@@ -1,8 +1,45 @@
 <template>
   <div class="container">
-    <!-- <div class="nav">
-      预留区域
-    </div> -->
+    <div class="nav" v-show="homeStore.isShowHistory">
+     <div style="display:flex;align-items:center;justify-content: space-between;box-sizing: border-box;
+     width: 100%;padding:0 20px">
+       <div>
+
+      </div>
+      <div class="left">
+        <div class="history">
+        <div class="icon">
+          <svg t="1750924024571" class="icon" viewBox="0 0 1029 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4316" width="16" height="16"><path d="M761.216 997.76c-144.64 0-262.4-117.76-262.4-262.4s117.76-262.4 262.4-262.4 262.4 117.76 262.4 262.4-117.76 262.4-262.4 262.4z m0-448c-102.4 0-185.6 83.2-185.6 185.6s83.2 185.6 185.6 185.6 185.6-83.2 185.6-185.6-83.328-185.6-185.6-185.6z" p-id="4317"></path><path d="M858.496 815.872l-116.48-58.24V588.16h51.2v137.728l88.192 44.16zM174.08 269.312h422.4v51.2h-422.4zM174.08 448.512h281.6v51.2h-281.6zM174.08 627.712h192v51.2h-192z" p-id="4318"></path><path d="M442.88 922.112H0v-883.2h775.68v364.8h-76.8V115.712H76.8v729.6h366.08z" p-id="4319"></path></svg>
+        </div>
+        <div class="txt" @click="homeStore.isShowHistory = false">历史版本</div>
+      </div>
+       <div class="avatar" @click="toggleDropdown">
+        <!-- <img src="./figure.png" alt="头像" class="avatar-img" /> -->
+         <div class="icon">
+          <svg t="1750566336287" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3669" width="16" height="16"><path d="M4.14791851 511.46598098c0 280.3599819 226.95808058 507.31806247 507.31806247 507.31806248s507.31806247-226.95808058 507.31806248-507.31806248-226.95808058-507.31806247-507.31806248-507.31806247-507.31806247 227.49209959-507.31806247 507.31806247" fill="#CCCCCC" p-id="3670"></path><path d="M444.71360435 580.35443368c-147.38924763 64.61630059-191.1788067 98.79351743-208.80143414 114.28006881-26.70095066 24.03085559-41.65348303 123.89241105-57.67405342 199.1890919 0 0 129.23260118 124.96044907 332.69384519 124.96044907s332.69384517-123.89241105 332.69384517-123.89241105c-16.02057039-75.29668085-30.43908375-177.29431236-57.1400344-200.79114894-17.62262743-15.48655138-59.81012947-49.12974921-207.1993771-113.21203077l-134.5727913-0.53401902z" fill="#FFD16D" p-id="3671"></path><path d="M582.49050974 451.65585152v162.875799c-39.51740697 48.06171118-103.59968854 46.45965414-143.11709552 0V451.65585152c0.53401902-88.11313717 143.11709552-88.11313717 143.11709552 0z" fill="#FFDECC" p-id="3672"></path><path d="M582.49050974 451.65585152v108.93987868c-27.23496967 19.75870349-52.8678823 30.97310276-71.55854776 30.97310276-18.15664645 0-44.32357809-11.21439928-71.55854776-30.97310276V451.65585152c0.53401902-88.11313717 143.11709552-88.11313717 143.11709552 0z" fill="#F7C5AA" p-id="3673"></path><path d="M432.96518606 578.75237664l-50.73180625 27.23496967 73.69462381 101.99763151 55.53797736-52.8678823-78.50079492-76.36471888z" fill="#FFFFFF" p-id="3674"></path><path d="M589.96677592 578.75237664l50.73180624 27.23496967-73.69462381 101.99763151-55.53797737-52.8678823 78.50079494-76.36471888z" fill="#FFFFFF" p-id="3675"></path><path d="M304.80062291 974.99448438l20.82674151 8.54430421C325.0933454 932.80698234 325.0933454 795.03007696 325.0933454 795.03007696l-20.29272249 179.96440742z m416.53483023-1.06803803l-24.5648746 10.14636126c0.53401902-50.73180625 0.53401902-188.50871164 0.53401902-188.50871164l24.03085558 178.36235038z" fill="#B98D39" p-id="3676"></path><path d="M511.46598098 170.76185061c-239.77453689 0-153.79747578 289.43830512-137.77690538 312.9351417 17.08860842 25.63291263 99.32753645 92.91930828 137.77690538 92.91930828 38.98338796 0 120.68829697-67.28639565 137.77690539-92.91930828 16.02057039-22.96281756 101.99763151-312.93514169-137.77690539-312.9351417z" fill="#FFDECC" p-id="3677"></path><path d="M327.22942146 360.87261928c12.81645632-4.27215211 28.83702671 10.14636125 35.77927388 32.04114079 6.94224717 21.89477954 2.67009507 42.72152105-9.61234224 46.99367316-12.81645632 4.27215211-28.83702671-10.14636125-35.77927388-32.04114079-7.47626619-21.89477954-2.67009507-42.72152105 9.61234224-46.99367316z m367.93910004 0c-12.81645632-4.27215211-28.83702671 10.14636125-35.77927387 32.04114079-6.94224717 21.89477954-2.67009507 42.72152105 9.61234223 46.99367316 12.81645632 4.27215211 28.83702671-10.14636125 35.77927387-32.04114079 7.47626619-21.89477954 2.67009507-42.72152105-9.61234223-46.99367316z" fill="#FFDECC" p-id="3678"></path><path d="M401.99208329 267.41929198c-13.88449434 75.83069987-48.5957302 68.8884527-45.92563512 158.06962789-11.21439928-69.4224717-27.76898869-161.80776098 19.22468447-222.68592848 37.91534993-48.5957302 162.875799-83.30696605 243.51266998-25.09889361 89.18117519 19.22468447 61.41218651 201.32516795 49.66376823 235.50238479-8.54430421-55.53797737-27.23496967-79.03481394-50.73180625-144.71915255-32.04114079 23.49683658-174.6242173 28.30300769-215.74368131-1.06803804z" fill="#CC7B53" p-id="3679"></path></svg>
+         </div>
+        <div v-if="showDropdown" class="unlogin">
+          <button @click="logout" style="padding: 5px 0!important;">退出登录</button>
+        </div>
+      </div>
+      </div>
+     </div>
+    </div>
+     <!-- 历史记录 -->
+     <div class="header" v-show="!homeStore.isShowHistory">
+      <div class="back" @click="homeStore.isShowHistory = true">
+        <div class="icon">
+          <svg t="1750925620558" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="6314" width="16" height="16"><path d="M682.666667 298.666667h-213.333334a256 256 0 1 0 0 512h384v85.333333h-384a341.333333 341.333333 0 1 1 0-682.666667h213.333334V42.666667l256 213.333333-256 213.333333V298.666667z" fill="#000000" p-id="6315"></path></svg>
+        </div>
+        <div class="txt">
+          返回文档
+        </div>
+      </div>
+      <div class="center">
+        <div class="txt">还原此历史记录</div>
+      </div>
+      <div class="right"></div>
+     </div>
     <div class="close" v-if="isShowClose" @click="handleClose">
       <svg t="1750512589823" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
         p-id="2618" width="16" height="16">
@@ -11,6 +48,7 @@
           p-id="2619"></path>
       </svg>
     </div>
+     <!-- v-show="homeStore.isShowHistory" -->
     <div class="content">
       <div class="content-center">
         <!-- <div class="page-header">
@@ -21,7 +59,7 @@
         </div>
 
         <!-- Quill 工具栏 -->
-        <div id="toolbar">
+        <div id="toolbar" style="z-index:5!important;">
           <!-- 标题和排序 -->
           <el-select v-model="formatValue" placeholder="正文" size="small" style="width:150px;margin-bottom:10px;"
             @change="handleFormatChange">
@@ -126,6 +164,7 @@
 
       </div>
     </div>
+   
   </div>
 </template>
 
@@ -149,17 +188,26 @@ import { EditorState } from '@codemirror/state'
 import { javascript } from '@codemirror/lang-javascript'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { useRoute, useRouter } from 'vue-router';
+import { useHomeStore } from '@/store/home';
 //yjs部分
 import * as Y from 'yjs'
 import { QuillBinding } from 'y-quill';
 import { WebsocketProvider } from 'y-websocket';
 import { WebrtcProvider } from 'y-webrtc';
 import {saveFile,fileListDetail} from '@/api/file'
+const homeStore = useHomeStore()
 let quill
 let ydoc
 let wsProvider
 let binding
-
+// 控制下拉框显示
+const showDropdown = ref(false);
+const toggleDropdown = () => {
+  showDropdown.value = !showDropdown.value;
+};
+const logout = () => {
+isShow.value = true
+};
 // 1. 自定义CodeMirror Block
 const BlockEmbed = Quill.import('blots/block/embed')
 const quillEditor = ref(null)
@@ -365,6 +413,7 @@ onMounted(() => {
 
     const bounds = quill.getBounds(range.index, range.length);
     if (range && range.length > 0) {
+      quillToolbar.style.zIndex = 6;
       quillToolbar.style.display = 'block';
       quillToolbar.style.top = bounds.top - 48 + 'px';
       quillToolbar.style.left = bounds.left + 'px';
@@ -872,14 +921,133 @@ button:hover {
     left: 0;
     height: 64px;
     width: calc(100vw - 300px);
-    background-color: skyblue;
-  }
+    display:flex;
+    align-items: center;
+    // background-color: skyblue;
+    justify-content: space-between;
+    border-bottom: 1px solid #ddd;
+   .left{
+    display:flex;
+    align-items: center;
+     .avatar {
+      border-left:1px solid #ddd;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      // overflow:hidden;
+      position: relative;
+      cursor: pointer;
+      .icon {
+        width: 100%;
+        height: 100%;
+        // width: 40px;
+        // height: 40px;
+        // border-radius: 50%;
+      }
+      .unlogin{
+        position: absolute;
+        top: 50px;
+        right: 0;
+        background: white;
+        border: 1px solid #ddd;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 4px;
+        padding: 10px 10px 0 10px;
+        width: 100px;
+        height: auto;
+        justify-content: center;
+        display: flex;
+        align-content: center;
+        button {
 
+          background: none;
+          border: none;
+          cursor: pointer;
+          color: #333;
+          font-size: 14px;
+        }
+        button:hover {
+          color: rgba(80, 98, 124, 0.788);
+        }
+      }
+    }
+    .history{
+      margin-right:20px;
+      height: 32px;
+      display: flex;
+      align-items:center!important;
+      justify-content: center;
+      border:1px solid #ddd;
+      padding:10px;
+      border-radius: 8px;
+      &:hover{
+        cursor: pointer;
+      }
+      .icon{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .txt{
+        margin-left:5px;
+        font-size: 14px;
+        color:#1f2329;
+      }
+    }
+   }
+  }
+.header{
+  position: absolute;
+    top: 0;
+    left: 0;
+    width: calc(100vw - 300px);
+  height: 64px;
+  display:flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+   border-bottom: 1px solid #ddd;
+  .back{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    &:hover{
+      height: 24px;
+      background: #f5f7fa;
+      cursor: pointer;
+    }
+    .icon{
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .txt{
+      font-size: 14px;
+      color:#1f2329
+    }
+  }
+  .center{
+    margin-right:10px;
+    display: flex;
+    align-items: center;
+    border:1px solid #ddd;
+    border-radius: 8px;
+    padding:6px 10px;
+    background-color:#aaa;
+    .txt{
+      font-size: 14px;
+      color:#fff;
+    }
+    &:hover{
+      cursor: pointer;
+    }
+  }
+}
   .content {
     box-sizing: border-box;
     flex: 1;
     margin-top: 61px;
-
+   overflow-y:scroll ;
     &-center {
       box-sizing: content-box;
       height: calc(100vh - 86px);
