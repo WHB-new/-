@@ -23,7 +23,16 @@
             <svg t="1750925301098" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="5330" width="16" height="16"><path d="M512 992C246.912 992 32 777.088 32 512 32 246.912 246.912 32 512 32c265.088 0 480 214.912 480 480 0 265.088-214.912 480-480 480z m0-64c229.76 0 416-186.24 416-416S741.76 96 512 96 96 282.24 96 512s186.24 416 416 416z" fill="#000000" p-id="5331"></path><path d="M552 601.696v22.432h-80v-22.432c0-51.296 24.192-99.808 58.816-136.704 26.464-28.224 25.728-27.424 33.28-36.384 19.968-23.776 27.904-40.768 27.904-60.608a80 80 0 1 0-160 0H352a160 160 0 0 1 320 0c0 41.664-15.68 75.2-46.656 112.064-5.216 6.208-10.88 12.576-17.856 20.096-2.688 2.88-5.44 5.888-9.152 9.792l-9.152 9.76c-21.952 23.36-37.184 53.92-37.184 81.984zM545.856 717.984c9.44 9.312 14.144 20.672 14.144 34.016 0 13.6-4.704 24.992-14.144 34.208A46.784 46.784 0 0 1 512 800c-13.12 0-24.448-4.608-33.856-13.792A45.856 45.856 0 0 1 464 752c0-13.344 4.704-24.704 14.144-34.016A46.464 46.464 0 0 1 512 704c13.12 0 24.448 4.672 33.856 13.984z" fill="#000000" p-id="5332"></path></svg>
           </div>
         </div>
-        <div class="li"></div>
+        <div class="li">
+          <div class="item" @click="handleChange">
+            <div class="time">6月20日 21:07</div>
+          <div class="recent">最近更新</div>
+          <div class="name">
+            <span style="background-color: rgb(141,85,237);" class="user-color"></span>
+            <span class="user-name">王皓彬</span>
+          </div>
+          </div>
+        </div>
       </div>
     </el-container>
 </template>
@@ -32,6 +41,9 @@
 import Aside from '@/components/Aside.vue'
 import { useHomeStore } from '@/store/home';
 const homeStore = useHomeStore()
+const handleChange = ()=>{
+
+}
 </script>
 
 <style lang="scss" scoped>
@@ -95,8 +107,56 @@ const homeStore = useHomeStore()
     &::-webkit-scrollbar{
       display: none;
     }
+    .item{
+      cursor:pointer;
+      padding:12px 13px 12px 40px;
+      margin:-1px 0;
+      position:relative;
+      transition:all .2s ease;
+      background-color: rgb(224 233 255);
+      .time{
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 20px;
+      height: 20px;
+      margin-bottom: 4px;
+      color:#336df4;
+    }
+    .recent{
+      font-size: 12px;
+      line-height: 18px;
+      margin:4px 0;
+      height: 18px;
+      color:#336df4
+    }
+    .name{
+      position:relative;
+      font-size: 12px;
+      font-weight: 500;
+      color:#1f2329;
+      height: 18px;
+      line-height: 18px;
+      padding-left:18px;
+      .user-color{
+  position:absolute;
+  left:0;
+  top:6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
+}
+.user-name{
+  overflow:hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+  display:inline-block;
+}
+    }
+    }
   }
 }
+
 }
 
 </style>
