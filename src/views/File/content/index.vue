@@ -51,9 +51,36 @@
      <!-- v-show="homeStore.isShowHistory" -->
     <div class="content">
       <div class="content-center">
-        <!-- <div class="page-header">
+
+        <!-- 手动触发AI摘要的按钮  -->
+        <div class="ai-trigger-btn">
+          <el-button type="primary" size="small" @click="showAiSummaryBox">
+            <el-icon><Lightning /></el-icon>生成AI文档摘要
+          </el-button>
+        </div>
         
-        </div> -->
+        <!-- AI文档摘要框 -->
+        <div v-if="showAiSummary" class="ai-summary-embedded ai-summary-at-start">
+          <div class="ai-summary-header">
+            <h3>AI文档摘要</h3>
+            <button @click="closeAiSummary" class="close-btn">
+              <el-icon><Close /></el-icon>
+            </button>
+          </div>
+          <div class="ai-summary-content">
+            <div v-if="isGenerating" class="thinking-animation">
+              <div class="thinking-dot" :class="{ 'dot-active': dotIndex === 0 }"></div>
+              <div class="thinking-dot" :class="{ 'dot-active': dotIndex === 1 }"></div>
+              <div class="thinking-dot" :class="{ 'dot-active': dotIndex === 2 }"></div>
+              <p>正在分析文档内容...</p>
+            </div>
+            <div v-else-if="summaryText" class="summary-result">
+              <p>{{ summaryText }}</p>
+            </div>
+          </div>
+        </div>
+        
+
         <div class="page-children" id="children" ref="quillEditor" style="padding:0!important;">
         
         </div>
@@ -169,6 +196,7 @@
 </template>
 
 <script setup>
+import { ElMessage } from 'element-plus';
 import { onBeforeRouteLeave } from 'vue-router';
 // 富文本引入
 import Quill from 'quill';
@@ -178,6 +206,8 @@ import {
   Sort,
   List,
   Menu,
+  Lightning,
+  Close
 } from '@element-plus/icons-vue'
 // quill的css文件
 import 'quill/dist/quill.snow.css';
@@ -208,6 +238,89 @@ const toggleDropdown = () => {
 const logout = () => {
 isShow.value = true
 };
+
+
+
+
+// AI摘要相关状态
+const showAiSummary = ref(false);
+const isGenerating = ref(false);
+const summaryText = ref('');
+const dotIndex = ref(0);
+const thinkingInterval = ref(null);
+
+// 计算文档字数
+const getDocumentWordCount = () => {
+  if (!quill) return 0;
+  const content = quill.getText();
+  return content.replace(/\s+/g, ' ').trim().length;
+};
+
+
+// 显示AI摘要框
+const showAiSummaryBox = () => {
+  if (showAiSummary.value) return;
+  
+  showAiSummary.value = true;
+  isGenerating.value = true;
+  summaryText.value = '';
+  
+  // 模拟AI思考过程
+  let thinkingTime = 0;
+  const maxThinkingTime = 2000; // 2秒
+  const interval = 300; // 300ms更新一次
+  
+  thinkingInterval.value = setInterval(() => {
+    thinkingTime += interval;
+    
+    // 更新思考动画
+    dotIndex.value = (dotIndex.value + 1) % 3;
+    
+    if (thinkingTime >= maxThinkingTime) {
+      clearInterval(thinkingInterval.value);
+      isGenerating.value = false;
+      
+      // 生成模拟摘要
+      generateMockSummary();
+    }
+  }, interval);
+};
+
+// 关闭AI摘要框
+const closeAiSummary = () => {
+  showAiSummary.value = false;
+  isGenerating.value = false;
+  summaryText.value = '';
+  if (thinkingInterval.value) {
+    clearInterval(thinkingInterval.value);
+  }
+};
+
+// 生成模拟摘要
+const generateMockSummary = () => {
+  if (!quill) return;
+  const content = quill.getText();
+  
+  if (content.length > 200) {
+    summaryText.value = content.substring(0, 200) + '...';
+  } else {
+    summaryText.value = content + '（文档较短，已显示全部内容）';
+  }
+};
+
+// 监听文本变化，检查字数
+quill?.on('text-change', (delta, oldDelta, source) => {
+  if (source === 'user') {
+    const wordCount = getDocumentWordCount();
+    console.log('当前文档字数:', wordCount);
+    
+    if (wordCount > 300) {
+      showAiSummaryBox();
+    }
+  }
+});
+
+
 // 1. 自定义CodeMirror Block
 const BlockEmbed = Quill.import('blots/block/embed')
 const quillEditor = ref(null)
@@ -899,6 +1012,104 @@ button:hover {
 }
 </style>
 <style lang="scss" scoped>
+
+.ai-trigger-btn {
+  margin: 15px 0;
+  text-align: right;
+  z-index: 10;
+}
+
+
+/* AI摘要框关闭按钮样式 */
+.close-btn {
+  background: none;
+  border: none;
+  color: #909399;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: #f5f7fa;
+    color: #606266;
+  }
+}
+
+
+/* AI文档摘要框 - 嵌入文本样式 */
+.ai-summary-embedded {
+  margin: 30px 0;
+  padding: 20px;
+  background: #f8f9fa;
+  border-left: 4px solid #409EFF;
+  border-radius: 0 4px 4px 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.ai-summary-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.ai-summary-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #303133;
+  display: flex;
+  align-items: center;
+}
+
+.ai-summary-header h3::before {
+  content: "";
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23409EFF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cline x1='12' y1='16' x2='12' y2='12'%3E%3C/line%3E%3Cline x1='12' y1='8' x2='12.01' y2='8'%3E%3C/line%3E%3C/svg%3E") no-repeat center;
+  margin-right: 8px;
+}
+
+.thinking-animation {
+  text-align: center;
+  padding: 15px 0;
+}
+
+.thinking-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: #909399;
+  border-radius: 50%;
+  margin: 0 4px;
+  animation: dotPulse 1.5s infinite ease-in-out;
+  opacity: 0.5;
+}
+
+.dot-active {
+  opacity: 1;
+}
+
+@keyframes dotPulse {
+  0%, 100% {
+    transform: scale(0.5);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.summary-result {
+  white-space: pre-wrap;
+  color: #303133;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
 .container {
   position: relative;
   display: flex;
