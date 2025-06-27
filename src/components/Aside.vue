@@ -126,15 +126,16 @@
     </div>
   </div>
   <!-- 重命名 -->
-   <el-dialog  width="500" align-center v-model="isShowName" :show-close="false">
-       <template #default>
-        <el-input v-model="changedName" placeholder="请输入你想修改的名字"></el-input>
-       </template>
-       <template #footer>
-       <el-button size="small">取消</el-button>
+  <el-dialog  width="500" align-center v-model="isShowName" :show-close="false">
+    <template #default>
+      <el-input v-model="changedName" placeholder="请输入你想修改的名字"></el-input>
+    </template>
+    <template #footer>
+      <el-button @click="isShowName = false">取消</el-button>
       <el-button
         type="primary"
-        size="small"
+        @click="handleRename"
+        :loading="loading"
       >
         确定
       </el-button>
@@ -143,12 +144,15 @@
 </template>
 
 <script setup>
+import { saveFile } from '@/api/file'; 
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { ref, onMounted, watch } from 'vue';
 import { addFile, getFileList,fileListDetail} from '@/api/file';
 import { ElMessage } from 'element-plus';
 import {useHomeStore} from '@/store/home'
 const homeStore = useHomeStore()
+const currentDocId = ref('');
+const loading = ref(false);
 //控制菜单
 const activeIndex = ref('file')
 const route = useRoute()
@@ -161,9 +165,44 @@ const handleMenuClick = (index) => {
   activeIndex.value = index
 }
 // 重命名
-const changeFileName = async(id)=>{
-isShowName.value = true
-}
+// 打开重命名对话框
+const changeFileName = (id) => {
+  // 获取当前文档信息，预填充标题
+  const currentDoc = homeStore.fileList.find(doc => doc._id === id);
+  if (currentDoc) {
+    changedName.value = currentDoc.title;
+    currentDocId.value = id;
+    isShowName.value = true;
+  }
+};
+
+// 处理重命名提交
+const handleRename = async () => {
+  if (!changedName.value.trim()) {
+    ElMessage.error('标题不能为空');
+    return;
+  }
+  
+  loading.value = true;
+  
+  try {
+    // 调用现有更新接口，只传递title字段
+    const res = await saveFile(currentDocId.value, { title: changedName.value });
+    
+    if (res.data.code === 200) {
+      ElMessage.success('重命名成功');
+      isShowName.value = false;
+      homeStore.getFileList(); // 刷新文件列表
+    } else {
+      ElMessage.error(res.data.message || '重命名失败');
+    }
+  } catch (error) {
+    console.error('重命名错误:', error);
+    ElMessage.error('服务器错误，请稍后再试');
+  } finally {
+    loading.value = false;
+  }
+};
 // 处理文件点击
 const handleEnterFile = async (id, index) => {
   activeIndex.value = `file-${id}`
