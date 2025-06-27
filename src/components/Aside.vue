@@ -126,10 +126,10 @@
     </div>
   </div>
   <!-- 重命名 -->
-  <el-dialog  width="500" align-center v-model="isShowName" :show-close="false">
-    <template #default>
-      <el-input v-model="changedName" placeholder="请输入你想修改的名字"></el-input>
-    </template>
+   <el-dialog  width="500" align-center v-model="isShowName" :show-close="false">
+       <template #default>
+        <el-input v-model="changedName" placeholder="请输入你想修改的名字"></el-input>
+      </template>
     <template #footer>
       <el-button @click="isShowName = false">取消</el-button>
       <el-button
@@ -150,9 +150,9 @@ import { ref, onMounted, watch } from 'vue';
 import { addFile, getFileList,fileListDetail} from '@/api/file';
 import { ElMessage } from 'element-plus';
 import {useHomeStore} from '@/store/home'
-const homeStore = useHomeStore()
 const currentDocId = ref('');
 const loading = ref(false);
+const homeStore = useHomeStore()
 //控制菜单
 const activeIndex = ref('file')
 const route = useRoute()
@@ -164,7 +164,7 @@ const changedName = ref('')
 const handleMenuClick = (index) => {
   activeIndex.value = index
 }
-// 重命名
+
 // 打开重命名对话框
 const changeFileName = (id) => {
   // 获取当前文档信息，预填充标题
@@ -203,6 +203,7 @@ const handleRename = async () => {
     loading.value = false;
   }
 };
+
 // 处理文件点击
 const handleEnterFile = async (id, index) => {
   activeIndex.value = `file-${id}`
