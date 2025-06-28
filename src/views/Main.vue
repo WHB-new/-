@@ -34,12 +34,22 @@
           </div>
         </div>
       </div>
+      
+      <FriendSidebar />
+      <ApplyFriendSidebar />
+      <permissionListSidebar />
+
+
     </el-container>
+
 </template>
 
 <script setup>
 import Aside from '@/components/Aside.vue'
 import { useHomeStore } from '@/store/home';
+import FriendSidebar from '@/components/FriendSidebar.vue'
+import ApplyFriendSidebar from '@/components/ApplyFriendSidebar.vue';
+import permissionListSidebar from '@/components/permissionListSidebar.vue';
 import {getHistoryList} from '@/api/content'
 import {ref} from 'vue'
 const homeStore = useHomeStore()

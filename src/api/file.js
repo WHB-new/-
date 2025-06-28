@@ -63,3 +63,14 @@ export function updateDocument(id, data) {
     }
   });
 }
+
+export function updateDocument(id, data) {
+  return request({
+    url: `/document/put/${id}`,
+    method: 'put',
+    data,
+    headers: {
+      "Content-Type": "application/json"
+    }
+  });
+}
