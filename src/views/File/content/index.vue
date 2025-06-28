@@ -35,7 +35,7 @@
           返回文档
         </div>
       </div>
-      <div class="center" @click="backToHistory">
+      <div class="center" @click="backToHistory" :style="homeStore.historyIndex !=0 ?'background-color:#336df4;':'pointer-events: none;'">
         <div class="txt">还原此历史记录</div>
       </div>
       <div class="right"></div>
@@ -220,7 +220,9 @@ const backToHistory = ()=>{
   sessionStorage.setItem(`${route.params.insertedId}`,JSON.stringify(quill.getContents()))
   homeStore.isShowHistory = true
   quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
-  
+  //初始化
+   homeStore.quillData = null
+   homeStore.historyIndex = 0
 }
 // 初始化Yjs连接的函数
 const initYjsConnection = (fileId, quillInstance) => {
@@ -264,7 +266,6 @@ const initYjsConnection = (fileId, quillInstance) => {
    })
     wsProvider.on('status', (event) => {
       if (event.status === 'connected') {
-            homeStore.tempQuill = quill
         if (!binding && quillInstance) {
           const quillEditor = quillInstance.quill || quillInstance
           binding = new QuillBinding(yText, quillEditor, wsProvider.awareness)
@@ -284,7 +285,6 @@ wsProvider.on('disconnect',()=>{
   }
 }
 const goHistory = async()=>{
-  homeStore.tempQuill = quill
   sessionStorage.setItem(`${route.params.insertedId}`,JSON.stringify(quill.getContents()))
     homeStore.isShowHistory = false
    let res = await getContentHistory(route.params.insertedId)
@@ -342,11 +342,13 @@ const changeTime = (time)=>{
   return `${inputMonth}月${inputDay}日 ${inputHours}:${inputMinutes}`;
 }
 const backContent = ()=>{
-  homeStore.quill = null
    homeStore.isShowHistory = true
         //先变回原来页面在渲染
-  //     quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
-  //  sessionStorage.removeItem(`${route.params.insertedId}`)
+      quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
+   sessionStorage.removeItem(`${route.params.insertedId}`)
+   //初始化
+   homeStore.quillData = null
+   homeStore.historyIndex = 0
 }
 // 监听路由参数变化
 watch(() => route.params.insertedId, (newId, oldId) => {
@@ -355,6 +357,14 @@ watch(() => route.params.insertedId, (newId, oldId) => {
       initYjsConnection(newId, quill)
     })
 }, { immediate: false })
+watch(()=>homeStore.historyIndex,(newValue,oldValue)=>{
+   console.log(homeStore.quillData,'触发了吗')
+   nextTick(()=>{
+    if(homeStore.quillData != null){
+      quill.setContents(JSON.parse(homeStore.quillData))
+    }
+   })
+})
 onBeforeRouteLeave((to,from)=>{
   console.log('onMounted文件挂载了')
    saveFile(from.params.insertedId,{

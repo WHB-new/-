@@ -7,8 +7,8 @@ isCollapse:false,
 fileList:[],
 isShowHistory:true,
 historyList:[],
-quillData:[],
-tempQuill:null,
+quillData:null,
+historyIndex:0,
 }),
 actions:{
 getFileList(){

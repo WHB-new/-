@@ -24,7 +24,7 @@
           </div>
         </div>
         <div class="li">
-          <div class="item" @click="handleChange(index,item._id)" v-for="(item,index) in homeStore.historyList" :key="item._id" :class="{activeBg:historyIndex == index}">
+          <div class="item" @click="handleChange(index,item._id)" v-for="(item,index) in homeStore.historyList" :key="item._id" :class="{activeBg:homeStore.historyIndex == index}">
             <div class="time">{{item.createTime}}</div>
           <div class="recent" v-if="index == 0">最近更新</div>
           <div class="name">
@@ -54,14 +54,13 @@ import {getHistoryList} from '@/api/content'
 import {ref} from 'vue'
 const homeStore = useHomeStore()
 const handleChange =async (index,docVersionId)=>{
-   historyIndex.value = index
    let res = await getHistoryList(docVersionId)
    if(res.data.code ==200){
-    console.log(res.data.data.content)
-    homeStore.tempQuill.setContents(JSON.parse(res.data.data.content))
+   homeStore.quillData = res.data.data.content
+    homeStore.historyIndex = index
    }
 }
-const historyIndex = ref(0)
+// const historyIndex = ref(0)
 </script>
 
 <style lang="scss" scoped>
@@ -100,6 +99,8 @@ const historyIndex = ref(0)
   width: 300px;
   background-color: #fff;
   border-left:1px solid #e5e7eb;
+  display:flex;
+  flex-direction: column;
   .header{
     width: 100%;
     height: 64px;
@@ -121,6 +122,7 @@ const historyIndex = ref(0)
     }
   }
   .li{
+    flex:1;
     overflow-y:scroll;
     &::-webkit-scrollbar{
       display: none;
