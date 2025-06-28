@@ -124,8 +124,6 @@ import Nav from '@/components/Nav.vue';
 import { ref, onMounted, reactive, watch } from 'vue';
 import { useRouter } from 'vue-router';
 //import { getRecycleFiles, restoreFile, deleteFile } from '@/api/recycle';
-import { ElMessage, ElMessageBox } from 'element-plus';
-
 const router = useRouter();
 const tableRef = ref(null);
 const recycleData = ref([]);

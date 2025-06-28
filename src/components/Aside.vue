@@ -281,7 +281,21 @@ const handleRename = async () => {
     loading.value = false;
   }
 };
-
+// 搜索
+const handleSearch =()=>{
+searchVisible.value = true
+//创建索引
+index = new FlexSearch.Index({
+  tokenize:'reverse',//适合中英数字分词
+  charset:"latin:extra",//支持特殊字符
+  suggest:true,//支持建议
+})
+homeStore.fileList.forEach((item)=>{
+  const titleAndContent = `${item.title} ${item.content}`
+  console.log('触发了这个函数',titleAndContent)
+  index.add(item._id,titleAndContent)
+})
+}
 // 处理文件点击
 const handleEnterFile = async (id, index) => {
   activeIndex.value = `file-${id}`
