@@ -1,21 +1,68 @@
 <template>
   <div class="container">
-    <!-- <div class="nav">
-      预留区域
-    </div> -->
+    <div class="nav" v-show="homeStore.isShowHistory">
+     <div style="display:flex;align-items:center;justify-content: space-between;box-sizing: border-box;
+     width: 100%;padding:0 20px">
+       <div>
+
+      </div>
+      <div class="left">
+        <div class="history" @click="goHistory">
+        <div class="icon">
+          <svg t="1750924024571" class="icon" viewBox="0 0 1029 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4316" width="16" height="16"><path d="M761.216 997.76c-144.64 0-262.4-117.76-262.4-262.4s117.76-262.4 262.4-262.4 262.4 117.76 262.4 262.4-117.76 262.4-262.4 262.4z m0-448c-102.4 0-185.6 83.2-185.6 185.6s83.2 185.6 185.6 185.6 185.6-83.2 185.6-185.6-83.328-185.6-185.6-185.6z" p-id="4317"></path><path d="M858.496 815.872l-116.48-58.24V588.16h51.2v137.728l88.192 44.16zM174.08 269.312h422.4v51.2h-422.4zM174.08 448.512h281.6v51.2h-281.6zM174.08 627.712h192v51.2h-192z" p-id="4318"></path><path d="M442.88 922.112H0v-883.2h775.68v364.8h-76.8V115.712H76.8v729.6h366.08z" p-id="4319"></path></svg>
+        </div>
+        <div class="txt">历史版本</div>
+      </div>
+       <div class="avatar" @click="toggleDropdown">
+        <!-- <img src="./figure.png" alt="头像" class="avatar-img" /> -->
+         <div class="icon">
+          <svg t="1750566336287" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3669" width="16" height="16"><path d="M4.14791851 511.46598098c0 280.3599819 226.95808058 507.31806247 507.31806247 507.31806248s507.31806247-226.95808058 507.31806248-507.31806248-226.95808058-507.31806247-507.31806248-507.31806247-507.31806247 227.49209959-507.31806247 507.31806247" fill="#CCCCCC" p-id="3670"></path><path d="M444.71360435 580.35443368c-147.38924763 64.61630059-191.1788067 98.79351743-208.80143414 114.28006881-26.70095066 24.03085559-41.65348303 123.89241105-57.67405342 199.1890919 0 0 129.23260118 124.96044907 332.69384519 124.96044907s332.69384517-123.89241105 332.69384517-123.89241105c-16.02057039-75.29668085-30.43908375-177.29431236-57.1400344-200.79114894-17.62262743-15.48655138-59.81012947-49.12974921-207.1993771-113.21203077l-134.5727913-0.53401902z" fill="#FFD16D" p-id="3671"></path><path d="M582.49050974 451.65585152v162.875799c-39.51740697 48.06171118-103.59968854 46.45965414-143.11709552 0V451.65585152c0.53401902-88.11313717 143.11709552-88.11313717 143.11709552 0z" fill="#FFDECC" p-id="3672"></path><path d="M582.49050974 451.65585152v108.93987868c-27.23496967 19.75870349-52.8678823 30.97310276-71.55854776 30.97310276-18.15664645 0-44.32357809-11.21439928-71.55854776-30.97310276V451.65585152c0.53401902-88.11313717 143.11709552-88.11313717 143.11709552 0z" fill="#F7C5AA" p-id="3673"></path><path d="M432.96518606 578.75237664l-50.73180625 27.23496967 73.69462381 101.99763151 55.53797736-52.8678823-78.50079492-76.36471888z" fill="#FFFFFF" p-id="3674"></path><path d="M589.96677592 578.75237664l50.73180624 27.23496967-73.69462381 101.99763151-55.53797737-52.8678823 78.50079494-76.36471888z" fill="#FFFFFF" p-id="3675"></path><path d="M304.80062291 974.99448438l20.82674151 8.54430421C325.0933454 932.80698234 325.0933454 795.03007696 325.0933454 795.03007696l-20.29272249 179.96440742z m416.53483023-1.06803803l-24.5648746 10.14636126c0.53401902-50.73180625 0.53401902-188.50871164 0.53401902-188.50871164l24.03085558 178.36235038z" fill="#B98D39" p-id="3676"></path><path d="M511.46598098 170.76185061c-239.77453689 0-153.79747578 289.43830512-137.77690538 312.9351417 17.08860842 25.63291263 99.32753645 92.91930828 137.77690538 92.91930828 38.98338796 0 120.68829697-67.28639565 137.77690539-92.91930828 16.02057039-22.96281756 101.99763151-312.93514169-137.77690539-312.9351417z" fill="#FFDECC" p-id="3677"></path><path d="M327.22942146 360.87261928c12.81645632-4.27215211 28.83702671 10.14636125 35.77927388 32.04114079 6.94224717 21.89477954 2.67009507 42.72152105-9.61234224 46.99367316-12.81645632 4.27215211-28.83702671-10.14636125-35.77927388-32.04114079-7.47626619-21.89477954-2.67009507-42.72152105 9.61234224-46.99367316z m367.93910004 0c-12.81645632-4.27215211-28.83702671 10.14636125-35.77927387 32.04114079-6.94224717 21.89477954-2.67009507 42.72152105 9.61234223 46.99367316 12.81645632 4.27215211 28.83702671-10.14636125 35.77927387-32.04114079 7.47626619-21.89477954 2.67009507-42.72152105-9.61234223-46.99367316z" fill="#FFDECC" p-id="3678"></path><path d="M401.99208329 267.41929198c-13.88449434 75.83069987-48.5957302 68.8884527-45.92563512 158.06962789-11.21439928-69.4224717-27.76898869-161.80776098 19.22468447-222.68592848 37.91534993-48.5957302 162.875799-83.30696605 243.51266998-25.09889361 89.18117519 19.22468447 61.41218651 201.32516795 49.66376823 235.50238479-8.54430421-55.53797737-27.23496967-79.03481394-50.73180625-144.71915255-32.04114079 23.49683658-174.6242173 28.30300769-215.74368131-1.06803804z" fill="#CC7B53" p-id="3679"></path></svg>
+         </div>
+        <div v-if="showDropdown" class="unlogin">
+          <button @click="logout" style="padding: 5px 0!important;">退出登录</button>
+        </div>
+      </div>
+      </div>
+     </div>
+    </div>
+     <!-- 历史记录 -->
+     <div class="header" v-show="!homeStore.isShowHistory">
+      <div class="back" @click="backContent">
+        <div class="icon">
+          <svg t="1750925620558" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="6314" width="16" height="16"><path d="M682.666667 298.666667h-213.333334a256 256 0 1 0 0 512h384v85.333333h-384a341.333333 341.333333 0 1 1 0-682.666667h213.333334V42.666667l256 213.333333-256 213.333333V298.666667z" fill="#000000" p-id="6315"></path></svg>
+        </div>
+        <div class="txt">
+          返回文档
+        </div>
+      </div>
+      <div class="center" @click="backToHistory">
+        <div class="txt">还原此历史记录</div>
+      </div>
+      <div class="right"></div>
+     </div>
+    <div class="close" v-if="isShowClose" @click="handleClose">
+      <svg t="1750512589823" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
+        p-id="2618" width="16" height="16">
+        <path
+          d="M729.6 931.2l-416-425.6 416-416c9.6-9.6 9.6-25.6 0-35.2-9.6-9.6-25.6-9.6-35.2 0l-432 435.2c-9.6 9.6-9.6 25.6 0 35.2l432 441.6c9.6 9.6 25.6 9.6 35.2 0C739.2 956.8 739.2 940.8 729.6 931.2z"
+          p-id="2619"></path>
+      </svg>
+    </div>
+     <!-- v-show="homeStore.isShowHistory" -->
     <div class="content">
       <div class="content-center">
-        <div class="page-header"></div>
-        <div class="page-children" id="children" ref="quillEditor">
-
+        <!-- <div class="page-header">
+        
+        </div> -->
+        <div class="page-children" id="children" ref="quillEditor" style="padding:0!important;" >
+        
         </div>
 
         <!-- Quill 工具栏 -->
-        <div id="toolbar">
+        <div id="toolbar" style="z-index:5!important;">
           <!-- 标题和排序 -->
-          <el-select v-model="formatValue" placeholder="正文" size="small" style="width: 150px"
+          <el-select v-model="formatValue" placeholder="正文" size="small" style="width:150px;margin-bottom:10px;"
             @change="handleFormatChange">
-
             <el-option-group label="标题">
               <el-option label="正文" value="paragraph">
                 <span style="display: flex; align-items: center">
@@ -50,7 +97,6 @@
                 </span>
               </el-option>
             </el-option-group>
-
 
             <el-option-group label="列表">
               <el-option label="有序列表" value="ordered">
@@ -117,15 +163,16 @@
         </div>
 
       </div>
-
     </div>
+   
   </div>
 </template>
 
 <script setup>
+import { onBeforeRouteLeave } from 'vue-router';
 // 富文本引入
 import Quill from 'quill';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, onBeforeUnmount, watch, onUnmounted, nextTick } from 'vue';
 import {
   Document,
   Sort,
@@ -134,15 +181,190 @@ import {
 } from '@element-plus/icons-vue'
 // quill的css文件
 import 'quill/dist/quill.snow.css';
+import QuillCursors from 'quill-cursors'
 // codeMirror引入
 import { EditorView, keymap } from '@codemirror/view'
 import { EditorState } from '@codemirror/state'
 import { javascript } from '@codemirror/lang-javascript'
 import { oneDark } from '@codemirror/theme-one-dark'
+import { useRoute, useRouter } from 'vue-router';
+import { useHomeStore } from '@/store/home';
+//yjs部分
+import * as Y from 'yjs'
+import { QuillBinding } from 'y-quill';
+import { WebsocketProvider } from 'y-websocket';
+import { WebrtcProvider } from 'y-webrtc';
+import {saveFile,fileListDetail} from '@/api/file'
+import {addContentHistory,getContentHistory} from '@/api/content'
+const homeStore = useHomeStore()
 let quill
+let ydoc
+let wsProvider
+let binding
+const historyList = ref([])
+// 控制下拉框显示
+const showDropdown = ref(false);
+const toggleDropdown = () => {
+  showDropdown.value = !showDropdown.value;
+};
+const logout = () => {
+isShow.value = true
+};
 // 1. 自定义CodeMirror Block
 const BlockEmbed = Quill.import('blots/block/embed')
 const quillEditor = ref(null)
+const route = useRoute()
+const router = useRouter()
+const isShowClose = ref(false)
+const backToHistory = ()=>{
+  sessionStorage.setItem(`${route.params.insertedId}`,JSON.stringify(quill.getContents()))
+  homeStore.isShowHistory = true
+  quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
+  
+}
+// 初始化Yjs连接的函数
+const initYjsConnection = (fileId, quillInstance) => {
+  if (!quillInstance) {
+    return
+  }
+  if (binding) {
+    binding.destroy()
+    binding = null
+  }
+  if (wsProvider) {
+    wsProvider.disconnect()
+    wsProvider.destroy()
+    wsProvider = null
+  }
+  if (ydoc) {
+    ydoc.destroy()
+    ydoc = null
+  }
+
+  try {
+    ydoc = new Y.Doc()
+    const yText = ydoc.getText('quill')
+    console.log(yText,'权威')
+    wsProvider = new WebsocketProvider(
+      `ws://localhost:8001/onlineEdit/${sessionStorage.getItem('userId')}`,
+      fileId,
+      ydoc,
+    )
+    ydoc.on('update', (update,origin) => {
+    })
+  
+    wsProvider.on('status', (event) => {
+      if (event.status === 'connected') {
+            homeStore.tempQuill = quill
+        if (!binding && quillInstance) {
+          const quillEditor = quillInstance.quill || quillInstance
+          binding = new QuillBinding(yText, quillEditor, wsProvider.awareness)
+        }
+        //有缓存用缓存
+        if(sessionStorage.getItem(`${route.params.insertedId}`)){
+          quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
+          sessionStorage.removeItem(`${route.params.insertedId}`)
+        }else{
+          fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
+            if(res.data.code == 200){
+              quill.setContents(JSON.parse(res.data.data.content))
+            }
+  })
+        }
+       
+      }
+    })
+    wsProvider.on('connection-error', (err) => {
+      console.error('WebSocket 连接错误:', err)
+    })
+
+  } catch (e) {
+    console.error('建立Yjs连接时出错:', e)
+  }
+}
+const goHistory = async()=>{
+  homeStore.tempQuill = quill
+  sessionStorage.setItem(`${route.params.insertedId}`,JSON.stringify(quill.getContents()))
+    homeStore.isShowHistory = false
+   let res = await getContentHistory(route.params.insertedId)
+   if(res.data.code ==200){
+       res.data.data.forEach((item,index)=>{
+        item.createTime = changeTime(item.createTime)
+        item.id = `用户${index}`
+       })
+       homeStore.historyList = res.data.data
+   
+   }
+}
+//改变时间
+const changeTime = (time)=>{
+  const inputDate = new Date(time)
+    const now = new Date();
+  
+  // 校验日期是否合法
+  if (isNaN(inputDate.getTime())) {
+    return "无效时间";
+  }
+
+  // 获取年月日时分，忽略秒和毫秒
+  const inputYear = inputDate.getFullYear();
+  const inputMonth = inputDate.getMonth() + 1; // 月份从0开始
+  const inputDay = inputDate.getDate();
+  const inputHours = inputDate.getHours().toString().padStart(2, '0');
+  const inputMinutes = inputDate.getMinutes().toString().padStart(2, '0');
+
+  const todayYear = now.getFullYear();
+  const todayMonth = now.getMonth() + 1;
+  const todayDay = now.getDate();
+
+  // 判断是否为今天
+  if (
+    inputYear === todayYear &&
+    inputMonth === todayMonth &&
+    inputDay === todayDay
+  ) {
+    return `今天 ${inputHours}:${inputMinutes}`;
+  }
+
+  // 判断是否为昨天（考虑跨年/跨月）
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (
+    inputYear === yesterday.getFullYear() &&
+    inputMonth === yesterday.getMonth() + 1 &&
+    inputDay === yesterday.getDate()
+  ) {
+    return `昨天 ${inputHours}:${inputMinutes}`;
+  }
+
+  // 更早的时间：返回 M月D日 HH:MM
+  return `${inputMonth}月${inputDay}日 ${inputHours}:${inputMinutes}`;
+}
+const backContent = ()=>{
+     homeStore.isShowHistory = true
+        //先变回原来页面在渲染
+      quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
+   sessionStorage.removeItem(`${route.params.insertedId}`)
+}
+// 监听路由参数变化
+watch(() => route.params.insertedId, (newId, oldId) => {
+  console.log('变化了吗')
+  if (newId && newId !== oldId && quill) {
+    // 延迟执行，确保DOM更新完成
+    nextTick(() => {
+      initYjsConnection(newId, quill)
+    })
+  }
+}, { immediate: false })
+onBeforeRouteLeave((to,from)=>{
+  console.log('onMounted文件挂载了')
+   saveFile(from.params.insertedId,{
+      content:JSON.stringify(quill.getContents())
+    }).then((res)=>{
+      console.log(from,'from')
+    })
+})
+//代码块
 const codeMirrorInstances = ref(new Map())
 class CodeMirrorBlock extends BlockEmbed {
   static blotName = 'code-mirror'
@@ -192,17 +414,31 @@ const handleFormatChange = (value) => {
   }
 };
 onMounted(() => {
+  console.log('onMounted文件挂载了')
+  if (sessionStorage.getItem('lastUrl')) {
+    isShowClose.value = true
+  }
+  //注册代码块
   Quill.register(CodeMirrorBlock)
+  //注册用户光标
+  Quill.register('modules/cursors', QuillCursors)
   const options = {
     debug: 'info',
     modules: {
       toolbar: '#toolbar',
+      cursors: true,
       keyboard: {
         bindings: {
           tab: false,
           enter: false,
           backspace: false
         }
+      },
+      //回撤
+      history: {
+        userOnly: true, // 关键配置
+        delay: 500,
+        maxStack: 200
       }
     },
     clipboard: {
@@ -220,14 +456,25 @@ onMounted(() => {
     placeholder: '请输入内容',
     theme: 'snow'
   };
-
   const quillToolbar = document.querySelector('#toolbar');
   quill = new Quill('#children', options);
+  // 延迟初始化Yjs连接，确保Quill完全初始化
+  // fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
+  //     quill.setContents(JSON.parse(res.data.content))
+  // })
+  nextTick(() => {
+    if (route.params.insertedId) {
+      initYjsConnection(route.params.insertedId, quill)
+    }
+  })
 
   // 选中的时候显示工具栏并根据选中的位置来决定工具栏位置
   quill.on('selection-change', (range) => {
+    if (!range) return // 添加空值检查
+
     const bounds = quill.getBounds(range.index, range.length);
     if (range && range.length > 0) {
+      quillToolbar.style.zIndex = 6;
       quillToolbar.style.display = 'block';
       quillToolbar.style.top = bounds.top - 48 + 'px';
       quillToolbar.style.left = bounds.left + 'px';
@@ -235,15 +482,33 @@ onMounted(() => {
       quillToolbar.style.display = 'none';
     }
   })
-
+  // 防抖
+  let timer = null
   //当位置改变时，工具栏跟着变动
-  quill.on('text-change', () => {
+  quill.on('text-change', (delta, oldDelta, source) => {
     const range = quill.getSelection();
+    if (!range) return // 添加空值检查
     const bounds = quill.getBounds(range.index, range.length);
     if (range && range.length > 0) {
       quillToolbar.style.top = bounds.top - 48 + 'px';
       quillToolbar.style.left = bounds.left + 'px';
     }
+    //简单的防抖
+    //如果在历史版本界面，则不需要保存
+    if(homeStore.isShowHistory && !sessionStorage.getItem(`${route.params.insertedId}`)){
+      console.log('触发保存了吗')
+ clearTimeout(timer)
+    timer = null
+    timer = setTimeout(()=>{
+      addContentHistory(route.params.insertedId,JSON.stringify(quill.getContents()))
+      saveFile(route.params.insertedId,{
+        content:JSON.stringify(quill.getContents())
+      }).then(res=>{
+        console.log('保存成功',res)
+      })
+    },300)
+    }
+    
   })
 
   renderCodeMirrorBlocks()
@@ -258,14 +523,62 @@ onMounted(() => {
     if (!codeBlock) {
       // 如果点击的不是代码块，则移除所有代码块的焦点
       codeMirrorInstances.value.forEach(view => {
-        view.dom.blur()
+        if (view && view.dom) {
+          view.dom.blur()
+        }
       })
     }
   })
 })
 
+onBeforeUnmount(() => {
+  // saveFile(route.params.insertedId,{
+  //     content:JSON.stringify(quill.getContents())
+  //   }).then((res)=>{
+  //     console.log('保存成功',res)
+  //   })
 
+  // 清理Yjs连接
+  if (binding) {
+    try {
+      binding.destroy()
+      binding = null
+    } catch (e) {
+      console.log('销毁binding时出错:', e)
+    }
+  }
 
+  if (wsProvider) {
+    try {
+      wsProvider.disconnect()
+      wsProvider.destroy()
+      console.log('销毁WebSocket连接')
+    } catch (e) {
+      console.log('销毁wsProvider时出错:', e)
+    }
+  }
+
+  if (ydoc) {
+    try {
+      ydoc.destroy()
+    } catch (e) {
+      console.log('销毁ydoc时出错:', e)
+    }
+  }
+
+  // 重置变量
+  wsProvider = null
+  binding = null
+  ydoc = null
+   
+});
+// 当从知识库进来的删除
+const handleClose = () => {
+  const url = sessionStorage.getItem('lastUrl')
+  isShowClose.value = false
+  router.push(url)
+  sessionStorage.removeItem('lastUrl')
+}
 // 2. 将选中文本转换为代码块
 const convertToCodeBlock = () => {
   if (!quill) return
@@ -447,15 +760,6 @@ const renderCodeMirrorBlocks = () => {
     block.classList.add('cm-initialized')
   })
 }
-
-// 4. 清理CodeMirror实例
-// const cleanupCodeMirrorInstances = () => {
-//   codeMirrorInstances.value.forEach(view => {
-//     view.destroy()
-//   })
-//   codeMirrorInstances.value.clear()
-// }
-
 </script>
 <style lang="scss">
 .ql-container {
@@ -672,26 +976,159 @@ button:hover {
   flex-direction: column;
   height: 100vh;
 
+  .close {
+    position: absolute;
+    top: 30px;
+    left: 50px;
+
+    &:hover {
+      cursor: pointer
+    }
+  }
+
   .nav {
     position: absolute;
     top: 0;
     left: 0;
     height: 64px;
     width: calc(100vw - 300px);
-    background-color: skyblue;
-  }
+    display:flex;
+    align-items: center;
+    // background-color: skyblue;
+    justify-content: space-between;
+    border-bottom: 1px solid #ddd;
+   .left{
+    display:flex;
+    align-items: center;
+     .avatar {
+      border-left:1px solid #ddd;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      // overflow:hidden;
+      position: relative;
+      cursor: pointer;
+      .icon {
+        width: 100%;
+        height: 100%;
+        // width: 40px;
+        // height: 40px;
+        // border-radius: 50%;
+      }
+      .unlogin{
+        position: absolute;
+        top: 50px;
+        right: 0;
+        background: white;
+        border: 1px solid #ddd;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 4px;
+        padding: 10px 10px 0 10px;
+        width: 100px;
+        height: auto;
+        justify-content: center;
+        display: flex;
+        align-content: center;
+        button {
 
+          background: none;
+          border: none;
+          cursor: pointer;
+          color: #333;
+          font-size: 14px;
+        }
+        button:hover {
+          color: rgba(80, 98, 124, 0.788);
+        }
+      }
+    }
+    .history{
+      margin-right:20px;
+      height: 32px;
+      display: flex;
+      align-items:center!important;
+      justify-content: center;
+      border:1px solid #ddd;
+      padding:10px;
+      border-radius: 8px;
+      &:hover{
+        cursor: pointer;
+      }
+      .icon{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .txt{
+        margin-left:5px;
+        font-size: 14px;
+        color:#1f2329;
+      }
+    }
+   }
+  }
+.header{
+  position: absolute;
+    top: 0;
+    left: 0;
+    width: calc(100vw - 300px);
+  height: 64px;
+  display:flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+   border-bottom: 1px solid #ddd;
+  .back{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    &:hover{
+      height: 24px;
+      background: #f5f7fa;
+      cursor: pointer;
+    }
+    .icon{
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .txt{
+      font-size: 14px;
+      color:#1f2329
+    }
+  }
+  .center{
+    margin-right:10px;
+    display: flex;
+    align-items: center;
+    border:1px solid #ddd;
+    border-radius: 8px;
+    padding:6px 10px;
+    background-color:#aaa;
+    .txt{
+      font-size: 14px;
+      color:#fff;
+    }
+    &:hover{
+      cursor: pointer;
+    }
+  }
+}
   .content {
     box-sizing: border-box;
     flex: 1;
-    margin-top: 64px;
-
+    margin-top: 61px;
+   overflow-y:scroll ;
+   &::-webkit-scrollbar{
+    display:none;
+   }
     &-center {
+      box-sizing: content-box;
       height: calc(100vh - 86px);
-      max-width: 820px;
+      min-width: 820px !important;
       padding: 0 268px;
       position: relative;
-
+      
       .page-header {
         padding: 20 0 0 0;
         margin-bottom: 22px;

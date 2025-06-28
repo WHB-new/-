@@ -1,5 +1,5 @@
 import request from "@/utils/request";
-export function addFile(){
+export function addFile(data){
   return request({
     url:'/document/addDoc',
     method:'post',
@@ -44,4 +44,33 @@ export function saveFile(params,data){
     method:'put',
     data
   })
+}
+
+export function deleteFile(id) {
+  return request({
+    url: `/document/delete/${id}`,
+    method: 'delete'
+  })
+}
+
+export function updateDocument(id, data) {
+  return request({
+    url: `/document/put/${id}`,
+    method: 'put',
+    data,
+    headers: {
+      "Content-Type": "application/json"
+    }
+  });
+}
+
+export function updateDocument(id, data) {
+  return request({
+    url: `/document/put/${id}`,
+    method: 'put',
+    data,
+    headers: {
+      "Content-Type": "application/json"
+    }
+  });
 }
