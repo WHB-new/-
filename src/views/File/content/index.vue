@@ -244,15 +244,24 @@ const initYjsConnection = (fileId, quillInstance) => {
   try {
     ydoc = new Y.Doc()
     const yText = ydoc.getText('quill')
-    console.log(yText,'权威')
     wsProvider = new WebsocketProvider(
       `ws://localhost:8001/onlineEdit/${sessionStorage.getItem('userId')}`,
       fileId,
       ydoc,
     )
-    ydoc.on('update', (update,origin) => {
-    })
-  
+   wsProvider.on('sync',()=>{
+     //有缓存用缓存
+        if(sessionStorage.getItem(`${route.params.insertedId}`)){
+          quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
+          sessionStorage.removeItem(`${route.params.insertedId}`)
+        }else if(yText.length ==0 || yText.lenght ==1){
+          fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
+            if(res.data.code == 200){
+              quill.setContents(JSON.parse(res.data.data.content))
+            }
+  })
+        }
+   })
     wsProvider.on('status', (event) => {
       if (event.status === 'connected') {
             homeStore.tempQuill = quill
@@ -260,17 +269,7 @@ const initYjsConnection = (fileId, quillInstance) => {
           const quillEditor = quillInstance.quill || quillInstance
           binding = new QuillBinding(yText, quillEditor, wsProvider.awareness)
         }
-        //有缓存用缓存
-        if(sessionStorage.getItem(`${route.params.insertedId}`)){
-          quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
-          sessionStorage.removeItem(`${route.params.insertedId}`)
-        }else{
-          fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
-            if(res.data.code == 200){
-              quill.setContents(JSON.parse(res.data.data.content))
-            }
-  })
-        }
+       
        
       }
     })
