@@ -73,7 +73,7 @@ const applies = ref([
 const fetchApplies = async (userId) => {
   try {
     const res = await getAddFriendList(userId);
-    applies.value = transformApplies(res.data);
+    applies.value = transformApplies(res.data.data);
   } catch (error) {
     console.error('获取好友申请列表失败:', error);
   }

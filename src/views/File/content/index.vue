@@ -276,7 +276,9 @@ const initYjsConnection = (fileId, quillInstance) => {
     wsProvider.on('connection-error', (err) => {
       console.error('WebSocket 连接错误:', err)
     })
-
+wsProvider.on('disconnect',()=>{
+  console.log('触发了吗断开连接')
+})
   } catch (e) {
     console.error('建立Yjs连接时出错:', e)
   }
@@ -340,20 +342,18 @@ const changeTime = (time)=>{
   return `${inputMonth}月${inputDay}日 ${inputHours}:${inputMinutes}`;
 }
 const backContent = ()=>{
-     homeStore.isShowHistory = true
+  homeStore.quill = null
+   homeStore.isShowHistory = true
         //先变回原来页面在渲染
-      quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
-   sessionStorage.removeItem(`${route.params.insertedId}`)
+  //     quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
+  //  sessionStorage.removeItem(`${route.params.insertedId}`)
 }
 // 监听路由参数变化
 watch(() => route.params.insertedId, (newId, oldId) => {
-  console.log('变化了吗')
-  if (newId && newId !== oldId && quill) {
-    // 延迟执行，确保DOM更新完成
+  console.log(quill,'quill还在吗')
     nextTick(() => {
       initYjsConnection(newId, quill)
     })
-  }
 }, { immediate: false })
 onBeforeRouteLeave((to,from)=>{
   console.log('onMounted文件挂载了')
