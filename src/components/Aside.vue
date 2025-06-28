@@ -146,14 +146,14 @@
         <div style="height: 52px;display: flex;align-items: center;padding:0 8px 0 12px;width: 100%; background-color: rgba(251, 252, 252);">
           <div style="height: 26px;display: flex;align-items: center;width: 100%;">
           <svg t="1751035652633" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="5567" width="16" height="16" style="margin:0 10px 0 4px;"><path d="M446.112323 177.545051c137.567677 0.219798 252.612525 104.59798 266.162424 241.493333 13.562828 136.895354-78.778182 261.818182-213.617777 289.008485-134.852525 27.203232-268.386263-52.156768-308.945455-183.608889s25.018182-272.252121 151.738182-325.779394A267.235556 267.235556 0 0 1 446.112323 177.545051m0-62.060607c-182.794343 0-330.989899 148.195556-330.989899 330.989899s148.195556 330.989899 330.989899 330.989899 330.989899-148.195556 330.989899-330.989899-148.195556-330.989899-330.989899-330.989899z m431.321212 793.341415a30.849293 30.849293 0 0 1-21.94101-9.102223l-157.220202-157.220202c-11.752727-12.179394-11.584646-31.534545 0.37495-43.50707 11.972525-11.972525 31.327677-12.140606 43.494141-0.37495l157.220202 157.220202a31.036768 31.036768 0 0 1 6.723232 33.810101 31.004444 31.004444 0 0 1-28.651313 19.174142z m0 0" p-id="5568"></path></svg>
-          <el-input v-model="searchValue" placeholder="搜索"  class="no-border-input"></el-input>
+          <el-input v-model="searchValue" placeholder="搜索"  class="no-border-input" @keydown.enter.native="search"></el-input>
           </div>
         </div>
       </template>
       <template #default>
         <div class="search-list">
-          <div class="search-history">
-            <div class="header">
+          <div class="search-history" v-show="searchList.length==0">
+            <div class="header" >
               搜索历史
             </div>
             <div class="li">
@@ -165,6 +165,22 @@
               </div>
             </div>
           </div>
+          <div class="search-content">
+            <div class="li" v-for="(item) in searchList" :key="item._id" @click="handleFile(item._id)">
+              <div class="icon">
+ <svg t="1751119283176" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3281" width="20" height="20"><path d="M654.826667 117.333333l209.173333 209.173334V928h-704v-810.666667h494.826667zM586.666667 181.312h-362.666667V864h576v-469.333333h-213.333333V181.333333zM704 672v64H320v-64h384z m0-170.666667v64H320v-64h384z m-203.264-170.666666v64H320v-64h180.736z m276.928 0L650.666667 203.669333V330.666667h126.997333z" fill="#1677FF" p-id="3282"></path></svg>
+              </div>
+              <div class="main">
+                <div class="content-title">
+                   {{ item.title }}
+                </div>
+                <div class="content-intro">
+                  {{item.content}}
+                </div>
+                <div class="footer"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </template>
     </el-dialog>
@@ -172,11 +188,30 @@
 
 <script setup>
 import { RouterLink, useRoute, useRouter } from 'vue-router'
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, nextTick } from 'vue';
 import { addFile, getFileList,fileListDetail} from '@/api/file';
 import { ElMessage } from 'element-plus';
 import {useHomeStore} from '@/store/home'
+//引入搜索插件
+import FlexSearch from 'flexsearch'
+
+//搜索到的列表
+const searchList = ref([])
 const homeStore = useHomeStore()
+let index
+//搜索函数
+const search=()=>{
+  searchList.value = []
+  const result = index.search(searchValue.value)
+  console.log(result,index,homeStore.fileList,'触发了这个函数')
+  homeStore.fileList.map(item=>{
+    if(result.includes(item._id)){
+      searchList.value.push(item)
+    }
+  })
+  
+}
+
 //控制菜单
 const activeIndex = ref('file')
 const route = useRoute()
@@ -197,6 +232,17 @@ isShowName.value = true
 // 搜索
 const handleSearch =()=>{
 searchVisible.value = true
+//创建索引
+index = new FlexSearch.Index({
+  tokenize:'reverse',//适合中英数字分词
+  charset:"latin:extra",//支持特殊字符
+  suggest:true,//支持建议
+})
+homeStore.fileList.forEach((item)=>{
+  const titleAndContent = `${item.title} ${item.content}`
+  console.log('触发了这个函数',titleAndContent)
+  index.add(item._id,titleAndContent)
+})
 }
 // 处理文件点击
 const handleEnterFile = async (id, index) => {
@@ -210,7 +256,12 @@ const handleEnterFile = async (id, index) => {
     }
   })
 }
-
+const handleFile = async(id)=>{
+   const userId = sessionStorage.getItem('userId')
+  const res = await fileListDetail(id,userId)
+   const url =router.resolve({name:'content',params:{insertedId:id}})
+   window.open(url.href,'_blank')
+  }
 // 监听路由变化，更新高亮状态
 watch(() => route.path, (newPath) => {
   if (newPath === '/knowledges') {
@@ -519,6 +570,61 @@ const handleAddFile = async () => {
       .txt{
         margin-left:8px;
         line-height: 36px;
+      }
+    }
+  }
+  .search-content{
+ 
+    padding:0 3px;
+    width: 100%;
+    .li{
+      padding:8px 8px 8px 12px;
+      display:flex;
+      align-items: center;
+      &:hover{
+        cursor: pointer;
+        background-color: #f4f4f4;
+        border-radius: 5px;
+      }
+      .icon{
+        width: 34px;
+        height: 44px;
+        display: flex;
+        // justify-content: center;
+        align-items: center;
+        margin-right:10px;
+      }
+      .main{
+        flex:1;
+        max-width: 470px;
+        .content-title{
+          height: 22px;
+          color:#1f2329;
+          font-size: 14px;
+          overflow:hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          font-family: LarkHackSafariFont;
+        }
+        .content-intro{
+          font-size: 12px;
+          color:#646A73;
+          line-height: 20px;
+            font-family: LarkHackSafariFont;
+            display:-webkit-box;
+            text-overflow: ellipsis;
+            -webkit-box-orient:vertical;
+            -webkit-line-clamp: 2;
+            overflow:hidden;
+            white-space:normal;
+        }
+        .footer{
+          // margin-top:2px;
+          // height: 20px;
+          font-size: 12px;
+          color:#646A73;
+            font-family: LarkHackSafariFont;
+        }
       }
     }
   }

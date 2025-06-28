@@ -220,9 +220,15 @@ const backToHistory = ()=>{
   sessionStorage.setItem(`${route.params.insertedId}`,JSON.stringify(quill.getContents()))
   homeStore.isShowHistory = true
   quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
+  saveFile(route.params.insertedId,{
+        content:JSON.stringify(quill.getContents())
+      }).then(res=>{
+        console.log('保存成功',res)
+      })
   //初始化
    homeStore.quillData = null
    homeStore.historyIndex = 0
+
 }
 // 初始化Yjs连接的函数
 const initYjsConnection = (fileId, quillInstance) => {
