@@ -65,18 +65,17 @@ export const useKnowledgeStore = defineStore('knowledge', () => {
         }))
       });
        if(res.data.code ==200){
-      console.log('失败了')
-      ElMessage.success('知识库已成功更新！');
+        ElMessage.success('知识库已成功更新！');
     }
-      const index = knowledgeList.value.findIndex(r => r.id === id);
-      if (index !== -1) {
-        knowledgeList.value[index] = {
-          ...knowledgeList.value[index],
-          title: updatedData.title,
-          description: updatedData.description,
+        const index = knowledgeList.value.findIndex(r => r.id === id);
+        if (index !== -1) {
+          knowledgeList.value[index] = {
+            ...knowledgeList.value[index],
+            title: updatedData.title,
+            description: updatedData.description,
           directory: updatedData.directory,
-          updated: formatDate(new Date())
-        };
+            updated: formatDate(new Date())
+          };
       }
     } catch (error) {
       console.error('更新知识库失败:', error);

@@ -7,11 +7,11 @@
 
       </div>
       <div class="left">
-        <div class="history">
+        <div class="history" @click="goHistory">
         <div class="icon">
           <svg t="1750924024571" class="icon" viewBox="0 0 1029 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4316" width="16" height="16"><path d="M761.216 997.76c-144.64 0-262.4-117.76-262.4-262.4s117.76-262.4 262.4-262.4 262.4 117.76 262.4 262.4-117.76 262.4-262.4 262.4z m0-448c-102.4 0-185.6 83.2-185.6 185.6s83.2 185.6 185.6 185.6 185.6-83.2 185.6-185.6-83.328-185.6-185.6-185.6z" p-id="4317"></path><path d="M858.496 815.872l-116.48-58.24V588.16h51.2v137.728l88.192 44.16zM174.08 269.312h422.4v51.2h-422.4zM174.08 448.512h281.6v51.2h-281.6zM174.08 627.712h192v51.2h-192z" p-id="4318"></path><path d="M442.88 922.112H0v-883.2h775.68v364.8h-76.8V115.712H76.8v729.6h366.08z" p-id="4319"></path></svg>
         </div>
-        <div class="txt" @click="homeStore.isShowHistory = false">历史版本</div>
+        <div class="txt">历史版本</div>
       </div>
        <div class="avatar" @click="toggleDropdown">
         <!-- <img src="./figure.png" alt="头像" class="avatar-img" /> -->
@@ -27,7 +27,7 @@
     </div>
      <!-- 历史记录 -->
      <div class="header" v-show="!homeStore.isShowHistory">
-      <div class="back" @click="homeStore.isShowHistory = true">
+      <div class="back" @click="backContent">
         <div class="icon">
           <svg t="1750925620558" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="6314" width="16" height="16"><path d="M682.666667 298.666667h-213.333334a256 256 0 1 0 0 512h384v85.333333h-384a341.333333 341.333333 0 1 1 0-682.666667h213.333334V42.666667l256 213.333333-256 213.333333V298.666667z" fill="#000000" p-id="6315"></path></svg>
         </div>
@@ -35,7 +35,7 @@
           返回文档
         </div>
       </div>
-      <div class="center">
+      <div class="center" @click="backToHistory" :style="homeStore.historyIndex !=0 ?'background-color:#336df4;':'pointer-events: none;'">
         <div class="txt">还原此历史记录</div>
       </div>
       <div class="right"></div>
@@ -225,11 +225,13 @@ import { QuillBinding } from 'y-quill';
 import { WebsocketProvider } from 'y-websocket';
 import { WebrtcProvider } from 'y-webrtc';
 import {saveFile,fileListDetail} from '@/api/file'
+import {addContentHistory,getContentHistory} from '@/api/content'
 const homeStore = useHomeStore()
 let quill
 let ydoc
 let wsProvider
 let binding
+const historyList = ref([])
 // 控制下拉框显示
 const showDropdown = ref(false);
 const toggleDropdown = () => {
@@ -327,6 +329,20 @@ const quillEditor = ref(null)
 const route = useRoute()
 const router = useRouter()
 const isShowClose = ref(false)
+const backToHistory = ()=>{
+  sessionStorage.setItem(`${route.params.insertedId}`,JSON.stringify(quill.getContents()))
+  homeStore.isShowHistory = true
+  quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
+  saveFile(route.params.insertedId,{
+        content:JSON.stringify(quill.getContents())
+      }).then(res=>{
+        console.log('保存成功',res)
+      })
+  //初始化
+   homeStore.quillData = null
+   homeStore.historyIndex = 0
+
+}
 // 初始化Yjs连接的函数
 const initYjsConnection = (fileId, quillInstance) => {
   if (!quillInstance) {
@@ -349,64 +365,125 @@ const initYjsConnection = (fileId, quillInstance) => {
   try {
     ydoc = new Y.Doc()
     const yText = ydoc.getText('quill')
-    console.log(yText,'权威')
     wsProvider = new WebsocketProvider(
       `ws://localhost:8001/onlineEdit/${sessionStorage.getItem('userId')}`,
       fileId,
       ydoc,
     )
-    ydoc.on('update', (update,origin) => {
-    console.log('收到更新',{origin,update})
-    })
-  
+   wsProvider.on('sync',()=>{
+     //有缓存用缓存
+        if(sessionStorage.getItem(`${route.params.insertedId}`)){
+          quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
+          sessionStorage.removeItem(`${route.params.insertedId}`)
+        }else if(yText.length ==0 || yText.lenght ==1){
+          fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
+            if(res.data.code == 200){
+              quill.setContents(JSON.parse(res.data.data.content))
+            }
+  })
+        }
+   })
     wsProvider.on('status', (event) => {
       if (event.status === 'connected') {
-        console.log('WebSocket 已连接',route.params.insertedId)
         if (!binding && quillInstance) {
           const quillEditor = quillInstance.quill || quillInstance
           binding = new QuillBinding(yText, quillEditor, wsProvider.awareness)
         }
-        console.log(yText.length,'权威')
-        if(yText.length == 0 && yText.length == 1){
-          fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
-    console.log(res.data.content,'res')
-    quill.setContents(JSON.parse(res.data.content))
-  })
-        }
+       
+       
       }
     })
     wsProvider.on('connection-error', (err) => {
       console.error('WebSocket 连接错误:', err)
     })
-
+wsProvider.on('disconnect',()=>{
+  console.log('触发了吗断开连接')
+})
   } catch (e) {
     console.error('建立Yjs连接时出错:', e)
   }
 }
+const goHistory = async()=>{
+  sessionStorage.setItem(`${route.params.insertedId}`,JSON.stringify(quill.getContents()))
+    homeStore.isShowHistory = false
+   let res = await getContentHistory(route.params.insertedId)
+   if(res.data.code ==200){
+       res.data.data.forEach((item,index)=>{
+        item.createTime = changeTime(item.createTime)
+        item.id = `用户${index}`
+       })
+       homeStore.historyList = res.data.data
+   
+   }
+}
+//改变时间
+const changeTime = (time)=>{
+  const inputDate = new Date(time)
+    const now = new Date();
+  
+  // 校验日期是否合法
+  if (isNaN(inputDate.getTime())) {
+    return "无效时间";
+  }
 
+  // 获取年月日时分，忽略秒和毫秒
+  const inputYear = inputDate.getFullYear();
+  const inputMonth = inputDate.getMonth() + 1; // 月份从0开始
+  const inputDay = inputDate.getDate();
+  const inputHours = inputDate.getHours().toString().padStart(2, '0');
+  const inputMinutes = inputDate.getMinutes().toString().padStart(2, '0');
+
+  const todayYear = now.getFullYear();
+  const todayMonth = now.getMonth() + 1;
+  const todayDay = now.getDate();
+
+  // 判断是否为今天
+  if (
+    inputYear === todayYear &&
+    inputMonth === todayMonth &&
+    inputDay === todayDay
+  ) {
+    return `今天 ${inputHours}:${inputMinutes}`;
+  }
+
+  // 判断是否为昨天（考虑跨年/跨月）
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (
+    inputYear === yesterday.getFullYear() &&
+    inputMonth === yesterday.getMonth() + 1 &&
+    inputDay === yesterday.getDate()
+  ) {
+    return `昨天 ${inputHours}:${inputMinutes}`;
+  }
+
+  // 更早的时间：返回 M月D日 HH:MM
+  return `${inputMonth}月${inputDay}日 ${inputHours}:${inputMinutes}`;
+}
+const backContent = ()=>{
+   homeStore.isShowHistory = true
+        //先变回原来页面在渲染
+      quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
+   sessionStorage.removeItem(`${route.params.insertedId}`)
+   //初始化
+   homeStore.quillData = null
+   homeStore.historyIndex = 0
+}
 // 监听路由参数变化
 watch(() => route.params.insertedId, (newId, oldId) => {
-  console.log('变化了吗')
-  if (newId && newId !== oldId && quill) {
-    console.log('路由参数变化:', oldId, '->', newId)
-    console.log('当前quill实例:', quill)
-    //用于保存跳转到另一文件的情况
-    saveFile(oldId,{
-      content:JSON.stringify(quill.getContents())
-    }).then((res)=>{
-      console.log('保存成功',res)
-    })
-  //   fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
-  //   console.log(res.data.content,'res')
-  //   quill.setContents(JSON.parse(res.data.content))
-
-  // })
-    // 延迟执行，确保DOM更新完成
+  console.log(quill,'quill还在吗')
     nextTick(() => {
       initYjsConnection(newId, quill)
     })
-  }
 }, { immediate: false })
+watch(()=>homeStore.historyIndex,(newValue,oldValue)=>{
+   console.log(homeStore.quillData,'触发了吗')
+   nextTick(()=>{
+    if(homeStore.quillData != null){
+      quill.setContents(JSON.parse(homeStore.quillData))
+    }
+   })
+})
 onBeforeRouteLeave((to,from)=>{
   console.log('onMounted文件挂载了')
    saveFile(from.params.insertedId,{
@@ -464,7 +541,6 @@ const handleFormatChange = (value) => {
     // 无需操作（已清除格式）
   }
 };
-let routeId = ref(null)
 onMounted(() => {
   console.log('onMounted文件挂载了')
   if (sessionStorage.getItem('lastUrl')) {
@@ -534,23 +610,33 @@ onMounted(() => {
       quillToolbar.style.display = 'none';
     }
   })
-
+  // 防抖
+  let timer = null
   //当位置改变时，工具栏跟着变动
   quill.on('text-change', (delta, oldDelta, source) => {
     const range = quill.getSelection();
     if (!range) return // 添加空值检查
-
     const bounds = quill.getBounds(range.index, range.length);
     if (range && range.length > 0) {
       quillToolbar.style.top = bounds.top - 48 + 'px';
       quillToolbar.style.left = bounds.left + 'px';
     }
-    if (source === 'user') {
-      console.log(delta, 'delta')
-      if (ydoc) {
-        console.log(ydoc, '数据')
-      }
+    //简单的防抖
+    //如果在历史版本界面，则不需要保存
+    if(homeStore.isShowHistory && !sessionStorage.getItem(`${route.params.insertedId}`)){
+      console.log('触发保存了吗')
+ clearTimeout(timer)
+    timer = null
+    timer = setTimeout(()=>{
+      addContentHistory(route.params.insertedId,JSON.stringify(quill.getContents()))
+      saveFile(route.params.insertedId,{
+        content:JSON.stringify(quill.getContents())
+      }).then(res=>{
+        console.log('保存成功',res)
+      })
+    },300)
     }
+    
   })
 
   renderCodeMirrorBlocks()
@@ -1259,13 +1345,16 @@ button:hover {
     flex: 1;
     margin-top: 61px;
    overflow-y:scroll ;
+   &::-webkit-scrollbar{
+    display:none;
+   }
     &-center {
       box-sizing: content-box;
       height: calc(100vh - 86px);
       min-width: 820px !important;
       padding: 0 268px;
       position: relative;
-
+      
       .page-header {
         padding: 20 0 0 0;
         margin-bottom: 22px;
