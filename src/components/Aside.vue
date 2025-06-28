@@ -123,7 +123,7 @@
                       </el-dropdown-item>
 
                       <el-dropdown-item>
-                        <div style="display:flex;align-items: center;">
+                        <div style="display:flex;align-items: center;" @click="handleDeleteFile(item._id)">
                           <div
                             style="display: flex;justify-content: center;align-items: center;margin-right:5px;width:16px;height: 16px;">
                             <svg t="1750569983191" class="icon" viewBox="0 0 1024 1024" version="1.1"
@@ -157,8 +157,8 @@
       <el-input v-model="changedName" placeholder="请输入你想修改的名字"></el-input>
     </template>
     <template #footer>
-      <el-button size="small">取消</el-button>
-      <el-button type="primary" size="small">
+      <el-button size="small" @click="cancelRename">取消</el-button>
+      <el-button type="primary" size="small" @click="confirmRename">
         确定
       </el-button>
     </template>
@@ -168,8 +168,8 @@
 <script setup>
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { ref, onMounted, watch } from 'vue';
-import { addFile, getFileList, fileListDetail } from '@/api/file';
-import { ElMessage } from 'element-plus';
+import { addFile, getFileList, fileListDetail, saveFile, deleteFile } from '@/api/file';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { useHomeStore } from '@/store/home'
 const homeStore = useHomeStore()
 //控制菜单
@@ -179,14 +179,100 @@ const router = useRouter()
 // const fileList = ref([])
 const isShowName = ref(false)
 const changedName = ref('')
+const currentFileId = ref('')
+
 // 处理菜单点击
 const handleMenuClick = (index) => {
   activeIndex.value = index
 }
+
 // 重命名
 const changeFileName = async (id) => {
+  currentFileId.value = id
+  // 找到当前文件并设置默认名称
+  const currentFile = homeStore.fileList.find(file => file._id === id)
+  if (currentFile) {
+    changedName.value = currentFile.title
+  }
   isShowName.value = true
 }
+
+// 确认重命名
+const confirmRename = async () => {
+  if (!changedName.value.trim()) {
+    ElMessage.error('文件名不能为空')
+    return
+  }
+  
+  try {
+    const currentFile = homeStore.fileList.find(file => file._id === currentFileId.value)
+    if (!currentFile) {
+      ElMessage.error('文件不存在')
+      return
+    }
+    
+    const res = await saveFile(currentFileId.value, {
+      title: changedName.value.trim(),
+      baseId: currentFile.baseId,
+      content: currentFile.content,
+      valid: currentFile.valid
+    })
+    
+    if (res.data.code === 200) {
+      ElMessage.success('重命名成功')
+      isShowName.value = false
+      changedName.value = ''
+      // 刷新文件列表
+      homeStore.getFileList()
+      // 触发主页数据刷新
+      window.dispatchEvent(new CustomEvent('refreshRecentFiles'))
+    } else {
+      ElMessage.error('重命名失败')
+    }
+  } catch (error) {
+    console.error('重命名失败:', error)
+    ElMessage.error('重命名失败，请重试')
+  }
+}
+
+// 取消重命名
+const cancelRename = () => {
+  isShowName.value = false
+  changedName.value = ''
+  currentFileId.value = ''
+}
+
+// 删除文档
+const handleDeleteFile = async (id) => {
+  try {
+    await ElMessageBox.confirm(
+      '确定要删除这个文档吗？此操作不可恢复。',
+      '删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    );
+    
+    const res = await deleteFile(id);
+    if (res.data.code === 200) {
+      ElMessage.success('文档删除成功');
+      // 刷新文件列表
+      homeStore.getFileList();
+      // 触发主页数据刷新
+      window.dispatchEvent(new CustomEvent('refreshRecentFiles'))
+    } else {
+      ElMessage.error('删除失败，请重试');
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除文档失败:', error);
+      ElMessage.error('删除失败，请重试');
+    }
+  }
+};
+
 // 处理文件点击
 const handleEnterFile = async (id, index) => {
   activeIndex.value = `file-${id}`

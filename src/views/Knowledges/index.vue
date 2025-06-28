@@ -133,8 +133,18 @@ name:[{required:true,message:'请输入名称',trigger:'blur'}],
 })
 const ownerId = ref(null)
 onMounted(()=>{
-  ownerId.value = sessionStorage.getItem('defaultKnowledgeId')
+  ownerId.value = sessionStorage.getItem('userId')
 })
+
+// 临时处理函数
+const temphandle = async () => {
+  // 如果没有userId，尝试从其他地方获取
+  const userId = sessionStorage.getItem('userId');
+  if (userId) {
+    ownerId.value = userId;
+  }
+}
+
 const handleAddFile = ()=>{
   const baseId=sessionStorage.getItem('defaultKnowledgeId')
     addFile({
@@ -164,9 +174,9 @@ const confirmAdd = async () => {
   try {
     await formRef.value.validate();
     const response = await addKnowledge({
-    ownerId: ownerId.value,
-    baseName: form.value.name,
-    baseDesc: form.value.intro 
+      ownerId: sessionStorage.getItem('userId'),
+      baseName: form.value.name,
+      baseDesc: form.value.intro 
     });
     
     console.log('创建响应:', response);
@@ -185,7 +195,8 @@ const confirmAdd = async () => {
       })
     } 
   } catch(error) {
-    
+    console.error('创建知识库失败:', error);
+    ElMessage.error('创建失败，请重试');
   }
 }
 

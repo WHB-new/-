@@ -1,5 +1,12 @@
 <template>
   <div class="container">
+    <!-- 添加侧边栏控制按钮 -->
+    <div class="sidebar-toggle" v-show="homeStore.isCollapse" @click="homeStore.isCollapse=false">
+      <svg t="1749734503742" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3371" width="16" height="16">
+        <path d="M907.264 70.656H116.736c-32.768 0-59.392 26.624-59.392 59.392v40.448c0 32.768 26.624 59.392 59.392 59.392h790.528c32.768 0 59.392-26.624 59.392-59.392v-40.448c0.512-32.768-26.624-59.392-59.392-59.392zM334.848 432.128H116.736c-32.768 0-59.392 26.624-59.392 59.392v40.448c0 32.768 26.624 59.392 59.392 59.392h218.624c32.768 0 59.392-26.624 59.392-59.392V491.52c0-32.768-26.624-59.392-59.904-59.392zM334.848 793.6H116.736c-32.768 0-59.392 26.624-59.392 59.392v40.448c0 32.768 26.624 59.392 59.392 59.392h218.624c32.768 0 59.392-26.624 59.392-59.392v-40.448c0-32.768-26.624-59.392-59.904-59.392zM925.184 621.568l-308.736-178.176C561.152 411.136 491.52 451.584 491.52 515.584v356.352c0 64 69.12 103.936 124.928 72.192l308.736-178.176c55.808-32.256 55.808-112.128 0-144.384z" fill="#707070" p-id="3372"></path>
+      </svg>
+    </div>
+    
     <div class="nav" v-show="homeStore.isShowHistory">
      <div style="display:flex;align-items:center;justify-content: space-between;box-sizing: border-box;
      width: 100%;padding:0 20px">
@@ -51,6 +58,26 @@
      <!-- v-show="homeStore.isShowHistory" -->
     <div class="content">
       <div class="content-center">
+        <!-- AI摘要显示区域 -->
+        <transition name="summary-fade" mode="out-in">
+          <div class="summary-section" v-if="summaryVisible && documentSummary" key="summary">
+            <div class="summary-header">
+              <svg t="1750924024571" class="icon" viewBox="0 0 1029 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4316" width="16" height="16">
+                <path d="M761.216 997.76c-144.64 0-262.4-117.76-262.4-262.4s117.76-262.4 262.4-262.4 262.4 117.76 262.4 262.4-117.76 262.4-262.4 262.4z m0-448c-102.4 0-185.6 83.2-185.6 185.6s83.2 185.6 185.6 185.6 185.6-83.2 185.6-185.6-83.328-185.6-185.6-185.6z" p-id="4317"></path>
+                <path d="M858.496 815.872l-116.48-58.24V588.16h51.2v137.728l88.192 44.16zM174.08 269.312h422.4v51.2h-422.4zM174.08 448.512h281.6v51.2h-281.6zM174.08 627.712h192v51.2h-192z" p-id="4318"></path>
+                <path d="M442.88 922.112H0v-883.2h775.68v364.8h-76.8V115.712H76.8v729.6h366.08z" p-id="4319"></path>
+              </svg>
+              <span>AI摘要</span>
+              <el-button size="small" type="primary" @click="generateDocumentSummary" :loading="generatingSummary">
+                重新生成
+              </el-button>
+            </div>
+            <div class="summary-content">
+              {{ documentSummary }}
+            </div>
+          </div>
+        </transition>
+        
         <!-- <div class="page-header">
         
         </div> -->
@@ -195,11 +222,223 @@ import { QuillBinding } from 'y-quill';
 import { WebsocketProvider } from 'y-websocket';
 import { WebrtcProvider } from 'y-webrtc';
 import {saveFile,fileListDetail} from '@/api/file'
+import {generateSummary, getSummary, checkAndUpdateSummary} from '@/api/file'
+import { ElMessage } from 'element-plus';
 const homeStore = useHomeStore()
 let quill
 let ydoc
 let wsProvider
 let binding
+
+// AI摘要相关
+const documentSummary = ref('')
+const generatingSummary = ref(false)
+// 添加请求状态管理，避免重复请求
+const summaryRequestInProgress = ref(false)
+// 添加摘要显示状态，用于动画控制
+const summaryVisible = ref(false)
+
+// 记录上次生成摘要时的内容hash
+let lastSummaryHash = ''
+let summaryTimer = null
+let summaryInterval = null
+
+// 10秒定时器和页面切换触发摘要生成
+let summaryDelayTimer = null
+let summaryShouldGenerate = false
+
+// 获取文档内容纯文本
+function getEditorText() {
+  if (!quill) return ''
+  // 移除replace(/\s+/g, '')，保留原始文本用于字数计算
+  return quill.getText().trim()
+}
+
+// 简单hash函数
+function simpleHash(str) {
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i)
+    hash |= 0
+  }
+  return hash.toString()
+}
+
+// 获取文档摘要
+const loadDocumentSummary = async (retryCount = 0) => {
+  // 如果正在请求中，避免重复请求
+  if (summaryRequestInProgress.value) {
+    return
+  }
+  
+  // 检查文档ID是否存在
+  if (!route.params.insertedId) {
+    return
+  }
+  
+  // 延迟检查，确保quill内容已加载
+  await nextTick()
+  
+  // 判断字数
+  const text = getEditorText()
+  
+  // 如果内容为空且未超过重试次数，则延迟重试
+  if (text.length === 0 && retryCount < 3) {
+    setTimeout(() => {
+      loadDocumentSummary(retryCount + 1)
+    }, 300)
+    return
+  }
+  
+  // 字数不足50时，不加载摘要也不清空已有摘要
+  if (text.length <= 50) {
+    return
+  }
+  
+  summaryRequestInProgress.value = true
+  try {
+    const res = await getSummary(route.params.insertedId)
+    if (res.data.code === 200 && res.data.data) {
+      documentSummary.value = res.data.data.summary
+      // 记录hash
+      lastSummaryHash = simpleHash(getEditorText())
+    }
+  } catch (error) {
+    // 不显示错误提示，因为可能是首次访问
+  } finally {
+    summaryRequestInProgress.value = false
+  }
+}
+
+// 生成文档摘要
+const generateDocumentSummary = async (isAuto = false) => {
+  if (!route.params.insertedId) return
+  if (generatingSummary.value || summaryRequestInProgress.value) {
+    return
+  }
+  
+  // 判断字数
+  const text = getEditorText()
+  
+  if (text.length <= 50) {
+    documentSummary.value = ''
+    return
+  }
+  
+  generatingSummary.value = true
+  summaryRequestInProgress.value = true
+  
+  try {
+    const res = await generateSummary({
+      docId: route.params.insertedId,
+      userId: sessionStorage.getItem('userId')
+    })
+    if (res.data.code === 200) {
+      documentSummary.value = res.data.data.summary
+      // 只在手动生成时显示成功提示，自动生成时不显示
+      if (!isAuto) {
+        ElMessage.success('摘要生成成功')
+      }
+      lastSummaryHash = simpleHash(getEditorText())
+    } else {
+      // 只在手动生成时显示错误提示
+      if (!isAuto) {
+        ElMessage.warning(res.data.message || '摘要生成失败')
+      }
+    }
+  } catch (error) {
+    // 只在手动生成时显示错误提示
+    if (!isAuto) {
+      ElMessage.error('摘要生成失败')
+    }
+  } finally {
+    generatingSummary.value = false
+    summaryRequestInProgress.value = false
+  }
+}
+
+// 监听编辑器内容变化，内容超过50字后5秒无操作生成摘要
+function setupSummaryAutoTrigger() {
+  if (!quill) return
+  let lastText = getEditorText()
+  let lastLength = lastText.length
+  
+  quill.on('text-change', () => {
+    const text = getEditorText()
+    const currentLength = text.length
+    
+    if (currentLength > 50) {
+      summaryShouldGenerate = true
+      if (summaryDelayTimer) clearTimeout(summaryDelayTimer)
+      summaryDelayTimer = setTimeout(() => {
+        // 检查是否正在请求中，避免重复请求
+        if (!summaryRequestInProgress.value && simpleHash(text) !== lastSummaryHash) {
+          generateDocumentSummary(true)
+          summaryShouldGenerate = false
+        }
+      }, 5000) // 5秒延迟
+    } else {
+      // 少于等于50字时，不立即清空摘要，只标记需要清空
+      summaryShouldGenerate = false
+      if (summaryDelayTimer) clearTimeout(summaryDelayTimer)
+    }
+    lastText = text
+    lastLength = currentLength
+  })
+}
+
+// 添加更频繁的字数检测（每30秒检查一次）
+function setupFrequentCheck() {
+  if (summaryInterval) clearInterval(summaryInterval)
+  summaryInterval = setInterval(() => {
+    const text = getEditorText()
+    const currentLength = text.length
+    
+    // 检查是否正在请求中，避免重复请求
+    if (currentLength > 50 && !summaryRequestInProgress.value && simpleHash(text) !== lastSummaryHash) {
+      generateDocumentSummary(true)
+    }
+  }, 30000) // 30秒检查一次
+}
+
+// 初始化摘要自动生成逻辑
+function initSummaryAuto() {
+  setupSummaryAutoTrigger()
+  setupFrequentCheck()
+}
+
+// 页面切换时，如果内容超过50字且摘要未生成，则立即生成摘要
+onBeforeRouteLeave((to, from, next) => {
+  const text = getEditorText()
+  const currentLength = text.length
+  
+  // 页面切换时，如果字数不足50，清空摘要并隐藏
+  if (currentLength <= 50 && documentSummary.value) {
+    documentSummary.value = ''
+    summaryVisible.value = false
+  }
+  
+  if (currentLength > 50 && summaryShouldGenerate) {
+    generateDocumentSummary(true).then(() => {
+      summaryShouldGenerate = false
+      next()
+    })
+    return
+  }
+  next()
+})
+
+// 监听摘要内容变化，控制显示动画
+watch(documentSummary, (newSummary) => {
+  if (newSummary && newSummary.length > 0) {
+    // 有摘要内容时，显示动画
+    summaryVisible.value = true
+  } else {
+    // 无摘要内容时，隐藏动画
+    summaryVisible.value = false
+  }
+}, { immediate: true })
+
 // 控制下拉框显示
 const showDropdown = ref(false);
 const toggleDropdown = () => {
@@ -277,17 +516,32 @@ watch(() => route.params.insertedId, (newId, oldId) => {
   if (newId && newId !== oldId && quill) {
     console.log('路由参数变化:', oldId, '->', newId)
     console.log('当前quill实例:', quill)
+    
+    // 切换文档时重置所有摘要相关状态
+    console.log('重置摘要状态')
+    documentSummary.value = ''
+    summaryVisible.value = false
+    summaryShouldGenerate = false
+    lastSummaryHash = ''
+    
+    // 清理定时器
+    if (summaryDelayTimer) {
+      clearTimeout(summaryDelayTimer)
+      summaryDelayTimer = null
+    }
+    
     //用于保存跳转到另一文件的情况
     saveFile(oldId,{
       content:JSON.stringify(quill.getContents())
     }).then((res)=>{
       console.log('保存成功',res)
     })
-  //   fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
-  //   console.log(res.data.content,'res')
-  //   quill.setContents(JSON.parse(res.data.content))
-
-  // })
+    
+    // 延迟加载新文档的摘要，确保quill内容已加载
+    setTimeout(() => {
+      loadDocumentSummary()
+    }, 500)
+    
     // 延迟执行，确保DOM更新完成
     nextTick(() => {
       initYjsConnection(newId, quill)
@@ -357,6 +611,12 @@ onMounted(() => {
   if (sessionStorage.getItem('lastUrl')) {
     isShowClose.value = true
   }
+  
+  // 加载文档摘要
+  if (route.params.insertedId) {
+    loadDocumentSummary()
+  }
+  
   //注册代码块
   Quill.register(CodeMirrorBlock)
   //注册用户光标
@@ -456,6 +716,13 @@ onMounted(() => {
           view.dom.blur()
         }
       })
+    }
+  })
+
+  // 在quill初始化后调用
+  nextTick(() => {
+    if (quill) {
+      initSummaryAuto()
     }
   })
 })
@@ -897,6 +1164,28 @@ button:hover {
 .ql-code-mirror .cm-line {
   padding: 0;
 }
+
+/* AI摘要动画效果 */
+.summary-fade-enter-active,
+.summary-fade-leave-active {
+  transition: all 0.4s ease;
+}
+
+.summary-fade-enter-from {
+  opacity: 0;
+  transform: translateY(-20px) scale(0.95);
+}
+
+.summary-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.98);
+}
+
+.summary-fade-enter-to,
+.summary-fade-leave-from {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
 </style>
 <style lang="scss" scoped>
 .container {
@@ -904,6 +1193,33 @@ button:hover {
   display: flex;
   flex-direction: column;
   height: 100vh;
+
+  // 侧边栏控制按钮样式
+  .sidebar-toggle {
+    position: fixed;
+    top: 24px;
+    left: 20px;
+    width: 24px;
+    height: 24px;
+    padding: 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 1000;
+    
+    &:hover {
+      background-color: #dddedf;
+    }
+    
+    .icon {
+      width: 16px;
+      height: 16px;
+    }
+  }
 
   .close {
     position: absolute;
@@ -1060,6 +1376,65 @@ button:hover {
         margin-bottom: 22px;
         word-break: break-word;
         position: relative;
+      }
+
+      // AI摘要样式
+      .summary-section {
+        background: #fff;
+        border: 1.5px solid #e3e6ed;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px 0 rgba(0,0,0,0.04);
+        padding: 20px 24px 18px 24px;
+        margin-bottom: 28px;
+        position: relative;
+        min-width: 320px;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 32px;
+
+        .summary-header {
+          display: flex;
+          align-items: center;
+          margin-bottom: 14px;
+          gap: 12px;
+          font-size: 16px;
+          font-weight: 600;
+          color: #3a3a3a;
+          .icon {
+            color: #4e7fff;
+            margin-right: 6px;
+          }
+          .el-button {
+            margin-left: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            padding: 5px 14px;
+            height: 28px;
+          }
+        }
+        
+        .summary-content {
+          color: #4a4a4a;
+          line-height: 1.8;
+          font-size: 15px;
+          background: #f7faff;
+          padding: 16px 18px;
+          border-radius: 8px;
+          border-left: 4px solid #4e7fff;
+          position: relative;
+          min-height: 32px;
+          &::before {
+            content: '"';
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            font-size: 28px;
+            color: #4e7fff;
+            font-weight: bold;
+            opacity: 0.18;
+          }
+        }
       }
 
       .page-children {

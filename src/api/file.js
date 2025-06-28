@@ -12,7 +12,7 @@ export function getFileList(baseId){
    url:'/document/getDocByBaseId',
    method:'get',
    params:{
-    baseId:'685805bb5b0b53d239496fca'
+    baseId: baseId
    }
   })
 }
@@ -42,6 +42,42 @@ export function saveFile(params,data){
   return request({
     url:`/document/updateDoc/${params}`,
     method:'put',
+    data
+  })
+}
+
+//删除文档
+export function deleteFile(docId){
+  return request({
+    url:`/document/delete/${docId}`,
+    method:'delete'
+  })
+}
+
+// AI摘要相关接口
+// 生成文档摘要
+export function generateSummary(data) {
+  return request({
+    url: '/summary/generate',
+    method: 'post',
+    data
+  })
+}
+
+// 获取文档摘要
+export function getSummary(docId) {
+  return request({
+    url: '/summary/getSummary',
+    method: 'get',
+    params: { docId }
+  })
+}
+
+// 检查并更新文档摘要
+export function checkAndUpdateSummary(data) {
+  return request({
+    url: '/summary/checkAndUpdateSummary',
+    method: 'post',
     data
   })
 }

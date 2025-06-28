@@ -63,6 +63,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {login} from '@/api/login'
+import { ElMessage } from 'element-plus'
 const router = useRouter()
 
 // 响应式数据
@@ -81,7 +82,7 @@ const handleLogin =async () => {
     username: loginForm.value.account,
     password: loginForm.value.password
    })
-   if(res.data.code == 201){
+   if(res.data.code == 200){
     //token
     sessionStorage.setItem('Authorization', res.data.token)
     //默认知识库ID
