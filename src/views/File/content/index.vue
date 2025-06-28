@@ -7,11 +7,11 @@
 
       </div>
       <div class="left">
-        <div class="history">
+        <div class="history" @click="goHistory">
         <div class="icon">
           <svg t="1750924024571" class="icon" viewBox="0 0 1029 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4316" width="16" height="16"><path d="M761.216 997.76c-144.64 0-262.4-117.76-262.4-262.4s117.76-262.4 262.4-262.4 262.4 117.76 262.4 262.4-117.76 262.4-262.4 262.4z m0-448c-102.4 0-185.6 83.2-185.6 185.6s83.2 185.6 185.6 185.6 185.6-83.2 185.6-185.6-83.328-185.6-185.6-185.6z" p-id="4317"></path><path d="M858.496 815.872l-116.48-58.24V588.16h51.2v137.728l88.192 44.16zM174.08 269.312h422.4v51.2h-422.4zM174.08 448.512h281.6v51.2h-281.6zM174.08 627.712h192v51.2h-192z" p-id="4318"></path><path d="M442.88 922.112H0v-883.2h775.68v364.8h-76.8V115.712H76.8v729.6h366.08z" p-id="4319"></path></svg>
         </div>
-        <div class="txt" @click="goHistory">历史版本</div>
+        <div class="txt">历史版本</div>
       </div>
        <div class="avatar" @click="toggleDropdown">
         <!-- <img src="./figure.png" alt="头像" class="avatar-img" /> -->
@@ -35,7 +35,7 @@
           返回文档
         </div>
       </div>
-      <div class="center">
+      <div class="center" @click="backToHistory">
         <div class="txt">还原此历史记录</div>
       </div>
       <div class="right"></div>
@@ -54,7 +54,7 @@
         <!-- <div class="page-header">
         
         </div> -->
-        <div class="page-children" id="children" ref="quillEditor" style="padding:0!important;">
+        <div class="page-children" id="children" ref="quillEditor" style="padding:0!important;" >
         
         </div>
 
@@ -195,12 +195,13 @@ import { QuillBinding } from 'y-quill';
 import { WebsocketProvider } from 'y-websocket';
 import { WebrtcProvider } from 'y-webrtc';
 import {saveFile,fileListDetail} from '@/api/file'
-import {addContentHistory} from '@/api/content'
+import {addContentHistory,getContentHistory} from '@/api/content'
 const homeStore = useHomeStore()
 let quill
 let ydoc
 let wsProvider
 let binding
+const historyList = ref([])
 // 控制下拉框显示
 const showDropdown = ref(false);
 const toggleDropdown = () => {
@@ -215,6 +216,12 @@ const quillEditor = ref(null)
 const route = useRoute()
 const router = useRouter()
 const isShowClose = ref(false)
+const backToHistory = ()=>{
+  sessionStorage.setItem(`${route.params.insertedId}`,JSON.stringify(quill.getContents()))
+  homeStore.isShowHistory = true
+  quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
+  window.location.reload()
+}
 // 初始化Yjs连接的函数
 const initYjsConnection = (fileId, quillInstance) => {
   if (!quillInstance) {
@@ -248,19 +255,20 @@ const initYjsConnection = (fileId, quillInstance) => {
   
     wsProvider.on('status', (event) => {
       if (event.status === 'connected') {
-        console.log('WebSocket 已连接',route.params.insertedId)
+            homeStore.tempQuill = quill
         if (!binding && quillInstance) {
           const quillEditor = quillInstance.quill || quillInstance
           binding = new QuillBinding(yText, quillEditor, wsProvider.awareness)
         }
         //有缓存用缓存
-        if(sessionStorage.getItem('tempContent')){
-          console.log(1)
-          quill.setContents(JSON.parse(sessionStorage.getItem('tempContent')))
-          sessionStorage.removeItem('tempContent')
+        if(sessionStorage.getItem(`${route.params.insertedId}`)){
+          quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
+          sessionStorage.removeItem(`${route.params.insertedId}`)
         }else{
           fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
-    quill.setContents(JSON.parse(res.data.content))
+            if(res.data.code == 200){
+              quill.setContents(JSON.parse(res.data.data.content))
+            }
   })
         }
        
@@ -274,20 +282,74 @@ const initYjsConnection = (fileId, quillInstance) => {
     console.error('建立Yjs连接时出错:', e)
   }
 }
-const goHistory = ()=>{
-  sessionStorage.setItem('tempContent',JSON.stringify(quill.getContents()))
+const goHistory = async()=>{
+  homeStore.tempQuill = quill
+  sessionStorage.setItem(`${route.params.insertedId}`,JSON.stringify(quill.getContents()))
     homeStore.isShowHistory = false
+   let res = await getContentHistory(route.params.insertedId)
+   if(res.data.code ==200){
+       res.data.data.forEach((item,index)=>{
+        item.createTime = changeTime(item.createTime)
+        item.id = `用户${index}`
+       })
+       homeStore.historyList = res.data.data
+   
+   }
+}
+//改变时间
+const changeTime = (time)=>{
+  const inputDate = new Date(time)
+    const now = new Date();
+  
+  // 校验日期是否合法
+  if (isNaN(inputDate.getTime())) {
+    return "无效时间";
+  }
+
+  // 获取年月日时分，忽略秒和毫秒
+  const inputYear = inputDate.getFullYear();
+  const inputMonth = inputDate.getMonth() + 1; // 月份从0开始
+  const inputDay = inputDate.getDate();
+  const inputHours = inputDate.getHours().toString().padStart(2, '0');
+  const inputMinutes = inputDate.getMinutes().toString().padStart(2, '0');
+
+  const todayYear = now.getFullYear();
+  const todayMonth = now.getMonth() + 1;
+  const todayDay = now.getDate();
+
+  // 判断是否为今天
+  if (
+    inputYear === todayYear &&
+    inputMonth === todayMonth &&
+    inputDay === todayDay
+  ) {
+    return `今天 ${inputHours}:${inputMinutes}`;
+  }
+
+  // 判断是否为昨天（考虑跨年/跨月）
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (
+    inputYear === yesterday.getFullYear() &&
+    inputMonth === yesterday.getMonth() + 1 &&
+    inputDay === yesterday.getDate()
+  ) {
+    return `昨天 ${inputHours}:${inputMinutes}`;
+  }
+
+  // 更早的时间：返回 M月D日 HH:MM
+  return `${inputMonth}月${inputDay}日 ${inputHours}:${inputMinutes}`;
 }
 const backContent = ()=>{
-   quill.setContents(JSON.parse(sessionStorage.getItem('tempContent')))
-   sessionStorage.removeItem('tempContent')
-   homeStore.isShowHistory = true
+  quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
+     homeStore.isShowHistory = true
+     //先变回原来页面在渲染
+   sessionStorage.removeItem(`${route.params.insertedId}`)
 }
 // 监听路由参数变化
 watch(() => route.params.insertedId, (newId, oldId) => {
   console.log('变化了吗')
   if (newId && newId !== oldId && quill) {
-  
     // 延迟执行，确保DOM更新完成
     nextTick(() => {
       initYjsConnection(newId, quill)
@@ -432,16 +494,20 @@ onMounted(() => {
       quillToolbar.style.left = bounds.left + 'px';
     }
     //简单的防抖
-    clearTimeout(timer)
+    //如果在历史版本界面，则不需要保存
+    if(homeStore.isShowHistory && !sessionStorage.getItem(`${route.params.insertedId}`)){
+      console.log('触发保存了吗')
+ clearTimeout(timer)
     timer = null
     timer = setTimeout(()=>{
-      // addContentHistory(route.params.insertedId)
+      addContentHistory(route.params.insertedId)
       saveFile(route.params.insertedId,{
         content:JSON.stringify(quill.getContents())
       }).then(res=>{
         console.log('保存成功',res)
       })
     },300)
+    }
     
   })
 

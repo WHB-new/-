@@ -24,12 +24,12 @@
           </div>
         </div>
         <div class="li">
-          <div class="item" @click="handleChange">
-            <div class="time">6月20日 21:07</div>
-          <div class="recent">最近更新</div>
+          <div class="item" @click="handleChange(index,item._id)" v-for="(item,index) in homeStore.historyList" :key="item._id" :class="{activeBg:historyIndex == index}">
+            <div class="time">{{item.createTime}}</div>
+          <div class="recent" v-if="index == 0">最近更新</div>
           <div class="name">
             <span style="background-color: rgb(141,85,237);" class="user-color"></span>
-            <span class="user-name">王皓彬</span>
+            <span class="user-name">{{item.id}}</span>
           </div>
           </div>
         </div>
@@ -40,10 +40,17 @@
 <script setup>
 import Aside from '@/components/Aside.vue'
 import { useHomeStore } from '@/store/home';
+import {getHistoryList} from '@/api/content'
+import {ref} from 'vue'
 const homeStore = useHomeStore()
-const handleChange = ()=>{
-
+const handleChange =async (index,docVersionId)=>{
+   historyIndex.value = index
+   let res = await getHistoryList(docVersionId)
+   if(res.data.code ==200){
+    homeStore.tempQuill.setContents(JSON.parse(res.data.data.content))
+   }
 }
+const historyIndex = ref(0)
 </script>
 
 <style lang="scss" scoped>
@@ -109,11 +116,12 @@ const handleChange = ()=>{
     }
     .item{
       cursor:pointer;
+      border:1px solid #e5e7eb;
       padding:12px 13px 12px 40px;
       margin:-1px 0;
       position:relative;
       transition:all .2s ease;
-      background-color: rgb(224 233 255);
+      
       .time{
       font-size: 14px;
       font-weight: 500;
@@ -158,7 +166,10 @@ const handleChange = ()=>{
 }
 
 }
-
+.activeBg{
+  background-color: rgb(224 233 255);
+  border-left:4px solid #336df4!important;
+}
 </style>
 
 <style>

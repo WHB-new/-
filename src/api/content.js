@@ -8,21 +8,15 @@ export function addContentHistory(docId){
 
 export function getContentHistory(docId){
   return request({
-    url:'/docVersion/getDocVersions',
+    url:`/docVersion/getDocVersions/${docId}`,
     method:'get',
-    params:{
-      docId
-    }
   })
 }
 
 export function getHistoryList(docVersionId){
   return request({
-    url:'/docVersion/getDocVersion',
+    url:`/docVersion/getDocVersion/${docVersionId}`,
     method:'get',
-    params:{
-      docVersionId
-    }
   })
 }
 

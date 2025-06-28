@@ -6,6 +6,9 @@ state:()=>({
 isCollapse:false,
 fileList:[],
 isShowHistory:true,
+historyList:[],
+quillData:[],
+tempQuill:null,
 }),
 actions:{
 getFileList(){
