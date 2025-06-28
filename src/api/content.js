@@ -1,8 +1,11 @@
 import request from "@/utils/request";
-export function addContentHistory(docId){
+export function addContentHistory(docId,content){
   return request({
     url:`/docVersion/addDocVersion/${docId}`,
     method:'post',
+    data:{
+      content
+    }
   })
 }
 

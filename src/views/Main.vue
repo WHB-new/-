@@ -47,6 +47,7 @@ const handleChange =async (index,docVersionId)=>{
    historyIndex.value = index
    let res = await getHistoryList(docVersionId)
    if(res.data.code ==200){
+    console.log(res.data.data.content)
     homeStore.tempQuill.setContents(JSON.parse(res.data.data.content))
    }
 }

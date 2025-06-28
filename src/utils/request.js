@@ -35,6 +35,8 @@ request.interceptors.response.use(res => {
      if(res.status == 200){
       sessionStorage.removeItem('Authorization')
       sessionStorage.setItem('Authorization',res.data.token)
+       const originalRequest = err.config
+    originalRequest.headers.Authorization = res.data.token
       //如果不是200证明refreshToken过期，则跳回登录
      }else if(res.status != 200){
       sessionStorage.removeItem('Authorization')
@@ -44,8 +46,7 @@ request.interceptors.response.use(res => {
       sessionStorage.removeItem('defaultKnowledgeId')
       router.push('/login')
      }
-    const originalRequest = err.config
-    originalRequest.headers.Authorization = res.data.token
+   
     return request(originalRequest)
   }else{
      ElMessage.warning('接口请求失败')

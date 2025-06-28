@@ -220,7 +220,7 @@ const backToHistory = ()=>{
   sessionStorage.setItem(`${route.params.insertedId}`,JSON.stringify(quill.getContents()))
   homeStore.isShowHistory = true
   quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
-  window.location.reload()
+  
 }
 // 初始化Yjs连接的函数
 const initYjsConnection = (fileId, quillInstance) => {
@@ -341,9 +341,9 @@ const changeTime = (time)=>{
   return `${inputMonth}月${inputDay}日 ${inputHours}:${inputMinutes}`;
 }
 const backContent = ()=>{
-  quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
      homeStore.isShowHistory = true
-     //先变回原来页面在渲染
+        //先变回原来页面在渲染
+      quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
    sessionStorage.removeItem(`${route.params.insertedId}`)
 }
 // 监听路由参数变化
@@ -500,7 +500,7 @@ onMounted(() => {
  clearTimeout(timer)
     timer = null
     timer = setTimeout(()=>{
-      addContentHistory(route.params.insertedId)
+      addContentHistory(route.params.insertedId,JSON.stringify(quill.getContents()))
       saveFile(route.params.insertedId,{
         content:JSON.stringify(quill.getContents())
       }).then(res=>{
