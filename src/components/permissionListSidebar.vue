@@ -1,15 +1,16 @@
 <template>
   <!-- 协作者列表按钮 -->
-  <div 
+  <el-button 
     class="trigger-btn"
-    :style="{ top: '30%' }"
+    :style="{ top: '2.5%', left: '72%', right: 'auto', bottom: 'auto' }"
     @click="toggleSidebar"
+    plain
   >
     <span class="btn-label">协作者列表</span>
     <el-icon :size="16">
       <component :is="isCollapsed ? 'ArrowLeft' : 'ArrowRight'" />
     </el-icon>
-  </div>
+  </el-button>
 
   <!-- 协作者列表侧边栏 -->
   <el-drawer
@@ -356,17 +357,14 @@ watch(drawerVisible, (val) => {
 <style scoped lang="scss">
 .trigger-btn {
   position: fixed;
-  right: 0;
-  width: 80px;
+  width: auto;
   height: 32px;
-  background: #c0df65;
-  color: white;
-  border-radius: 16px 0 0 16px;
+  padding: 0 12px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 8px 0 12px;
-  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+  gap: 6px;
   cursor: pointer;
   z-index: 1000;
   transition: all 0.3s;
@@ -377,8 +375,7 @@ watch(drawerVisible, (val) => {
   }
 
   &:hover {
-    width: 90px;
-    background: #c1ce61;
+    background-color: #f5f7fa;
   }
 }
 

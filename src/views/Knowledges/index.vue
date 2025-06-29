@@ -178,7 +178,7 @@ const confirmAdd = async () => {
     const response = await addKnowledge({
     ownerId: sessionStorage.getItem('userId'),
     baseName: form.value.name,
-    baseDesc: form.value.intro 
+    baseDesc: form.value.intro
     });
     
     console.log('创建响应:', response);
