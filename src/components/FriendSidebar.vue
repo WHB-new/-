@@ -54,17 +54,22 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { ArrowLeft, ArrowRight, Search, MoreFilled } from '@element-plus/icons-vue'
+import { deleteFriend, getFriendList } from '@/api/friend'
 
-const isCollapsed = ref(true)
-const drawerVisible = ref(false)
-const searchQuery = ref('')
+const isCollapsed = ref(true);
+const drawerVisible = ref(false);
+const searchQuery = ref('');
+const userId = sessionStorage.getItem('userId');
 
-const friends = ref([
-  { id: 1, name: '张三', avatar: '' },
-  { id: 2, name: '李四', avatar: '' }
-])
+const friends = ref([]);
+
+// 控制弹出
+const toggleSidebar = () => {
+  isCollapsed.value = !isCollapsed.value
+  getFriends();
+}
 
 const filteredFriends = computed(() => {
   return friends.value.filter(f => 
@@ -72,9 +77,15 @@ const filteredFriends = computed(() => {
   )
 })
 
-const toggleSidebar = () => {
-  isCollapsed.value = !isCollapsed.value
-}
+// 查询好友列表数据导入
+const getFriends = async () => {
+  const res = await getFriendList(userId);
+  friends.value = res.data.data.map(friend => ({
+    id: friend._id,
+    name: friend.nickName,
+    avatar: ""
+  }))
+};
 
 const handleCommand = (friendId, command) => {
   if (command === 'delete') {
@@ -83,7 +94,11 @@ const handleCommand = (friendId, command) => {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
-    }).then(() => {
+    }).then(async () => {
+      // 调删除好友接口
+      console.log(friendId);
+      
+      await deleteFriend(userId, friendId);
       friends.value = friends.value.filter(f => f.id !== friendId)
       ElMessage.success('删除成功')
     }).catch(() => {
@@ -92,7 +107,6 @@ const handleCommand = (friendId, command) => {
   }
 }
 
-// 同步 isCollapsed 和 drawerVisible
 watch(isCollapsed, (val) => {
   drawerVisible.value = !val
 })

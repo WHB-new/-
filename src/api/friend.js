@@ -23,7 +23,7 @@ export function searchStranger(username, userId) {
 }
 
 // 申请添加好友
-export function addFriend(userId, friendId ) {
+export function addFriend(userId, friendId) {
   return request({
     url: '/user/addFriend',
     method: 'post',

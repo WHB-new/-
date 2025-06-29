@@ -34,7 +34,6 @@
           </div>
         </div>
       </div>
-      
       <FriendSidebar />
       <ApplyFriendSidebar />
       <permissionListSidebar />

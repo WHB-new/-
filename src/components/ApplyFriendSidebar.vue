@@ -20,33 +20,86 @@
     custom-class="sidebar-drawer"
   >
     <div class="drawer-content">
-      <h3 class="sidebar-title">申请列表</h3>
-      <el-input
-        v-model="searchQuery"
-        placeholder="搜索用户..."
-        clearable
-        :prefix-icon="Search"
-      />
-      <el-scrollbar height="calc(100vh - 120px)">
-        <el-empty v-if="filteredApplies.length === 0" description="暂无申请"/>
-        
-        <div 
-          v-for="apply in filteredApplies" 
-          :key="apply.id" 
-          class="list-item"
+      <div class="header-section">
+        <h3 class="sidebar-title">
+          {{ showStrangersOrApplies ? '陌生人搜索' : '好友申请' }}
+        </h3>
+        <el-button 
+          v-if="showStrangersOrApplies"
+          type="text" 
+          size="small"
+          @click="backToApplies"
+          class="back-btn"
         >
-          <el-avatar :size="36" :src="apply.avatar">
-            {{ apply.name.charAt(0) }}
-          </el-avatar>
-          <div class="item-info">
-            <span class="name">{{ apply.name }}</span>
-            <div class="actions">
-              <el-button type="success" size="small" plain @click="acceptApply(apply)">
-                接受
-              </el-button>
-              <el-button type="danger" size="small" plain @click="rejectApply(apply)">
-                拒绝
-              </el-button>
+          <el-icon><ArrowLeft /></el-icon> 返回
+        </el-button>
+      </div>
+      
+      <!-- 搜索框 -->
+      <div class="search-section">
+        <el-input
+          v-model="searchQuery"
+          placeholder="搜索陌生人..."
+          clearable
+          :prefix-icon="Search"
+          @keyup.enter="fetchStrangers"
+        />
+        <el-button 
+          type="primary" 
+          size="small" 
+          @click="fetchStrangers"
+          style="margin-top: 8px"
+        >
+          搜索
+        </el-button>
+      </div>
+
+      <el-scrollbar height="calc(100vh - 180px)">
+        <!-- 陌生人搜索结果 -->
+        <div v-if="showStrangersOrApplies">
+          <el-empty v-if="strangers.length === 0" description="没有找到用户"/>
+          
+          <div 
+            v-for="stranger in strangers" 
+            :key="stranger.id" 
+            class="list-item"
+          >
+            <el-avatar :size="36" :src="stranger.avatar">
+              {{ stranger.name.charAt(0) }}
+            </el-avatar>
+            <div class="item-info">
+              <span class="name">{{ stranger.name }}</span>
+              <div class="actions">
+                <el-button type="primary" size="small" plain @click="addFriendApply(stranger)">
+                  添加好友
+                </el-button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 好友申请列表 -->
+        <div v-else>
+          <el-empty v-if="applies.length === 0" description="暂无好友申请"/>
+          
+          <div 
+            v-for="apply in applies" 
+            :key="apply.id" 
+            class="list-item"
+          >
+            <el-avatar :size="36" :src="apply.avatar">
+              {{ apply.name.charAt(0) }}
+            </el-avatar>
+            <div class="item-info">
+              <span class="name">{{ apply.name }}</span>
+              <div class="actions">
+                <el-button type="success" size="small" plain @click="acceptApply(apply)">
+                  接受
+                </el-button>
+                <el-button type="danger" size="small" plain @click="rejectApply(apply)">
+                  拒绝
+                </el-button>
+              </div>
             </div>
           </div>
         </div>
@@ -56,57 +109,100 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { ArrowLeft, ArrowRight, Search } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { getAddFriendList } from '@/api/addFriend'
+import { addFriend, agreeAddFriend, getAddFriendList, refuseAddFriend, searchStranger } from '@/api/friend'
 
 const isCollapsed = ref(true)
 const drawerVisible = ref(false)
 const searchQuery = ref('')
+const userId = sessionStorage.getItem('userId')
+// 默认开申请好友列表
+const showStrangersOrApplies = ref(false)
 
-const applies = ref([
-  { id: 1, name: '王五', avatar: '' },
-  { id: 2, name: '赵六', avatar: '' }
-])
+// 申请列表数据
+const applies = ref([])
+// 陌生人列表数据
+const strangers = ref([])
 
-const fetchApplies = async (userId) => {
+// 获取好友申请列表
+const fetchApplies = async () => {
   try {
-    const res = await getAddFriendList(userId);
-    applies.value = transformApplies(res.data);
-  } catch (error) {
-    console.error('获取好友申请列表失败:', error);
-  }
-};
-
-const transformApplies = (data) => {
-  return data.map(user => ({
+    const res = await getAddFriendList(userId)
+    applies.value = res.data.data.map(user => ({
       id: user._id,
       name: user.nickName,
       avatar: ''
-  })
-)
+    }))
+  } catch (error) {
+    console.error('获取好友申请列表失败:', error)
+    ElMessage.error('获取申请列表失败')
+  }
 }
 
-const filteredApplies = computed(() => {
-  const query = searchQuery.value.toLowerCase()
-  return applies.value.filter(apply => 
-    apply.name.toLowerCase().includes(query)
-  )
-})
-
-const toggleSidebar = () => {
-  isCollapsed.value = !isCollapsed.value
+// 搜索陌生人
+const fetchStrangers = async () => {
+  if (!searchQuery.value.trim()) {
+    ElMessage.warning('请输入搜索内容')
+    return
+  }
+  
+  try {
+    const res = await searchStranger(searchQuery.value, userId)
+    if (!res.data.data) {
+      // 需要加上，消除上一次搜索的内容
+      strangers.value = []
+      ElMessage.info('没有找到符合条件的用户')
+    } else {
+      strangers.value = [{
+        id: res.data.data._id,
+        name: res.data.data.nickName,
+        avatar: ''
+      }]
+    }
+    showStrangersOrApplies.value = true
+  } catch (error) {
+    console.error('搜索陌生人失败:', error)
+  }
 }
 
+// 返回申请列表
+const backToApplies = () => {
+  showStrangersOrApplies.value = false
+  searchQuery.value = ''
+}
+
+// 接受申请
 const acceptApply = (apply) => {
+  // 先调用同意接口
+  agreeAddFriend(userId, apply.id);
   ElMessage.success(`已接受 ${apply.name} 的好友申请`)
   applies.value = applies.value.filter(a => a.id !== apply.id)
+  
 }
 
+// 拒绝申请
 const rejectApply = (apply) => {
+  // 调用拒绝接口
+  refuseAddFriend(userId, apply.id);
   ElMessage.warning(`已拒绝 ${apply.name} 的好友申请`)
   applies.value = applies.value.filter(a => a.id !== apply.id)
+}
+
+// 陌生人搜索列表内，发起添加好友申请
+const addFriendApply = (stranger) => {
+  // 调用发起申请好友请求接口
+  addFriend(userId, stranger.id);
+  ElMessage.success(`好友申请已发送给 ${stranger.name}`);
+  // 需要添加完直接回申请列表？
+  // backToApplies();
+}
+
+// 侧边栏控制
+const toggleSidebar = () => {
+  isCollapsed.value = !isCollapsed.value
+  fetchApplies();
 }
 
 // 同步状态
@@ -117,20 +213,10 @@ watch(isCollapsed, (val) => {
 watch(drawerVisible, (val) => {
   isCollapsed.value = !val
 })
-
-// 在组件挂载时从会话存储中获取 userId 并调用 fetchApplies
-onMounted(() => {
-  const userId = sessionStorage.getItem('userId');
-  if (userId) {
-    fetchApplies(userId);
-  } else {
-    console.error('未找到 userId');
-  }
-})
 </script>
 
 <style scoped lang="scss">
-/* 触发按钮基础样式 */
+// 按钮
 .trigger-btn {
   position: fixed;
   right: 0;
@@ -156,7 +242,6 @@ onMounted(() => {
   }
 }
 
-/* 申请列表按钮特殊样式 */
 .apply-trigger {
   background: var(--el-color-success);
   color: white;
@@ -166,13 +251,33 @@ onMounted(() => {
   }
 }
 
-/* 抽屉内容样式 */
+// 弹出内容
 .drawer-content {
   padding: 16px;
   
-  .sidebar-title {
-    margin: 0 0 16px 0;
-    color: var(--el-text-color-primary);
+  .header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    
+    .sidebar-title {
+      margin: 0;
+      color: var(--el-text-color-primary);
+    }
+    
+    .back-btn {
+      padding: 0;
+      color: var(--el-color-primary);
+      
+      &:hover {
+        color: var(--el-color-primary-light-3);
+      }
+    }
+  }
+
+  .search-section {
+    margin-bottom: 16px;
   }
 
   .list-item {
