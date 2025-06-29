@@ -51,7 +51,6 @@ import FriendSidebar from '@/components/FriendSidebar.vue'
 import ApplyFriendSidebar from '@/components/ApplyFriendSidebar.vue';
 import permissionListSidebar from '@/components/permissionListSidebar.vue';
 import {getHistoryList} from '@/api/content'
-import {ref} from 'vue'
 const homeStore = useHomeStore()
 const handleChange =async (index,docVersionId)=>{
    let res = await getHistoryList(docVersionId)

@@ -260,6 +260,7 @@ const goToEdit = (id) => {
   .header{
     display:flex;
     align-items:center;
+    margin-bottom:20px;
     .icon{
       width: 16px;
       height: 16px;

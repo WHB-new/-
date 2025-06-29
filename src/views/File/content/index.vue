@@ -326,7 +326,7 @@ const goHistory = async()=>{
    
    }
 }
-//改变时间
+//改变返回的时间
 const changeTime = (time)=>{
   const inputDate = new Date(time)
     const now = new Date();
@@ -389,6 +389,7 @@ watch(() => route.params.insertedId, (newId, oldId) => {
       initYjsConnection(newId, quill)
     })
 }, { immediate: false })
+//切换历史版本查看的时候 编辑器也切换对应版本的内容
 watch(()=>homeStore.historyIndex,(newValue,oldValue)=>{
    console.log(homeStore.quillData,'触发了吗')
    nextTick(()=>{
