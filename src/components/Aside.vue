@@ -37,6 +37,19 @@
           <el-menu-item :index="'knowledges'" :class="{ 'is-active': activeIndex === 'knowledges' }"
             @click="handleMenuClick('knowledges')">知识库</el-menu-item>
         </RouterLink>
+          <!-- 新增回收站菜单项 -->
+          <!-- <RouterLink to="/Recycle">
+          <el-menu-item :index="'recycle'" :class="{ 'is-active': activeIndex === 'recycle' }"
+            @click="handleMenuClick('recycle')">
+            <div style="display:flex;align-items:center">
+              <svg t="1750569983191" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="7415" width="16" height="16" style="margin-right:6px">
+                <path d="M380 455a8 8 0 0 1 8-8h64a8 8 0 0 1 8 8v240a8 8 0 0 1-8 8h-64a8 8 0 0 1-8-8V455zM644 455a8 8 0 0 0-8-8h-64a8 8 0 0 0-8 8v240a8 8 0 0 0 8 8h64a8 8 0 0 0 8-8V455z" fill="#444444" p-id="7416"></path>
+                <path d="M321 212V96c0-17.673 14.327-32 32-32h320c17.673 0 32 14.327 32 32v116h183a8 8 0 0 1 8 8v64a8 8 0 0 1-8 8h-55v635c0 17.673-14.327 32-32 32H225c-17.673 0-32-14.327-32-32V292h-58a8 8 0 0 1-8-8v-64a8 8 0 0 1 8-8h186z m80-68v68h224v-68H401zM273 292v587h480V292H273z" fill="#444444" p-id="7417"></path>
+              </svg>
+              <div class="txt">回收站</div>
+            </div>
+          </el-menu-item>
+        </RouterLink> -->
       </el-menu>
       <div class="file">
         <div class="file-header">
@@ -129,12 +142,13 @@
    <el-dialog  width="500" align-center v-model="isShowName" :show-close="false">
        <template #default>
         <el-input v-model="changedName" placeholder="请输入你想修改的名字"></el-input>
-       </template>
-       <template #footer>
-       <el-button size="small">取消</el-button>
+      </template>
+    <template #footer>
+      <el-button @click="isShowName = false">取消</el-button>
       <el-button
         type="primary"
-        size="small"
+        @click="handleRename"
+        :loading="loading"
       >
         确定
       </el-button>
@@ -187,11 +201,14 @@
 </template>
 
 <script setup>
+import { saveFile } from '@/api/file'; 
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { ref, onMounted, watch, nextTick } from 'vue';
 import { addFile, getFileList,fileListDetail} from '@/api/file';
 import { ElMessage } from 'element-plus';
 import {useHomeStore} from '@/store/home'
+const currentDocId = ref('');
+const loading = ref(false);
 //引入搜索插件
 import FlexSearch from 'flexsearch'
 
@@ -225,10 +242,45 @@ const searchValue = ref('')
 const handleMenuClick = (index) => {
   activeIndex.value = index
 }
-// 重命名
-const changeFileName = async(id)=>{
-isShowName.value = true
-}
+
+// 打开重命名对话框
+const changeFileName = (id) => {
+  // 获取当前文档信息，预填充标题
+  const currentDoc = homeStore.fileList.find(doc => doc._id === id);
+  if (currentDoc) {
+    changedName.value = currentDoc.title;
+    currentDocId.value = id;
+    isShowName.value = true;
+  }
+};
+
+// 处理重命名提交
+const handleRename = async () => {
+  if (!changedName.value.trim()) {
+    ElMessage.error('标题不能为空');
+    return;
+  }
+  
+  loading.value = true;
+  
+  try {
+    // 调用现有更新接口，只传递title字段
+    const res = await saveFile(currentDocId.value, { title: changedName.value });
+    
+    if (res.data.code === 200) {
+      ElMessage.success('重命名成功');
+      isShowName.value = false;
+      homeStore.getFileList(); // 刷新文件列表
+    } else {
+      ElMessage.error(res.data.message || '重命名失败');
+    }
+  } catch (error) {
+    console.error('重命名错误:', error);
+    ElMessage.error('服务器错误，请稍后再试');
+  } finally {
+    loading.value = false;
+  }
+};
 // 搜索
 const handleSearch =()=>{
 searchVisible.value = true
