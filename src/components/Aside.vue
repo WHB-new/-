@@ -304,6 +304,8 @@ const handleEnterFile = async (id, index,item) => {
     name:`用户${item.ownerId.slice(item.ownerId.length-6)}`
   }))
   const res = await fileListDetail(id,userId)
+  console.log(res,'res')
+  sessionStorage.setItem('permissionCode',res.data.permissionCode)
   router.push({
     name: 'content',
     params: {

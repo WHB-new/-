@@ -102,7 +102,7 @@ const knowledgeStore = useKnowledgeStore();
 
 const knowledge = ref(null);
 const selectedItem = ref(null);
-const ownerId = ref(sessionStorage.getItem('defaultKnowledgeId'));
+const ownerId = ref(sessionStorage.getItem('userId'));
 const knowledgeFileList = ref([])
 onMounted(async () => {
   const id = route.params.id;

@@ -87,6 +87,8 @@ export const useKnowledgeStore = defineStore('knowledge', () => {
   try {
     const res = await getKnowledgeDetail(id,sessionStorage.getItem('userId'));
     const kb = res.data.data;
+    console.log(res,'在这呢')
+    sessionStorage.setItem('permissionCode',res.data.permissionCode)
     return {
       id: kb._id,
       title: kb.baseName || '未命名知识库', 
