@@ -24,26 +24,41 @@
           </div>
         </div>
         <div class="li">
-          <div class="item" @click="handleChange">
-            <div class="time">6月20日 21:07</div>
-          <div class="recent">最近更新</div>
+          <div class="item" @click="handleChange(index,item._id)" v-for="(item,index) in homeStore.historyList" :key="item._id" :class="{activeBg:homeStore.historyIndex == index}">
+            <div class="time">{{item.createTime}}</div>
+          <div class="recent" v-if="index == 0">最近更新</div>
           <div class="name">
             <span style="background-color: rgb(141,85,237);" class="user-color"></span>
-            <span class="user-name">王皓彬</span>
+            <span class="user-name">{{item.id}}</span>
           </div>
           </div>
         </div>
       </div>
+      <FriendSidebar />
+      <ApplyFriendSidebar />
+      <permissionListSidebar />
+
+
     </el-container>
+
 </template>
 
 <script setup>
 import Aside from '@/components/Aside.vue'
 import { useHomeStore } from '@/store/home';
+import FriendSidebar from '@/components/FriendSidebar.vue'
+import ApplyFriendSidebar from '@/components/ApplyFriendSidebar.vue';
+import permissionListSidebar from '@/components/permissionListSidebar.vue';
+import {getHistoryList} from '@/api/content'
 const homeStore = useHomeStore()
-const handleChange = ()=>{
-
+const handleChange =async (index,docVersionId)=>{
+   let res = await getHistoryList(docVersionId)
+   if(res.data.code ==200){
+   homeStore.quillData = res.data.data.content
+    homeStore.historyIndex = index
+   }
 }
+// const historyIndex = ref(0)
 </script>
 
 <style lang="scss" scoped>
@@ -82,6 +97,8 @@ const handleChange = ()=>{
   width: 300px;
   background-color: #fff;
   border-left:1px solid #e5e7eb;
+  display:flex;
+  flex-direction: column;
   .header{
     width: 100%;
     height: 64px;
@@ -103,17 +120,19 @@ const handleChange = ()=>{
     }
   }
   .li{
+    flex:1;
     overflow-y:scroll;
     &::-webkit-scrollbar{
       display: none;
     }
     .item{
       cursor:pointer;
+      border:1px solid #e5e7eb;
       padding:12px 13px 12px 40px;
       margin:-1px 0;
       position:relative;
       transition:all .2s ease;
-      background-color: rgb(224 233 255);
+      
       .time{
       font-size: 14px;
       font-weight: 500;
@@ -158,7 +177,10 @@ const handleChange = ()=>{
 }
 
 }
-
+.activeBg{
+  background-color: rgb(224 233 255);
+  border-left:4px solid #336df4!important;
+}
 </style>
 
 <style>

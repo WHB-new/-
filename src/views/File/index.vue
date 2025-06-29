@@ -116,6 +116,10 @@ const handleAdd = ()=>{
       baseId,
        ownerId: sessionStorage.getItem('userId'),
     }).then(res=>{
+      localStorage.setItem(`title${res.data.insertedId}`,JSON.stringify({
+      title:'未命名文档',
+      name:`用户${sessionStorage.getItem('defaultKnowledgeId').slice(sessionStorage.getItem('defaultKnowledgeId').length-6)}`
+    }))
        homeStore.getFileList()
       router.push({name:'content',params:{insertedId:res.data.insertedId}})
     }).catch(err=>{

@@ -39,7 +39,7 @@
     <div class="list" v-show="filteredKnowledge.length != 0">
       <div 
         v-for="item in filteredKnowledge" 
-        :key="item.id" 
+        :key="item._id" 
         class="li"
         @click="goToEdit(item.id)"
       >
@@ -140,7 +140,7 @@ name:[{required:true,message:'请输入名称',trigger:'blur'}],
 })
 const ownerId = ref(null)
 onMounted(()=>{
-  ownerId.value = sessionStorage.getItem('userId');
+  ownerId.value = sessionStorage.getItem('userId')
 })
 const handleAddFile = ()=>{
   const baseId=sessionStorage.getItem('defaultKnowledgeId')
@@ -148,6 +148,10 @@ const handleAddFile = ()=>{
       baseId,
        ownerId: sessionStorage.getItem('userId'),
     }).then(res=>{
+      localStorage.setItem(`title${res.data.insertedId}`,JSON.stringify({
+      title:'未命名文档',
+      name:`用户${sessionStorage.getItem('defaultKnowledgeId').slice(sessionStorage.getItem('defaultKnowledgeId').length-6)}`
+    }))
       homeStore.getFileList()
       router.push({name:'content',params:{insertedId:res.data.insertedId}})
       
@@ -173,9 +177,9 @@ const confirmAdd = async () => {
     const userId = sessionStorage.getItem('userId'); 
     
     const response = await addKnowledge({
-      ownerId: userId, 
-      baseName: form.value.name,
-      baseDesc: form.value.intro 
+    ownerId: sessionStorage.getItem('userId'),
+    baseName: form.value.name,
+    baseDesc: form.value.intro 
     });
     
     if (response.data.code === 201) {
@@ -214,8 +218,7 @@ onMounted(async () => {
     console.error('用户ID未找到');
     return;
   }
-  
-  await knowledgeStore.fetchKnowledgeList(userId);
+  await knowledgeStore.fetchKnowledgeList(sessionStorage.getItem('userId'));
 });
 
 // 过滤后的知识库
@@ -261,13 +264,9 @@ const handleDelete = async () => {
 
 // 跳转到编辑页面
 const goToEdit = (id) => {
-  const userId = sessionStorage.getItem('userId');
-  router.push({ 
-    name: 'edit', 
-    params: { id },
-    query: { userId }
-  });
-}
+  console.log(id,'id是什么')
+  router.push({ name: 'edit', params: { id } });
+};
 </script>
 
 <style lang="scss" scoped>
@@ -275,6 +274,7 @@ const goToEdit = (id) => {
   .header{
     display:flex;
     align-items:center;
+    margin-bottom:20px;
     .icon{
       width: 16px;
       height: 16px;

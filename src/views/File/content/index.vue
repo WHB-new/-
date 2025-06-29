@@ -7,11 +7,32 @@
 
       </div>
       <div class="left">
-        <div class="history">
+        <div class="mode">
+          <el-select
+      v-model="modeValue"
+      placeholder="编辑"
+      style="width: 83px"
+      @change="changeMode"
+    >
+      <el-option
+      value="bianji"
+      label="编辑"
+      />
+      <el-option
+      value="xiuding"
+      label="修订"
+      />
+      <el-option
+      value="yuedu"
+      label="阅读"
+      />
+    </el-select>
+        </div>
+        <div class="history" @click="goHistory">
         <div class="icon">
           <svg t="1750924024571" class="icon" viewBox="0 0 1029 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4316" width="16" height="16"><path d="M761.216 997.76c-144.64 0-262.4-117.76-262.4-262.4s117.76-262.4 262.4-262.4 262.4 117.76 262.4 262.4-117.76 262.4-262.4 262.4z m0-448c-102.4 0-185.6 83.2-185.6 185.6s83.2 185.6 185.6 185.6 185.6-83.2 185.6-185.6-83.328-185.6-185.6-185.6z" p-id="4317"></path><path d="M858.496 815.872l-116.48-58.24V588.16h51.2v137.728l88.192 44.16zM174.08 269.312h422.4v51.2h-422.4zM174.08 448.512h281.6v51.2h-281.6zM174.08 627.712h192v51.2h-192z" p-id="4318"></path><path d="M442.88 922.112H0v-883.2h775.68v364.8h-76.8V115.712H76.8v729.6h366.08z" p-id="4319"></path></svg>
         </div>
-        <div class="txt" @click="goHistory">历史版本</div>
+        <div class="txt">历史版本</div>
       </div>
        <div class="avatar" @click="toggleDropdown">
         <!-- <img src="./figure.png" alt="头像" class="avatar-img" /> -->
@@ -35,7 +56,7 @@
           返回文档
         </div>
       </div>
-      <div class="center">
+      <div class="center" @click="backToHistory" :style="homeStore.historyIndex !=0 ?'background-color:#336df4;':'pointer-events: none;'">
         <div class="txt">还原此历史记录</div>
       </div>
       <div class="right"></div>
@@ -50,10 +71,20 @@
     </div>
      <!-- v-show="homeStore.isShowHistory" -->
     <div class="content">
+      <div class="content-header">
+        <div style="height: 28px;"></div>
+
+        <div class="title">
+        {{title}}
+        </div>
+        <div class="info">
+          <div class="icon">
+            <svg t="1751187966181" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3252" width="20" height="20"><path d="M512 993.962667A481.962667 481.962667 0 1 1 993.962667 512 482.304 482.304 0 0 1 512 993.962667z" fill="#03ad82" p-id="3253"></path><path d="M512 60.074667A451.925333 451.925333 0 1 1 60.074667 512 451.925333 451.925333 0 0 1 512 60.074667M512 0a512 512 0 1 0 512 512A512 512 0 0 0 512 0z" fill="#03ad82" p-id="3254"></path><path d="M794.282667 755.029333a145.749333 145.749333 0 0 0-10.922667-13.653333 87.04 87.04 0 0 0-11.946667-11.264l-10.581333-8.192a34.133333 34.133333 0 0 0-8.192-4.778667L750.933333 716.8l-58.368-38.229333a247.466667 247.466667 0 0 0-27.306666-15.36l-78.848-38.229334v-37.546666a151.552 151.552 0 0 0 52.906666-53.248 178.858667 178.858667 0 0 0 20.138667-73.728v-28.672a245.76 245.76 0 0 0-2.730667-51.2l-2.389333-16.384a166.229333 166.229333 0 0 0-46.762667-113.664 140.288 140.288 0 0 0-116.053333-44.032 119.125333 119.125333 0 0 0-80.213333 45.397333 211.968 211.968 0 0 0-46.08 110.250667s-3.072 52.565333-2.730667 59.050666l2.730667 36.864a249.856 249.856 0 0 0 19.797333 73.728 130.389333 130.389333 0 0 0 53.248 53.248v37.546667l-78.506667 38.912q-8.874667 4.437333-17.408 9.898667L273.066667 716.8l-5.802667 3.413333a108.544 108.544 0 0 0-13.312 9.898667 136.533333 136.533333 0 0 0-16.725333 16.042667 95.232 95.232 0 0 0-13.312 20.138666A52.224 52.224 0 0 0 228.693333 819.2a344.064 344.064 0 0 0 74.069334 48.810667 427.349333 427.349333 0 0 0 467.626666-25.6 123.562667 123.562667 0 0 0 24.576-23.210667 50.858667 50.858667 0 0 0 10.581334-31.402667 52.224 52.224 0 0 0-3.072-17.749333 68.266667 68.266667 0 0 0-8.192-15.018667z" fill="#FFFFFF" p-id="3255"></path></svg>
+          </div>
+          <div class="name">{{name}}</div>
+        </div>
+      </div>
       <div class="content-center">
-        <!-- <div class="page-header">
-        
-        </div> -->
         <div class="page-children" id="children" ref="quillEditor" style="padding:0!important;">
         
         </div>
@@ -195,12 +226,15 @@ import { QuillBinding } from 'y-quill';
 import { WebsocketProvider } from 'y-websocket';
 import { WebrtcProvider } from 'y-webrtc';
 import {saveFile,fileListDetail} from '@/api/file'
-import {addContentHistory} from '@/api/content'
+import {addContentHistory,getContentHistory} from '@/api/content'
 const homeStore = useHomeStore()
 let quill
 let ydoc
 let wsProvider
 let binding
+const historyList = ref([])
+const title = ref(``)
+const name = ref(``)
 // 控制下拉框显示
 const showDropdown = ref(false);
 const toggleDropdown = () => {
@@ -209,12 +243,65 @@ const toggleDropdown = () => {
 const logout = () => {
 isShow.value = true
 };
+//重新绑定
+const rebinding = ()=>{
+  quill.on('selection-change', (range) => {
+    if (!range) return // 添加空值检查
+
+    const bounds = quill.getBounds(range.index, range.length);
+    if (range && range.length > 0) {
+      quillToolbar.style.zIndex = 6;
+      quillToolbar.style.display = 'block';
+      quillToolbar.style.top = bounds.top - 48 + 'px';
+      quillToolbar.style.left = bounds.left + 'px';
+    } else {
+      quillToolbar.style.display = 'none';
+    }
+  })
+}
+//改变文档模式
+const changeMode= ()=>{
+  if(modeValue.value == 'yuedu'){
+    quill.enable(false)
+    quill.off('selection-change')
+  }else if(modeValue.value == 'bianji'){
+    quill.enable(true)
+    rebinding()
+  }else if(modeValue.value == 'xiuding'){
+quill.enable(true)
+//都删掉，然后自定义
+    quill.off('selection-change')
+    quill.off('text-change')
+   
+  }
+
+
+
+}
 // 1. 自定义CodeMirror Block
 const BlockEmbed = Quill.import('blots/block/embed')
 const quillEditor = ref(null)
 const route = useRoute()
 const router = useRouter()
 const isShowClose = ref(false)
+let quillToolbar
+const modeValue = ref('')
+const backToHistory = ()=>{
+  sessionStorage.setItem(`${route.params.insertedId}`,JSON.stringify(quill.getContents()))
+  homeStore.isShowHistory = true
+  rebinding()
+  quill.enable(true)
+  quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
+  saveFile(route.params.insertedId,{
+        content:JSON.stringify(quill.getContents())
+      }).then(res=>{
+        console.log('保存成功',res)
+      })
+  //初始化
+   homeStore.quillData = null
+   homeStore.historyIndex = 0
+
+}
 // 初始化Yjs连接的函数
 const initYjsConnection = (fileId, quillInstance) => {
   if (!quillInstance) {
@@ -237,63 +324,139 @@ const initYjsConnection = (fileId, quillInstance) => {
   try {
     ydoc = new Y.Doc()
     const yText = ydoc.getText('quill')
-    console.log(yText,'权威')
     wsProvider = new WebsocketProvider(
       `ws://localhost:8001/onlineEdit/${sessionStorage.getItem('userId')}`,
       fileId,
       ydoc,
     )
-    ydoc.on('update', (update,origin) => {
-    })
-  
+   wsProvider.on('sync',()=>{
+     //有缓存用缓存
+        if(sessionStorage.getItem(`${route.params.insertedId}`)){
+          quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
+          sessionStorage.removeItem(`${route.params.insertedId}`)
+         
+        }else if(yText.length ==0 || yText.lenght ==1){
+          fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
+            if(res.data.code == 200){
+              if(Object.keys(res.data.data.content).length != 0){
+                quill.setContents(JSON.parse(res.data.data.content))
+               
+              }
+            }
+  })
+        }
+   })
     wsProvider.on('status', (event) => {
       if (event.status === 'connected') {
-        console.log('WebSocket 已连接',route.params.insertedId)
+         title.value=JSON.parse(localStorage.getItem(`title${route.params.insertedId}`)).title
+         name.value = JSON.parse(localStorage.getItem(`title${route.params.insertedId}`)).name
+          
         if (!binding && quillInstance) {
           const quillEditor = quillInstance.quill || quillInstance
           binding = new QuillBinding(yText, quillEditor, wsProvider.awareness)
         }
-        //有缓存用缓存
-        if(sessionStorage.getItem('tempContent')){
-          console.log(1)
-          quill.setContents(JSON.parse(sessionStorage.getItem('tempContent')))
-          sessionStorage.removeItem('tempContent')
-        }else{
-          fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
-    quill.setContents(JSON.parse(res.data.content))
-  })
-        }
+       
        
       }
     })
     wsProvider.on('connection-error', (err) => {
       console.error('WebSocket 连接错误:', err)
     })
-
+wsProvider.on('disconnect',()=>{
+  console.log('触发了吗断开连接')
+})
   } catch (e) {
     console.error('建立Yjs连接时出错:', e)
   }
 }
-const goHistory = ()=>{
-  sessionStorage.setItem('tempContent',JSON.stringify(quill.getContents()))
+const goHistory = async()=>{
+  sessionStorage.setItem(`${route.params.insertedId}`,JSON.stringify(quill.getContents()))
     homeStore.isShowHistory = false
+    console.log(quillEditor,'quillEditor')
+    quill.enable(false)
+    quill.off('selection-change')
+   let res = await getContentHistory(route.params.insertedId)
+   if(res.data.code ==200){
+       res.data.data.forEach((item,index)=>{
+        item.createTime = changeTime(item.createTime)
+        item.id = `用户${index}`
+       })
+       homeStore.historyList = res.data.data
+   
+   }
+}
+//改变返回的时间
+const changeTime = (time)=>{
+  const inputDate = new Date(time)
+    const now = new Date();
+  
+  // 校验日期是否合法
+  if (isNaN(inputDate.getTime())) {
+    return "无效时间";
+  }
+
+  // 获取年月日时分，忽略秒和毫秒
+  const inputYear = inputDate.getFullYear();
+  const inputMonth = inputDate.getMonth() + 1; // 月份从0开始
+  const inputDay = inputDate.getDate();
+  const inputHours = inputDate.getHours().toString().padStart(2, '0');
+  const inputMinutes = inputDate.getMinutes().toString().padStart(2, '0');
+
+  const todayYear = now.getFullYear();
+  const todayMonth = now.getMonth() + 1;
+  const todayDay = now.getDate();
+
+  // 判断是否为今天
+  if (
+    inputYear === todayYear &&
+    inputMonth === todayMonth &&
+    inputDay === todayDay
+  ) {
+    return `今天 ${inputHours}:${inputMinutes}`;
+  }
+
+  // 判断是否为昨天（考虑跨年/跨月）
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (
+    inputYear === yesterday.getFullYear() &&
+    inputMonth === yesterday.getMonth() + 1 &&
+    inputDay === yesterday.getDate()
+  ) {
+    return `昨天 ${inputHours}:${inputMinutes}`;
+  }
+
+  // 更早的时间：返回 M月D日 HH:MM
+  return `${inputMonth}月${inputDay}日 ${inputHours}:${inputMinutes}`;
 }
 const backContent = ()=>{
-   quill.setContents(JSON.parse(sessionStorage.getItem('tempContent')))
-   sessionStorage.removeItem('tempContent')
    homeStore.isShowHistory = true
+        //先变回原来页面在渲染
+        //重新绑定
+        rebinding()
+        quill.enable(true)
+      quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
+   sessionStorage.removeItem(`${route.params.insertedId}`)
+   //初始化
+   homeStore.quillData = null
+   homeStore.historyIndex = 0
 }
 // 监听路由参数变化
 watch(() => route.params.insertedId, (newId, oldId) => {
-  console.log('变化了吗')
-  if (newId && newId !== oldId && quill) {
-  
-    // 延迟执行，确保DOM更新完成
+  console.log(quill,'quill还在吗')
     nextTick(() => {
       initYjsConnection(newId, quill)
     })
-  }
 }, { immediate: false })
+//切换历史版本查看的时候 编辑器也切换对应版本的内容
+watch(()=>homeStore.historyIndex,(newValue,oldValue)=>{
+   console.log(homeStore.quillData,'触发了吗')
+   nextTick(()=>{
+    if(homeStore.quillData != null){
+      quill.setContents(JSON.parse(homeStore.quillData))
+    }
+   })
+})
 onBeforeRouteLeave((to,from)=>{
   console.log('onMounted文件挂载了')
    saveFile(from.params.insertedId,{
@@ -394,12 +557,9 @@ onMounted(() => {
     placeholder: '请输入内容',
     theme: 'snow'
   };
-  const quillToolbar = document.querySelector('#toolbar');
+   quillToolbar = document.querySelector('#toolbar');
   quill = new Quill('#children', options);
-  // 延迟初始化Yjs连接，确保Quill完全初始化
-  // fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
-  //     quill.setContents(JSON.parse(res.data.content))
-  // })
+ 
   nextTick(() => {
     if (route.params.insertedId) {
       initYjsConnection(route.params.insertedId, quill)
@@ -432,16 +592,20 @@ onMounted(() => {
       quillToolbar.style.left = bounds.left + 'px';
     }
     //简单的防抖
-    clearTimeout(timer)
+    //如果在历史版本界面，则不需要保存
+    if(homeStore.isShowHistory && !sessionStorage.getItem(`${route.params.insertedId}`)){
+      console.log('触发保存了吗')
+ clearTimeout(timer)
     timer = null
     timer = setTimeout(()=>{
-      // addContentHistory(route.params.insertedId)
+      addContentHistory(route.params.insertedId,JSON.stringify(quill.getContents()))
       saveFile(route.params.insertedId,{
         content:JSON.stringify(quill.getContents())
       }).then(res=>{
         console.log('保存成功',res)
       })
     },300)
+    }
     
   })
 
@@ -846,7 +1010,7 @@ button:hover {
   border-radius: 4px;
 }
 
-/* 代码块样式 - 确保独立不融合 */
+
 .ql-code-mirror {
   margin: 16px 0;
   border: 1px solid #444;
@@ -904,6 +1068,7 @@ button:hover {
 }
 </style>
 <style lang="scss" scoped>
+
 .container {
   position: relative;
   display: flex;
@@ -934,6 +1099,9 @@ button:hover {
    .left{
     display:flex;
     align-items: center;
+    .mode{
+      margin-right:32px;
+    }
      .avatar {
       border-left:1px solid #ddd;
       width: 40px;
@@ -1056,6 +1224,40 @@ button:hover {
    &::-webkit-scrollbar{
     display:none;
    }
+   &-header{
+    padding:20px 268px 0;
+    height: 150px;
+    margin-bottom:22px;
+    .title{
+      font-size: 34px;
+      display: flex;
+      align-items: center;
+      font-family: LackHackSafariFont;
+      color:#1f2329;
+      height: 55px;
+      padding:0 12px;
+    }
+    .info{
+      padding: 12px 12px 8px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      .icon{
+        width: 20px;
+        height: 20px;
+        display: flex;
+        // justify-content: center;
+        // align-items: center;
+      }
+      .name{
+        height: 20px;
+        line-height: 20px;
+      padding:0 4px;
+      font-size: 14px;
+      color: #646473;
+      }
+    }
+   }
     &-center {
       box-sizing: content-box;
       height: calc(100vh - 86px);
@@ -1076,4 +1278,5 @@ button:hover {
     }
   }
 }
+
 </style>
