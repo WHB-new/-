@@ -85,7 +85,7 @@ export const useKnowledgeStore = defineStore('knowledge', () => {
 
   const getRepoDetail = async (id) => {
   try {
-    const res = await getKnowledgeDetail(id);
+    const res = await getKnowledgeDetail(id,sessionStorage.getItem('userId'));
     const kb = res.data.data;
     return {
       id: kb._id,

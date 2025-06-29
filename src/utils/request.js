@@ -49,9 +49,10 @@ request.interceptors.response.use(res => {
    
     return request(originalRequest)
   }else{
-     ElMessage.warning('接口请求失败')
-  console.log(err)
- return Promise.reject(new Error(err))
+    //  ElMessage.warning('接口请求失败')
+  console.log(err,'err')
+  return err
+//  return Promise.reject(new Error(err))
   }
  
 })

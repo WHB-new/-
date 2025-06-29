@@ -35,11 +35,13 @@ export function updateKnowledge(id, data) {
   });
 }
 
-export function getKnowledgeDetail(id) {
+export function getKnowledgeDetail(id,userId) {
   return request({
     url: '/knowledgeBase/getKnowledgeBase',
     method: 'get',
-    params: { id } 
+    params: { id ,
+      userId
+    } 
   });
 }
 

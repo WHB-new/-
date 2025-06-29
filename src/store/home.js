@@ -7,8 +7,9 @@ isCollapse:false,
 fileList:[],
 isShowHistory:true,
 historyList:[],
-quillData:[],
-tempQuill:null,
+quillData:null,
+historyIndex:0,
+
 }),
 actions:{
 getFileList(){
@@ -17,7 +18,11 @@ getFileList(){
     console.log(res)
     if (res.data.code === 200) {
       this.fileList = res.data.data
-      console.log(res.data.data)
+      
+      //替换为纯文本，方便查询
+      this.fileList.forEach(item=>{
+        item.content = JSON.parse(item.content).ops[0].insert.replace(/\n/g, "")
+      })
     }
   }).catch(err => {
     console.log(err)
