@@ -39,7 +39,7 @@
     <div class="list" v-show="filteredKnowledge.length != 0">
       <div 
         v-for="item in filteredKnowledge" 
-        :key="item.id" 
+        :key="item._id" 
         class="li"
         @click="goToEdit(item.id)"
       >
@@ -174,8 +174,9 @@ dialogVisible.value = false
 const confirmAdd = async () => {
   try {
     await formRef.value.validate();
+    // ownerId.value
     const response = await addKnowledge({
-    ownerId: ownerId.value,
+    ownerId: sessionStorage.getItem('userId'),
     baseName: form.value.name,
     baseDesc: form.value.intro 
     });
@@ -255,6 +256,7 @@ const handleDelete = async () => {
 
 // 跳转到编辑页面
 const goToEdit = (id) => {
+  console.log(id,'id是什么')
   router.push({ name: 'edit', params: { id } });
 };
 </script>
