@@ -7,6 +7,27 @@
 
       </div>
       <div class="left">
+        <div class="mode">
+          <el-select
+      v-model="modeValue"
+      placeholder="编辑"
+      style="width: 83px"
+      @change="changeMode"
+    >
+      <el-option
+      value="bianji"
+      label="编辑"
+      />
+      <el-option
+      value="xiuding"
+      label="修订"
+      />
+      <el-option
+      value="yuedu"
+      label="阅读"
+      />
+    </el-select>
+        </div>
         <div class="history" @click="goHistory">
         <div class="icon">
           <svg t="1750924024571" class="icon" viewBox="0 0 1029 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4316" width="16" height="16"><path d="M761.216 997.76c-144.64 0-262.4-117.76-262.4-262.4s117.76-262.4 262.4-262.4 262.4 117.76 262.4 262.4-117.76 262.4-262.4 262.4z m0-448c-102.4 0-185.6 83.2-185.6 185.6s83.2 185.6 185.6 185.6 185.6-83.2 185.6-185.6-83.328-185.6-185.6-185.6z" p-id="4317"></path><path d="M858.496 815.872l-116.48-58.24V588.16h51.2v137.728l88.192 44.16zM174.08 269.312h422.4v51.2h-422.4zM174.08 448.512h281.6v51.2h-281.6zM174.08 627.712h192v51.2h-192z" p-id="4318"></path><path d="M442.88 922.112H0v-883.2h775.68v364.8h-76.8V115.712H76.8v729.6h366.08z" p-id="4319"></path></svg>
@@ -54,7 +75,7 @@
         <!-- <div class="page-header">
         
         </div> -->
-        <div class="page-children" id="children" ref="quillEditor" style="padding:0!important;" >
+        <div class="page-children" id="children" ref="quillEditor" style="padding:0!important;margin-top:150px;" >
         
         </div>
 
@@ -226,6 +247,25 @@ const rebinding = ()=>{
     }
   })
 }
+//改变文档模式
+const changeMode= ()=>{
+  if(modeValue.value == 'yuedu'){
+    quill.enable(false)
+    quill.off('selection-change')
+  }else if(modeValue.value == 'bianji'){
+    quill.enable(true)
+    rebinding()
+  }else if(modeValue.value == 'xiuding'){
+quill.enable(true)
+//都删掉，然后自定义
+    quill.off('selection-change')
+    quill.off('text-change')
+   
+  }
+
+
+
+}
 // 1. 自定义CodeMirror Block
 const BlockEmbed = Quill.import('blots/block/embed')
 const quillEditor = ref(null)
@@ -233,7 +273,7 @@ const route = useRoute()
 const router = useRouter()
 const isShowClose = ref(false)
 let quillToolbar
-
+const modeValue = ref('')
 const backToHistory = ()=>{
   sessionStorage.setItem(`${route.params.insertedId}`,JSON.stringify(quill.getContents()))
   homeStore.isShowHistory = true
@@ -285,7 +325,9 @@ const initYjsConnection = (fileId, quillInstance) => {
         }else if(yText.length ==0 || yText.lenght ==1){
           fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
             if(res.data.code == 200){
-              quill.setContents(JSON.parse(res.data.data.content))
+              if(Object.keys(res.data.data.content).length != 0){
+                quill.setContents(JSON.parse(res.data.data.content))
+              }
             }
   })
         }
@@ -500,10 +542,7 @@ onMounted(() => {
   };
    quillToolbar = document.querySelector('#toolbar');
   quill = new Quill('#children', options);
-  // 延迟初始化Yjs连接，确保Quill完全初始化
-  // fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
-  //     quill.setContents(JSON.parse(res.data.content))
-  // })
+ 
   nextTick(() => {
     if (route.params.insertedId) {
       initYjsConnection(route.params.insertedId, quill)
@@ -954,7 +993,7 @@ button:hover {
   border-radius: 4px;
 }
 
-/* 代码块样式 - 确保独立不融合 */
+
 .ql-code-mirror {
   margin: 16px 0;
   border: 1px solid #444;
@@ -1042,6 +1081,9 @@ button:hover {
    .left{
     display:flex;
     align-items: center;
+    .mode{
+      margin-right:32px;
+    }
      .avatar {
       border-left:1px solid #ddd;
       width: 40px;
@@ -1184,4 +1226,5 @@ button:hover {
     }
   }
 }
+
 </style>
