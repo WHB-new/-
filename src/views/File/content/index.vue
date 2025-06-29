@@ -210,15 +210,34 @@ const toggleDropdown = () => {
 const logout = () => {
 isShow.value = true
 };
+//重新绑定
+const rebinding = ()=>{
+  quill.on('selection-change', (range) => {
+    if (!range) return // 添加空值检查
+
+    const bounds = quill.getBounds(range.index, range.length);
+    if (range && range.length > 0) {
+      quillToolbar.style.zIndex = 6;
+      quillToolbar.style.display = 'block';
+      quillToolbar.style.top = bounds.top - 48 + 'px';
+      quillToolbar.style.left = bounds.left + 'px';
+    } else {
+      quillToolbar.style.display = 'none';
+    }
+  })
+}
 // 1. 自定义CodeMirror Block
 const BlockEmbed = Quill.import('blots/block/embed')
 const quillEditor = ref(null)
 const route = useRoute()
 const router = useRouter()
 const isShowClose = ref(false)
+let quillToolbar
+
 const backToHistory = ()=>{
   sessionStorage.setItem(`${route.params.insertedId}`,JSON.stringify(quill.getContents()))
   homeStore.isShowHistory = true
+  rebinding()
   quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
   saveFile(route.params.insertedId,{
         content:JSON.stringify(quill.getContents())
@@ -293,6 +312,9 @@ wsProvider.on('disconnect',()=>{
 const goHistory = async()=>{
   sessionStorage.setItem(`${route.params.insertedId}`,JSON.stringify(quill.getContents()))
     homeStore.isShowHistory = false
+    console.log(quillEditor,'quillEditor')
+    quill.enable(false)
+    quill.off('selection-change')
    let res = await getContentHistory(route.params.insertedId)
    if(res.data.code ==200){
        res.data.data.forEach((item,index)=>{
@@ -350,6 +372,8 @@ const changeTime = (time)=>{
 const backContent = ()=>{
    homeStore.isShowHistory = true
         //先变回原来页面在渲染
+        //重新绑定
+        rebinding()
       quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
    sessionStorage.removeItem(`${route.params.insertedId}`)
    //初始化
@@ -471,7 +495,7 @@ onMounted(() => {
     placeholder: '请输入内容',
     theme: 'snow'
   };
-  const quillToolbar = document.querySelector('#toolbar');
+   quillToolbar = document.querySelector('#toolbar');
   quill = new Quill('#children', options);
   // 延迟初始化Yjs连接，确保Quill完全初始化
   // fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
