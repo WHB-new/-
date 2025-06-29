@@ -175,9 +175,6 @@ const showSearchResults = ref(false)
 const userId = sessionStorage.getItem('userId');
 const permission = "0";
 
-// 路径获取文档ID
-const docId = route.params.insertedId;
-
 // 协作者列表数据
 const collaborators = ref([
   { id: 1, name: '张三', avatar: '', permission: '1' },
@@ -199,6 +196,7 @@ const filterSearchResults = computed(() => {
 
 // 获取文档内的协作者列表
 const fetchDocPermissionList = async () => {
+    const docId = route.params.insertedId;
     const res = await getDocPermissionList(docId, permission);
     if (res.data.code === 402) {
       ElMessage.error('您没有权限查看此文档的协作者列表');
@@ -227,6 +225,7 @@ const handleCommand = (collaboratorId, command) => {
 
 // 修改协作者权限
 const updatePermission = async (collaboratorId, newPermission) => {
+  const docId = route.params.insertedId;
   const collaborator = collaborators.value.find(c => c.id === collaboratorId);
   if (collaborator) {
     // 调用修改协作者权限接口
@@ -307,6 +306,8 @@ const addCollaborator = (friend) => {
     return;
   }
 
+  // 路径获取文档ID
+  const docId = route.params.insertedId;
   // 调用添加协作者接口，1：管理  2：编辑  3：阅读
   // 默认给只读
   addDocPermission(friend.id, docId, "3");
