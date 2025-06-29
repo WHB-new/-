@@ -15,14 +15,19 @@
     <div class="main">
       <div class="header">
         <div class="title">
-          <div class="recent" :style="{'color':isActive==1?'skyblue':'',fontWeight:isActive==1?'500':'normal',fontSize:isActive==1?'16px':'14px'}">
+          <div class="recent" :style="{'color':activeTab==1?'skyblue':'',fontWeight:activeTab==1?'500':'normal',fontSize:activeTab==1?'16px':'14px'}"
+               @click="switchTab(1)">
             最近访问
+          </div>
+          <div class="shared" :style="{'color':activeTab==2?'skyblue':'',fontWeight:activeTab==2?'500':'normal',fontSize:activeTab==2?'16px':'14px'}"
+               @click="switchTab(2)" style="margin-left: 20px;">
+            与我共享
           </div>
         </div>
       </div>
       <!-- 列表区域 -->
       <div class="list">
-        <el-table :data="fileData" style="width: 100%" row-key="_id" @row-click="handleClick">
+        <el-table :data="activeTab === 1 ? recentFileData : sharedFileData" style="width: 100%" row-key="_id" @row-click="handleClick">
            <el-table-column type="selection" width="28px" :selectable="selectable" style="border-radius: 5px;"/>
             <el-table-column  label="所有文档" min-width="200px" prop="title">
               <template #default="scope">
@@ -40,25 +45,38 @@
               </template>
             </el-table-column>
             
-            <el-table-column property="name" label="不限归属" width="356px" prop="recentlyOpen[0].recentlyOpenUserId">
+            <el-table-column property="name" :label="activeTab === 1 ? '不限归属' : '共享人'" width="356px">
+              <template #default="scope">
+                <div v-if="activeTab === 1">
+                  {{ scope.row.recentlyOpen[0]?.recentlyOpenUserId || '' }}
+                </div>
+                <div v-else>
+                  {{ scope.row.sharedBy?.username || '未知用户' }}
+                </div>
+              </template>
             </el-table-column>
             
-            <el-table-column property="time" label="最近打开" width="356px" prop="recentlyOpen[0].recentlyOpenTime">
-            </el-table-column>
-            <el-table-column  label="操作" width="76px" >
+            <!-- 仅在最近访问标签页显示时间列 -->
+            <el-table-column v-if="activeTab === 1" property="time" label="最近打开" width="356px">
               <template #default="scope">
+                {{ changeTime(scope.row.recentlyOpen[0]?.recentlyOpenTime) }}
+              </template>
+            </el-table-column>
+            
+            <el-table-column  label="操作" width="76px" >
+              <template #default>
                 
                 <el-dropdown placement="bottom-start">
       <template #default>
 <div class="caozuo" style="display:flex;align-items:center;margin-left:3px;" @click.stop>
-                  <svg t="1749795603824" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3324" width="16" height="16"><path d="M841.085552 395.21211c-62.669318 0-113.472378 49.541323-113.472378 110.642936 0 61.093427 50.80306 110.652146 113.472378 110.652146 62.685691 0 113.487727-49.559742 113.487727-110.652146C954.573279 444.75241 903.77022 395.21211 841.085552 395.21211zM500.653069 395.21211c-62.668295 0-113.487727 49.541323-113.487727 110.642936 0 61.093427 50.820456 110.652146 113.487727 110.652146 62.669318 0 113.472378-49.559742 113.472378-110.652146C614.125447 444.75241 563.322387 395.21211 500.653069 395.21211zM182.915471 395.21211c-62.686714 0-113.488751 49.541323-113.488751 110.642936 0 61.093427 50.802036 110.652146 113.488751 110.652146 62.669318 0 113.471354-49.559742 113.471354-110.652146C296.385802 444.75241 245.583766 395.21211 182.915471 395.21211z" p-id="3325"></path></svg>
+                  <svg t="1749795603824" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3324" width="16" height="16"><path d="M841.085552 395.21211c-62.669318 0-113.472378 49.541323-113.472378 110.642936 0 61.093427 50.80306 110.652146 113.472378 110.652146 62.685691 0 113.487727-49.559742 113.487727-110.652146C954.573279 444.75241 903.77022 395.21211 841.085552 395.21211zM500.653069 395.21211c-62.668295 0-113.487727 49.541323-113.487727 110.642936 0 61.093427 50.820456 110.652146 113.487727 110.652146 62.669318 0 113.472378-49.559742 113.472378-110.642936C614.125447 444.75241 563.322387 395.21211 500.653069 395.21211zM182.915471 395.21211c-62.686714 0-113.488751 49.541323-113.488751 110.642936 0 61.093427 50.802036 110.652146 113.488751 110.652146 62.669318 0 113.471354-49.559742 113.471354-110.652146C296.385802 444.75241 245.583766 395.21211 182.915471 395.21211z" p-id="3325"></path></svg>
                 </div>
       </template>
       <template #dropdown>
         <el-dropdown-menu>
           <el-dropdown-item>
           <template #default>
- <div style="display:flex;align-items:center;" @click="handleDelete(scope.row._id)">
+ <div style="display:flex;align-items:center;" @click="handleDelete">
             <div style="display: flex;align-items: center;justify-content: flex-start;width: 16px;height: 16px;">
                <svg t="1750569983191" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="7415" width="16" height="16"><path d="M380 455a8 8 0 0 1 8-8h64a8 8 0 0 1 8 8v240a8 8 0 0 1-8 8h-64a8 8 0 0 1-8-8V455zM644 455a8 8 0 0 0-8-8h-64a8 8 0 0 0-8 8v240a8 8 0 0 0 8 8h64a8 8 0 0 0 8-8V455z" fill="#323338" p-id="7416"></path><path d="M321 212V96c0-17.673 14.327-32 32-32h320c17.673 0 32 14.327 32 32v116h183a8 8 0 0 1 8 8v64a8 8 0 0 1-8 8h-55v635c0 17.673-14.327 32-32 32H225c-17.673 0-32-14.327-32-32V292h-58a8 8 0 0 1-8-8v-64a8 8 0 0 1 8-8h186z m80-68v68h224v-68H401zM273 292v587h480V292H273z" fill="#323338" p-id="7417"></path></svg>
             </div>
@@ -81,162 +99,85 @@
 
 <script setup>
 import Nav from '@/components/Nav.vue';
-import {ref,onMounted,onUnmounted} from 'vue'
+import {ref,onMounted} from 'vue'
 import { useRouter,useRoute } from 'vue-router';
-import {addFile,getRecentFile,deleteFile,fileListDetail} from '@/api/file'
+import {addFile,getRecentFile, getSharedDocs} from '@/api/file'
 import { useHomeStore } from '@/store/home';
-import { ElMessage, ElMessageBox } from 'element-plus';
 const homeStore = useHomeStore();
-const isActive = ref(1)
+const activeTab = ref(1) 
+const recentFileData = ref([])
+const sharedFileData = ref([])
 const router = useRouter()
 const route = useRoute()
-const fileData =ref([
-])
-
-// 刷新最近文档列表
-const refreshRecentFiles = async () => {
-  const userId = sessionStorage.getItem('userId')
-  if (!userId) return
-  
-  try {
-    const res = await getRecentFile(userId)
-    if (res.data.code === 200 && res.data.data) {
-      res.data.data.forEach(item => {
-        if (item.recentlyOpen && item.recentlyOpen.length > 0) {
-          item.recentlyOpen[0].recentlyOpenTime = changeTime(item.recentlyOpen[0].recentlyOpenTime)
-        }
-      })
-      fileData.value = res.data.data
-    }
-  } catch (error) {
-    console.error('刷新最近文档失败:', error)
-  }
-}
 
 const handleAdd = ()=>{
  const baseId=sessionStorage.getItem('defaultKnowledgeId')
- const ownerId=sessionStorage.getItem('userId')
- 
- // 验证必要参数
- if (!baseId) {
-   ElMessage.error('缺少默认知识库ID，请先选择知识库')
-   return
- }
- if (!ownerId) {
-   ElMessage.error('用户信息缺失，请重新登录')
-   return
- }
- 
- // 验证baseId格式
- if (typeof baseId !== 'string' || baseId.length !== 24 || !/^[a-fA-F0-9]{24}$/.test(baseId)) {
-   ElMessage.error('知识库ID格式错误')
-   return
- }
- 
     addFile({
-      title: "未命名文档",
       baseId,
-      content: {},
-      ownerId,
-      valid: 1
+       ownerId: sessionStorage.getItem('userId'),
     }).then(res=>{
-      console.log('文档创建成功:', res.data)
+      localStorage.setItem(`title${res.data.insertedId}`,JSON.stringify({
+      title:'未命名文档',
+      name:`用户${sessionStorage.getItem('defaultKnowledgeId').slice(sessionStorage.getItem('defaultKnowledgeId').length-6)}`
+    }))
+       homeStore.getFileList()
       router.push({name:'content',params:{insertedId:res.data.insertedId}})
     }).catch(err=>{
       console.log(err)
-      ElMessage.error('创建文档失败，请稍后重试')
     })
 }
-const handleDelete = async (docId) => {
-  try {
-    await ElMessageBox.confirm(
-      '确定要删除这个文档吗？此操作不可恢复。',
-      '删除确认',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-      }
-    );
-    
-    const res = await deleteFile(docId);
-    if (res.data.code === 200) {
-      ElMessage.success('文档删除成功');
-      // 同步刷新侧边栏和主页数据
-      homeStore.getFileList();
-      await refreshRecentFiles();
-    } else {
-      ElMessage.error('删除失败，请重试');
-    }
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.error('删除文档失败:', error);
-      ElMessage.error('删除失败，请重试');
-    }
-  }
-};
+
+const handleDelete = ()=>{
+
+}
+
 //点击文件新开页面
 const handleClick = async(row)=>{
-   // 更新访问记录，让文档重新排到顶部
-   const userId = sessionStorage.getItem('userId')
-   if (userId && row._id) {
-     try {
-       // 调用文档详情接口来更新访问记录
-       await fileListDetail(row._id, userId)
-       // 刷新数据以更新排序
-       await refreshRecentFiles()
-     } catch (error) {
-       console.error('更新访问记录失败:', error)
-     }
-   }
-   
    const url = router.resolve({name:'content',params:{insertedId:row._id}})
    window.open(url.href,'_blank')
 }
-onMounted(()=>{
-  
-  const userId=sessionStorage.getItem('userId')
-  console.log('主页加载，用户ID:', userId)
-  
-  if (!userId) {
-    console.error('用户ID不存在，请重新登录')
-    ElMessage.error('用户信息缺失，请重新登录')
-    return
-  }
-  
-  getRecentFile(userId).then(res=>{
-    console.log('获取最近文件成功:', res.data)
-    if (res.data.code === 200 && res.data.data) {
-      res.data.data.forEach(item=>{
-        if (item.recentlyOpen && item.recentlyOpen.length > 0) {
-          item.recentlyOpen[0].recentlyOpenTime = changeTime(item.recentlyOpen[0].recentlyOpenTime)
-        }
-      })
-      fileData.value = res.data.data
-    } else {
-      console.warn('获取最近文件返回异常:', res.data)
-      fileData.value = []
-    }
-  }).catch(err=>{
-    console.error('获取最近文件失败:', err)
-    ElMessage.error('获取最近文件失败')
-    fileData.value = []
-  })
-  
-  // 监听侧边栏的数据刷新事件
-  window.addEventListener('refreshRecentFiles', refreshRecentFiles)
-})
 
-onUnmounted(() => {
-  // 清理事件监听器
-  window.removeEventListener('refreshRecentFiles', refreshRecentFiles)
+// 切换标签
+const switchTab = (tabIndex) => {
+  activeTab.value = tabIndex
+  if (tabIndex === 2 && sharedFileData.value.length === 0) {
+    loadSharedDocs()
+  }
+}
+
+// 加载共享文档
+const loadSharedDocs = () => {
+  const userId = sessionStorage.getItem('userId')
+  getSharedDocs(userId).then(res => {
+    sharedFileData.value = res.data.data
+  }).catch(err => {
+    console.error('获取共享文档失败:', err)
+  })
+}
+
+onMounted(()=>{
+  const userId = sessionStorage.getItem('userId')
+  
+  // 获取最近访问文件
+  getRecentFile(userId).then(res=>{
+    res.data.data.forEach(item=>{
+      if(item.recentlyOpen && item.recentlyOpen.length > 0) {
+        item.recentlyOpen[0].recentlyOpenTime = changeTime(item.recentlyOpen[0].recentlyOpenTime)
+      }
+    })
+    recentFileData.value = res.data.data
+  }).catch(err=>{
+    console.error('获取最近访问文件失败:', err)
+  })
 })
 
 //时间转换函数
 const changeTime = (time)=>{
-  const inputDate = new Date(time)
-    const now = new Date();
+  if (!time) return ''
   
+  const inputDate = new Date(time)
+  const now = new Date();
+
   // 校验日期是否合法
   if (isNaN(inputDate.getTime())) {
     return "无效时间";
@@ -329,28 +270,28 @@ flex:1;
   padding-right:24px;
   .header{
     margin-left:12px;
-    max-width: 268px;
-    padding:10px 12px;
-    height: 48px;
-    .title{
-      height: 48px;
-      display: flex;
-      align-items: center;
-      .recent{
-        width: 72px;
-        height: 28px;
-        font-size: 16px;
-        padding:2px 4px;
-        text-align: center;
-        color:#646A73;
-        
-        &:hover{
-          cursor: pointer;
-          background-color: #f5f5f5;
-          border-radius: 5px;
-        }
-      }
+     max-width: 268px;
+   padding:10px 12px;
+height: 48px;
+.title{
+  height: 48px;
+  display: flex;
+  align-items: center;
+  .recent, .shared {
+    width: 72px;
+    height: 28px;
+    font-size: 16px;
+    padding:2px 4px;
+    text-align: center;
+    color:#646A73;
+   
+    &:hover{
+      cursor: pointer;
+        background-color: #f5f5f5;
+        border-radius: 5px;
     }
+  }
+}
   }
   .list{
     .right{
@@ -373,36 +314,15 @@ flex:1;
   display: flex;
   justify-content: center;
   align-content: center;
-  .dropdown-trigger {
-    width: 24px;
-    height: 24px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 5px;
+  &:hover{
     cursor: pointer;
-    &:hover{
-      background-color: #d6d9dc;
-    }
+    background-color: #d6d9dc;
+    border-radius: 5px;
   }
 }
 </style>
-
 <style>
 .el-table__body tr:hover td {
   cursor: pointer;
-}
-
-.delete-item {
-  color: #ff4d4f !important;
-}
-
-.delete-item:hover {
-  background-color: #fff2f0 !important;
-}
-
-/* 添加：确保下拉菜单有足够的层级 */
-.el-dropdown-menu {
-  z-index: 9999 !important;
 }
 </style>

@@ -1,19 +1,19 @@
 import request from "@/utils/request";
-export function addKnowledge(data){
+export function addKnowledge(data) {
   return request({
-    url:'/knowledgeBase/addKnowledgeBase',
-    method:'post',
-    headers:{
-      "Content-Type":"application/json",
+    url: '/knowledgeBase/addKnowledgeBase',
+    method: 'post',
+    headers: {
+      "Content-Type": "application/json",
     },
     data
   })
 }
 export const getKnowledgeList = (userId) => {
   return request({
-    url: '/knowledgeBase/getKnowledgeBases', 
+    url: '/knowledgeBase/getKnowledgeBases',
     method: 'get',
-    params: { userId } 
+    params: { userId }
   })
 }
 
@@ -26,7 +26,7 @@ export const deleteKnowledge = (id) => {
 
 export function updateKnowledge(id, data) {
   return request({
-    url: `/knowledgeBase/updateBase/${id}`, 
+    url: `/knowledgeBase/updateBase/${id}`,
     method: 'put',
     data,
     headers: {
@@ -35,10 +35,21 @@ export function updateKnowledge(id, data) {
   });
 }
 
-export function getKnowledgeDetail(id) {
+export function getKnowledgeDetail(id, userId) {
   return request({
     url: '/knowledgeBase/getKnowledgeBase',
     method: 'get',
-    params: { id } 
+    params: {
+      id,
+      userId
+    }
+  });
+}
+
+export function getDocsByBaseId(baseId) {
+  return request({
+    url: '/document/getDocByBaseId',
+    method: 'get',
+    params: { baseId }
   });
 }

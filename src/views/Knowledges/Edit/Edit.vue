@@ -44,7 +44,7 @@
               <div class="item-content" @click="selectItem(item)">
                 <i class="fas fa-file"></i>
                 <span>{{ item.title }}</span>
-                <svg t="1750512919025" class="delete-icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3607" width="16" height="16" @click.stop="handleDelete(item._id)"><path d="M380 455a8 8 0 0 1 8-8h64a8 8 0 0 1 8 8v240a8 8 0 0 1-8 8h-64a8 8 0 0 1-8-8V455zM644 455a8 8 0 0 0-8-8h-64a8 8 0 0 0-8 8v240a8 8 0 0 0 8 8h64a8 8 0 0 0 8-8V455z" fill="#323338" p-id="3608"></path><path d="M321 212V96c0-17.673 14.327-32 32-32h320c17.673 0 32 14.327 32 32v116h183a8 8 0 0 1 8 8v64a8 8 0 0 1-8 8h-55v635c0 17.673-14.327 32-32 32H225c-17.673 0-32-14.327-32-32V292h-58a8 8 0 0 1-8-8v-64a8 8 0 0 1 8-8h186z m80-68v68h224v-68H401zM273 292v587h480V292H273z" fill="#323338" p-id="3609"></path></svg>
+                <svg t="1750512919025" class="delete-icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3607" width="16" height="16" @click=handleDelete(item._id)><path d="M380 455a8 8 0 0 1 8-8h64a8 8 0 0 1 8 8v240a8 8 0 0 1-8 8h-64a8 8 0 0 1-8-8V455zM644 455a8 8 0 0 0-8-8h-64a8 8 0 0 0-8 8v240a8 8 0 0 0 8 8h64a8 8 0 0 0 8-8V455z" fill="#323338" p-id="3608"></path><path d="M321 212V96c0-17.673 14.327-32 32-32h320c17.673 0 32 14.327 32 32v116h183a8 8 0 0 1 8 8v64a8 8 0 0 1-8 8h-55v635c0 17.673-14.327 32-32 32H225c-17.673 0-32-14.327-32-32V292h-58a8 8 0 0 1-8-8v-64a8 8 0 0 1 8-8h186z m80-68v68h224v-68H401zM273 292v587h480V292H273z" fill="#323338" p-id="3609"></path></svg>
               </div>
             </div>
           </div>
@@ -89,38 +89,44 @@ import Nav from '@/components/Nav.vue';
 import {addFile,getFileList} from '@/api/file'
 import { 
   updateKnowledge,
+  getDocsByBaseId
 } from '@/api/knowledge';
 import { ElMessage } from 'element-plus';
+// import{addFile,
+//   deleteFile,
+//   updateDocument
+// }from '@/api/file'
 const route = useRoute();
 const router = useRouter();
 const knowledgeStore = useKnowledgeStore();
 
 const knowledge = ref(null);
 const selectedItem = ref(null);
-const ownerId = ref(sessionStorage.getItem('defaultKnowledgeId'));
+const ownerId = ref(sessionStorage.getItem('userId'));
 const knowledgeFileList = ref([])
 onMounted(async () => {
   const id = route.params.id;
-  if (ownerId.value) {
+  const userId = sessionStorage.getItem('userId'); 
+  
+  if (userId) {
     const detail = await knowledgeStore.getRepoDetail(id);
+    const docsRes = await getDocsByBaseId(detail.id);
+    const docs = docsRes.data.data || [];
+    
     knowledge.value = {
       ...detail,
-      directory: detail.directory.map(doc => ({
-        ...doc,
-        content: doc.content || '' 
+      directory: docs.map(doc => ({
+        id: doc._id,
+        name: doc.title || '未命名文档',
+        content: doc.content || ''
       }))
     };
   }
-  getList()
+  getList();
 });
+
 const handleDelete = (id)=>{
-  // 只移除当前知识库的文档列表
-  knowledgeFileList.value = knowledgeFileList.value.filter(item => item._id !== id)
-  // 如果当前选中项被删了，也清空选中
-  if(selectedItem.value && selectedItem.value._id === id){
-    selectedItem.value = null
-  }
-  ElMessage.success('文档已从本知识库移除')
+
 }
 //查询知识库文件列表
 const getList = ()=>{
@@ -152,33 +158,38 @@ getList()
 };
 
 // 删除当前选中的项目
-const deleteItem = () => {
+const deleteItem = async () => {
   if (selectedItem.value) {
-    knowledge.value.directory = knowledge.value.directory.filter(
-      item => item.id !== selectedItem.value.id
-    );
-    selectedItem.value = null;
+    try {
+      await deleteFile(selectedItem.value.id);
+
+      knowledge.value.directory = knowledge.value.directory.filter(
+        item => item.id !== selectedItem.value.id
+      );
+      
+      selectedItem.value = null;
+      ElMessage.success('文档已删除');
+    } catch (error) {
+      ElMessage.error('删除文档失败');
+      console.error('删除文档失败:', error);
+    }
   }
 };
+
 
 // 保存更改
 const saveChanges = async () => {
   try {
-    const res = await updateKnowledge(route.params.id, {
-      ownerId: sessionStorage.getItem('userId'),
+    await updateKnowledge(route.params.id, {
       baseName: knowledge.value.title,
       baseDesc: knowledge.value.description,
     });
     
-    if (res.data.code === 200) {
-      ElMessage.success('知识库已成功更新！');
-      router.push({ name: 'knowledges' });
-    } else {
-      ElMessage.error('更新失败，请重试');
-    }
+    ElMessage.success('知识库已成功更新！');
+    router.push({ name: 'knowledges' });
   } catch (error) {
-    console.error('保存知识库失败:', error);
-    ElMessage.error('保存失败，请重试');
+    ElMessage.error('更新知识库失败');
+    console.error('更新知识库失败:', error);
   }
 };
 

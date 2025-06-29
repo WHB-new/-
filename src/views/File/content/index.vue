@@ -221,9 +221,10 @@ import * as Y from 'yjs'
 import { QuillBinding } from 'y-quill';
 import { WebsocketProvider } from 'y-websocket';
 import { WebrtcProvider } from 'y-webrtc';
-import {saveFile,fileListDetail} from '@/api/file'
-import {generateSummary, getSummary, checkAndUpdateSummary} from '@/api/file'
+import { saveFile, fileListDetail, generateSummary, getSummary, checkAndUpdateSummary } from '@/api/file'
 import { ElMessage } from 'element-plus';
+import request from "@/utils/request";
+
 const homeStore = useHomeStore()
 let quill
 let ydoc
@@ -237,6 +238,8 @@ const generatingSummary = ref(false)
 const summaryRequestInProgress = ref(false)
 // 添加摘要显示状态，用于动画控制
 const summaryVisible = ref(false)
+// 添加页面状态管理，确保在正确的页面才执行摘要逻辑
+const isDocumentPage = ref(false)
 
 // 记录上次生成摘要时的内容hash
 let lastSummaryHash = ''
@@ -247,11 +250,18 @@ let summaryInterval = null
 let summaryDelayTimer = null
 let summaryShouldGenerate = false
 
-// 获取文档内容纯文本
+// 优化AI摘要逻辑
+let summaryMonitorInterval = null
+let summaryMonitorDelayTimer = null
+
+// 获取文档内容纯文本（适配后端，专门处理Quill Delta格式）
 function getEditorText() {
-  if (!quill) return ''
-  // 移除replace(/\s+/g, '')，保留原始文本用于字数计算
-  return quill.getText().trim()
+  if (!quill || !isDocumentPage.value) return ''
+  const delta = quill.getContents();
+  if (delta && Array.isArray(delta.ops)) {
+    return delta.ops.map(op => typeof op.insert === 'string' ? op.insert : '').join('').trim();
+  }
+  return quill.getText().trim();
 }
 
 // 简单hash函数
@@ -312,22 +322,28 @@ const loadDocumentSummary = async (retryCount = 0) => {
 
 // 生成文档摘要
 const generateDocumentSummary = async (isAuto = false) => {
-  if (!route.params.insertedId) return
+  if (!isDocumentPage.value || !route.params.insertedId) return
   if (generatingSummary.value || summaryRequestInProgress.value) {
     return
   }
-  
+
   // 判断字数
   const text = getEditorText()
-  
+
   if (text.length <= 50) {
-    documentSummary.value = ''
+    // 只在自动生成时清空摘要和隐藏框，手动点击"更新"时不隐藏
+    if (isAuto) {
+      documentSummary.value = ''
+      summaryVisible.value = false
+    } else {
+      ElMessage.warning('内容不足50字，无法生成摘要')
+    }
     return
   }
-  
+
   generatingSummary.value = true
   summaryRequestInProgress.value = true
-  
+
   try {
     const res = await generateSummary({
       docId: route.params.insertedId,
@@ -335,19 +351,18 @@ const generateDocumentSummary = async (isAuto = false) => {
     })
     if (res.data.code === 200) {
       documentSummary.value = res.data.data.summary
-      // 只在手动生成时显示成功提示，自动生成时不显示
       if (!isAuto) {
         ElMessage.success('摘要生成成功')
       }
       lastSummaryHash = simpleHash(getEditorText())
+      // 手动生成时，确保摘要框显示
+      summaryVisible.value = true
     } else {
-      // 只在手动生成时显示错误提示
       if (!isAuto) {
         ElMessage.warning(res.data.message || '摘要生成失败')
       }
     }
   } catch (error) {
-    // 只在手动生成时显示错误提示
     if (!isAuto) {
       ElMessage.error('摘要生成失败')
     }
@@ -359,11 +374,12 @@ const generateDocumentSummary = async (isAuto = false) => {
 
 // 监听编辑器内容变化，内容超过50字后5秒无操作生成摘要
 function setupSummaryAutoTrigger() {
-  if (!quill) return
+  if (!quill || !isDocumentPage.value) return
   let lastText = getEditorText()
   let lastLength = lastText.length
   
   quill.on('text-change', () => {
+    if (!isDocumentPage.value) return
     const text = getEditorText()
     const currentLength = text.length
     
@@ -390,32 +406,62 @@ function setupSummaryAutoTrigger() {
 // 添加更频繁的字数检测（每30秒检查一次）
 function setupFrequentCheck() {
   if (summaryInterval) clearInterval(summaryInterval)
+  let lastTextHash = simpleHash(getEditorText())
   summaryInterval = setInterval(() => {
+    if (!isDocumentPage.value) return
     const text = getEditorText()
     const currentLength = text.length
-    
-    // 检查是否正在请求中，避免重复请求
-    if (currentLength > 50 && !summaryRequestInProgress.value && simpleHash(text) !== lastSummaryHash) {
+    const currentHash = simpleHash(text)
+    // 内容不足50字，切换页面时摘要消失
+    if (currentLength <= 50) {
+      // 不生成摘要
+      return
+    }
+    // 内容有变化且超过50字，自动生成摘要
+    if (!summaryRequestInProgress.value && currentHash !== lastSummaryHash) {
       generateDocumentSummary(true)
     }
+    lastTextHash = currentHash
   }, 30000) // 30秒检查一次
 }
 
 // 初始化摘要自动生成逻辑
 function initSummaryAuto() {
   setupSummaryAutoTrigger()
-  setupFrequentCheck()
+  startSummaryMonitor()
 }
 
-// 页面切换时，如果内容超过50字且摘要未生成，则立即生成摘要
+// 页面切换时，如果内容不足50字，摘要消失
 onBeforeRouteLeave((to, from, next) => {
   const text = getEditorText()
   const currentLength = text.length
-  
-  // 页面切换时，如果字数不足50，清空摘要并隐藏
   if (currentLength <= 50 && documentSummary.value) {
     documentSummary.value = ''
     summaryVisible.value = false
+  }
+  
+  // 设置为非文档页面状态
+  isDocumentPage.value = false
+  
+  // 清理所有定时器
+  if (summaryDelayTimer) {
+    clearTimeout(summaryDelayTimer)
+    summaryDelayTimer = null
+  }
+  
+  if (summaryInterval) {
+    clearInterval(summaryInterval)
+    summaryInterval = null
+  }
+  
+  if (summaryMonitorInterval) {
+    clearInterval(summaryMonitorInterval)
+    summaryMonitorInterval = null
+  }
+  
+  if (summaryMonitorDelayTimer) {
+    clearTimeout(summaryMonitorDelayTimer)
+    summaryMonitorDelayTimer = null
   }
   
   if (currentLength > 50 && summaryShouldGenerate) {
@@ -445,14 +491,20 @@ const toggleDropdown = () => {
   showDropdown.value = !showDropdown.value;
 };
 const logout = () => {
-isShow.value = true
+  // 这里可以添加退出登录的逻辑
+  ElMessage.info('退出登录功能待实现')
 };
+
+// 格式选择器
+const formatValue = ref('paragraph')
+
 // 1. 自定义CodeMirror Block
 const BlockEmbed = Quill.import('blots/block/embed')
 const quillEditor = ref(null)
 const route = useRoute()
 const router = useRouter()
 const isShowClose = ref(false)
+
 // 初始化Yjs连接的函数
 const initYjsConnection = (fileId, quillInstance) => {
   if (!quillInstance) {
@@ -493,11 +545,8 @@ const initYjsConnection = (fileId, quillInstance) => {
           binding = new QuillBinding(yText, quillEditor, wsProvider.awareness)
         }
         console.log(yText.length,'权威')
-        if(yText.length == 0 && yText.length == 1){
-          fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
-    console.log(res.data.content,'res')
-    quill.setContents(JSON.parse(res.data.content))
-  })
+        if(yText.length <= 1){
+          loadDocContent(fileId, sessionStorage.getItem('userId'), quillInstance)
         }
       }
     })
@@ -517,6 +566,9 @@ watch(() => route.params.insertedId, (newId, oldId) => {
     console.log('路由参数变化:', oldId, '->', newId)
     console.log('当前quill实例:', quill)
     
+    // 设置为文档页面状态
+    isDocumentPage.value = true
+    
     // 切换文档时重置所有摘要相关状态
     console.log('重置摘要状态')
     documentSummary.value = ''
@@ -524,18 +576,37 @@ watch(() => route.params.insertedId, (newId, oldId) => {
     summaryShouldGenerate = false
     lastSummaryHash = ''
     
-    // 清理定时器
+    // 清理所有定时器
     if (summaryDelayTimer) {
       clearTimeout(summaryDelayTimer)
       summaryDelayTimer = null
     }
     
+    if (summaryInterval) {
+      clearInterval(summaryInterval)
+      summaryInterval = null
+    }
+    
+    if (summaryMonitorInterval) {
+      clearInterval(summaryMonitorInterval)
+      summaryMonitorInterval = null
+    }
+    
+    if (summaryMonitorDelayTimer) {
+      clearTimeout(summaryMonitorDelayTimer)
+      summaryMonitorDelayTimer = null
+    }
+    
     //用于保存跳转到另一文件的情况
-    saveFile(oldId,{
-      content:JSON.stringify(quill.getContents())
-    }).then((res)=>{
-      console.log('保存成功',res)
-    })
+    if (oldId && quill) {
+      saveFile(oldId,{
+        content:JSON.stringify(quill.getContents())
+      }).then((res)=>{
+        console.log('保存成功',res)
+      }).catch(error => {
+        console.error('保存文档失败:', error)
+      })
+    }
     
     // 延迟加载新文档的摘要，确保quill内容已加载
     setTimeout(() => {
@@ -545,17 +616,65 @@ watch(() => route.params.insertedId, (newId, oldId) => {
     // 延迟执行，确保DOM更新完成
     nextTick(() => {
       initYjsConnection(newId, quill)
+      // 重新启动摘要监控
+      initSummaryAuto()
     })
+  } else if (!newId && oldId) {
+    // 如果从文档页面切换到非文档页面（如主页），清理所有状态
+    console.log('切换到非文档页面，清理所有状态')
+    isDocumentPage.value = false
+    documentSummary.value = ''
+    summaryVisible.value = false
+    summaryShouldGenerate = false
+    lastSummaryHash = ''
+    
+    // 清理所有定时器
+    if (summaryDelayTimer) {
+      clearTimeout(summaryDelayTimer)
+      summaryDelayTimer = null
+    }
+    
+    if (summaryInterval) {
+      clearInterval(summaryInterval)
+      summaryInterval = null
+    }
+    
+    if (summaryMonitorInterval) {
+      clearInterval(summaryMonitorInterval)
+      summaryMonitorInterval = null
+    }
+    
+    if (summaryMonitorDelayTimer) {
+      clearTimeout(summaryMonitorDelayTimer)
+      summaryMonitorDelayTimer = null
+    }
+    
+    // 保存当前文档
+    if (quill) {
+      saveFile(oldId,{
+        content:JSON.stringify(quill.getContents())
+      }).then((res)=>{
+        console.log('保存成功',res)
+      }).catch(error => {
+        console.error('保存文档失败:', error)
+      })
+    }
   }
 }, { immediate: false })
+
 onBeforeRouteLeave((to,from)=>{
   console.log('onMounted文件挂载了')
-   saveFile(from.params.insertedId,{
+  if (from.params.insertedId && quill) {
+    saveFile(from.params.insertedId,{
       content:JSON.stringify(quill.getContents())
     }).then((res)=>{
       console.log(from,'from')
+    }).catch(error => {
+      console.error('保存文档失败:', error)
     })
+  }
 })
+
 //代码块
 const codeMirrorInstances = ref(new Map())
 class CodeMirrorBlock extends BlockEmbed {
@@ -606,11 +725,33 @@ const handleFormatChange = (value) => {
   }
 };
 let routeId = ref(null)
+
+function loadDocContent(docId, userId, quillInstance) {
+  fileListDetail(docId, userId).then(res => {
+    if (res.data.code === 200 && res.data.data) {
+      let content = res.data.data.content;
+      try {
+        if (content && typeof content === 'string') {
+          content = JSON.parse(content);
+        }
+        quillInstance.setContents(content || { ops: [] });
+      } catch (e) {
+        quillInstance.setText('文档内容解析失败');
+      }
+    } else {
+      quillInstance.setText('新文档，开始编辑...');
+    }
+  });
+}
+
 onMounted(() => {
   console.log('onMounted文件挂载了')
   if (sessionStorage.getItem('lastUrl')) {
     isShowClose.value = true
   }
+  
+  // 初始化页面状态
+  isDocumentPage.value = !!route.params.insertedId
   
   // 加载文档摘要
   if (route.params.insertedId) {
@@ -657,10 +798,8 @@ onMounted(() => {
   };
   const quillToolbar = document.querySelector('#toolbar');
   quill = new Quill('#children', options);
+  
   // 延迟初始化Yjs连接，确保Quill完全初始化
-  // fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
-  //     quill.setContents(JSON.parse(res.data.content))
-  // })
   nextTick(() => {
     if (route.params.insertedId) {
       initYjsConnection(route.params.insertedId, quill)
@@ -721,19 +860,37 @@ onMounted(() => {
 
   // 在quill初始化后调用
   nextTick(() => {
-    if (quill) {
+    if (quill && route.params.insertedId) {
       initSummaryAuto()
     }
   })
 })
 
 onBeforeUnmount(() => {
-  // saveFile(route.params.insertedId,{
-  //     content:JSON.stringify(quill.getContents())
-  //   }).then((res)=>{
-  //     console.log('保存成功',res)
-  //   })
-
+  // 重置页面状态
+  isDocumentPage.value = false
+  
+  // 清理所有定时器
+  if (summaryDelayTimer) {
+    clearTimeout(summaryDelayTimer)
+    summaryDelayTimer = null
+  }
+  
+  if (summaryInterval) {
+    clearInterval(summaryInterval)
+    summaryInterval = null
+  }
+  
+  if (summaryMonitorInterval) {
+    clearInterval(summaryMonitorInterval)
+    summaryMonitorInterval = null
+  }
+  
+  if (summaryMonitorDelayTimer) {
+    clearTimeout(summaryMonitorDelayTimer)
+    summaryMonitorDelayTimer = null
+  }
+  
   // 清理Yjs连接
   if (binding) {
     try {
@@ -768,6 +925,7 @@ onBeforeUnmount(() => {
   ydoc = null
    
 });
+
 // 当从知识库进来的删除
 const handleClose = () => {
   const url = sessionStorage.getItem('lastUrl')
@@ -775,6 +933,7 @@ const handleClose = () => {
   router.push(url)
   sessionStorage.removeItem('lastUrl')
 }
+
 // 2. 将选中文本转换为代码块
 const convertToCodeBlock = () => {
   if (!quill) return
@@ -955,6 +1114,37 @@ const renderCodeMirrorBlocks = () => {
     codeMirrorInstances.value.set(id, view)
     block.classList.add('cm-initialized')
   })
+}
+
+function startSummaryMonitor() {
+  if (summaryMonitorInterval) clearInterval(summaryMonitorInterval)
+  let lastTextHash = simpleHash(getEditorText())
+  summaryMonitorInterval = setInterval(() => {
+    if (!isDocumentPage.value) return
+    const text = getEditorText()
+    const currentLength = text.length
+    const currentHash = simpleHash(text)
+    // 没有摘要时，持续检测字数，超过50字就生成摘要
+    if (!documentSummary.value) {
+      if (currentLength > 50 && !summaryRequestInProgress.value) {
+        generateDocumentSummary(true)
+      }
+      return
+    }
+    // 有摘要后，每30秒检测内容变化
+    if (currentLength <= 50) {
+      // 不生成摘要，等切换页面时摘要消失
+      return
+    }
+    // 内容有变化就延迟生成新摘要
+    if (currentHash !== lastSummaryHash && !summaryRequestInProgress.value) {
+      if (summaryMonitorDelayTimer) clearTimeout(summaryMonitorDelayTimer)
+      summaryMonitorDelayTimer = setTimeout(() => {
+        generateDocumentSummary(true)
+      }, 5000) // 延迟5秒生成摘要
+    }
+    lastTextHash = currentHash
+  }, 30000) // 30秒检查一次
 }
 </script>
 <style lang="scss">
