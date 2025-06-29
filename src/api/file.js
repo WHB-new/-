@@ -1,47 +1,47 @@
 import request from "@/utils/request";
-export function addFile(data){
+export function addFile(data) {
   return request({
-    url:'/document/addDoc',
-    method:'post',
+    url: '/document/addDoc',
+    method: 'post',
     data
   })
 }
 //文件列表
-export function getFileList(baseId){
+export function getFileList(baseId) {
   return request({
-   url:'/document/getDocByBaseId',
-   method:'get',
-   params:{
-    baseId
-   }
+    url: '/document/getDocByBaseId',
+    method: 'get',
+    params: {
+      baseId
+    }
   })
 }
 //根据id查询文件
-export function fileListDetail(docId,userId){
+export function fileListDetail(docId, userId) {
   return request({
-    url:'/document/getDoc',
-    params:{
+    url: '/document/getDoc',
+    params: {
       docId,
       userId
     },
-    method:'get'
+    method: 'get'
   })
 }
 //查询最近访问文件
-export function getRecentFile(userId){
- return request({
-  url:'/document/getRecentlyDoc',
-  method:'get',
-  params:{
-    userId
-  }
- })
+export function getRecentFile(userId) {
+  return request({
+    url: '/document/getRecentlyDoc',
+    method: 'get',
+    params: {
+      userId
+    }
+  })
 }
 //保存文档内容
-export function saveFile(params,data){
+export function saveFile(params, data) {
   return request({
-    url:`/document/updateDoc/${params}`,
-    method:'put',
+    url: `/document/updateDoc/${params}`,
+    method: 'put',
     data
   })
 }
@@ -64,3 +64,12 @@ export function updateDocument(id, data) {
   });
 }
 
+export function getSharedDocs(userId) {
+  return request({
+    url: '/document/getSharedDocs',
+    method: 'get',
+    params: {
+      userId
+    }
+  })
+}

@@ -85,10 +85,7 @@
         </div>
       </div>
       <div class="content-center">
-        <!-- <div class="page-header">
-        
-        </div> -->
-        <div class="page-children" id="children" ref="quillEditor" style="padding:0!important;" >
+        <div class="page-children" id="children" ref="quillEditor" style="padding:0!important;">
         
         </div>
 
@@ -1074,6 +1071,7 @@ button:hover {
 }
 </style>
 <style lang="scss" scoped>
+
 .container {
   position: relative;
   display: flex;

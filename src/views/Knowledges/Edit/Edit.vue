@@ -102,11 +102,13 @@ const knowledgeStore = useKnowledgeStore();
 
 const knowledge = ref(null);
 const selectedItem = ref(null);
-const ownerId = ref(sessionStorage.getItem('defaultKnowledgeId'));
+const ownerId = ref(sessionStorage.getItem('userId'));
 const knowledgeFileList = ref([])
 onMounted(async () => {
   const id = route.params.id;
-  if (ownerId.value) {
+  const userId = sessionStorage.getItem('userId'); 
+  
+  if (userId) {
     const detail = await knowledgeStore.getRepoDetail(id);
     const docsRes = await getDocsByBaseId(detail.id);
     const docs = docsRes.data.data || [];
@@ -120,8 +122,9 @@ onMounted(async () => {
       }))
     };
   }
-  getList()
+  getList();
 });
+
 const handleDelete = (id)=>{
 
 }
@@ -177,21 +180,16 @@ const deleteItem = async () => {
 // 保存更改
 const saveChanges = async () => {
   try {
-   updateKnowledge(route.params.id,{
-    ownerId:sessionStorage.getItem('defaultKnowledgeId'),
-     baseName: knowledge.value.title,
-     baseDesc: knowledge.value.description,
-   }).then(res=>{
-    ElMessage.success('知识库已成功更新！')
-   }).catch(err=>{
-   
-   })
-
- 
+    await updateKnowledge(route.params.id, {
+      baseName: knowledge.value.title,
+      baseDesc: knowledge.value.description,
+    });
+    
+    ElMessage.success('知识库已成功更新！');
+    router.push({ name: 'knowledges' });
   } catch (error) {
-   
-  }finally{
-    router.push({name:'knowledges'})
+    ElMessage.error('更新知识库失败');
+    console.error('更新知识库失败:', error);
   }
 };
 

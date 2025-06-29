@@ -174,32 +174,34 @@ dialogVisible.value = false
 const confirmAdd = async () => {
   try {
     await formRef.value.validate();
-    // ownerId.value
+    const userId = sessionStorage.getItem('userId'); 
+    
     const response = await addKnowledge({
     ownerId: sessionStorage.getItem('userId'),
     baseName: form.value.name,
     baseDesc: form.value.intro
     });
     
-    console.log('创建响应:', response);
- 
     if (response.data.code === 201) {
       const newKnowledgeId = response.data.data;
       ElMessage.success('知识库创建成功');
-      console.log('创建成功，新知识库ID:', newKnowledgeId);
-
+      
       dialogVisible.value = false;
       formRef.value.resetFields();
-
+      
+      // 刷新知识库列表
+      await knowledgeStore.fetchKnowledgeList(userId);
+      
       router.push({ 
         name: 'edit', 
         params: { id: newKnowledgeId }
-      })
+      });
     } 
   } catch(error) {
-    
+    ElMessage.error('创建知识库失败');
+    console.error('创建知识库失败:', error);
   }
-}
+};
 
 
 const router = useRouter();
@@ -210,8 +212,11 @@ const showDeleteModal = ref(false);
 const repoToDelete = ref(null);
 
 onMounted(async () => {
-  if (!ownerId.value) {
-    await temphandle();
+  const userId = sessionStorage.getItem('userId');
+  
+  if (!userId) {
+    console.error('用户ID未找到');
+    return;
   }
   await knowledgeStore.fetchKnowledgeList(sessionStorage.getItem('userId'));
 });
@@ -241,14 +246,17 @@ const confirmDelete = (id) => {
 // 执行删除
 const handleDelete = async () => {
   try {
-    const res = await knowledgeStore.deleteRepo(repoToDelete.value.id);
-    if (res) {
+    const success = await knowledgeStore.deleteRepo(repoToDelete.value.id);
+    if (success) {
       ElMessage.success('删除成功');
-    } else {
       
+      // 删除后刷新列表
+      const userId = sessionStorage.getItem('userId');
+      await knowledgeStore.fetchKnowledgeList(userId);
     }
   } catch (error) {
-   
+    ElMessage.error('删除失败');
+    console.error('删除知识库失败:', error);
   } finally {
     showDeleteModal.value = false; 
   }
