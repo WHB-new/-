@@ -63,3 +63,13 @@ export function updateDocument(id, data) {
     }
   });
 }
+
+export function getSharedDocs(userId){
+  return request({
+    url:'/document/getSharedDocs',
+    method:'get',
+    params:{
+      userId
+    }
+  })
+}

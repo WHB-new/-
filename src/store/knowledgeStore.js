@@ -52,46 +52,49 @@ export const useKnowledgeStore = defineStore('knowledge', () => {
     }
   };
 
-  const updateRepo = async (id, ownerId, updatedData) => {
-    try {
-     let res =  await updateKnowledge(id,{
-        ownerId,
-        baseName: updatedData.title,
-        baseDesc: updatedData.description,
-        docs: updatedData.directory.map(doc => ({
+  const updateRepo = async (id, updatedData) => {
+  try {
+    let res = await updateKnowledge(id, {
+      baseName: updatedData.title,
+      baseDesc: updatedData.description,
+      docs: updatedData.directory.map(doc => ({
         id: doc.id,
         name: doc.name,
         content: doc.content
-        }))
-      });
-       if(res.data.code ==200){
-        ElMessage.success('知识库已成功更新！');
-    }
-        const index = knowledgeList.value.findIndex(r => r.id === id);
-        if (index !== -1) {
-          knowledgeList.value[index] = {
-            ...knowledgeList.value[index],
-            title: updatedData.title,
-            description: updatedData.description,
+      }))
+    });
+    
+    if(res.data.code == 200) {
+      ElMessage.success('知识库已成功更新！');
+      
+      const index = knowledgeList.value.findIndex(r => r.id === id);
+      if (index !== -1) {
+        knowledgeList.value[index] = {
+          ...knowledgeList.value[index],
+          title: updatedData.title,
+          description: updatedData.description,
           directory: updatedData.directory,
-            updated: formatDate(new Date())
-          };
+          updated: formatDate(new Date())
+        };
       }
-    } catch (error) {
-      console.error('更新知识库失败:', error);
-      throw error;
     }
-  };
+  } catch (error) {
+    console.error('更新知识库失败:', error);
+    throw error;
+  }
+};
 
   const getRepoDetail = async (id) => {
   try {
-    const res = await getKnowledgeDetail(id);
+    const userId = sessionStorage.getItem('userId'); 
+    const res = await getKnowledgeDetail(id, userId); 
+    
     const kb = res.data.data;
     return {
       id: kb._id,
-      title: kb.baseName || '未命名知识库', 
+      title: kb.baseName || '未命名知识库',
       description: kb.baseDesc || '无描述',
-      directory: kb.docs || [] 
+      directory: kb.docs || []
     };
   } catch (error) {
     console.error('获取知识库详情失败:', error);

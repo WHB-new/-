@@ -15,14 +15,19 @@
     <div class="main">
       <div class="header">
         <div class="title">
-          <div class="recent" :style="{'color':isActive==1?'skyblue':'',fontWeight:isActive==1?'500':'normal',fontSize:isActive==1?'16px':'14px'}">
+          <div class="recent" :style="{'color':activeTab==1?'skyblue':'',fontWeight:activeTab==1?'500':'normal',fontSize:activeTab==1?'16px':'14px'}"
+               @click="switchTab(1)">
             最近访问
+          </div>
+          <div class="shared" :style="{'color':activeTab==2?'skyblue':'',fontWeight:activeTab==2?'500':'normal',fontSize:activeTab==2?'16px':'14px'}"
+               @click="switchTab(2)" style="margin-left: 20px;">
+            与我共享
           </div>
         </div>
       </div>
       <!-- 列表区域 -->
       <div class="list">
-        <el-table :data="fileData" style="width: 100%" row-key="_id" @row-click="handleClick">
+        <el-table :data="activeTab === 1 ? recentFileData : sharedFileData" style="width: 100%" row-key="_id" @row-click="handleClick">
            <el-table-column type="selection" width="28px" :selectable="selectable" style="border-radius: 5px;"/>
             <el-table-column  label="所有文档" min-width="200px" prop="title">
               <template #default="scope">
@@ -40,11 +45,24 @@
               </template>
             </el-table-column>
             
-            <el-table-column property="name" label="不限归属" width="356px" prop="recentlyOpen[0].recentlyOpenUserId">
+            <el-table-column property="name" :label="activeTab === 1 ? '不限归属' : '共享人'" width="356px">
+              <template #default="scope">
+                <div v-if="activeTab === 1">
+                  {{ scope.row.recentlyOpen[0]?.recentlyOpenUserId || '' }}
+                </div>
+                <div v-else>
+                  {{ scope.row.sharedBy?.username || '未知用户' }}
+                </div>
+              </template>
             </el-table-column>
             
-            <el-table-column property="time" label="最近打开" width="356px" prop="recentlyOpen[0].recentlyOpenTime">
+            <!-- 仅在最近访问标签页显示时间列 -->
+            <el-table-column v-if="activeTab === 1" property="time" label="最近打开" width="356px">
+              <template #default="scope">
+                {{ changeTime(scope.row.recentlyOpen[0]?.recentlyOpenTime) }}
+              </template>
             </el-table-column>
+            
             <el-table-column  label="操作" width="76px" >
               <template #default>
                 
@@ -83,15 +101,15 @@
 import Nav from '@/components/Nav.vue';
 import {ref,onMounted} from 'vue'
 import { useRouter,useRoute } from 'vue-router';
-import {addFile,getRecentFile} from '@/api/file'
+import {addFile,getRecentFile, getSharedDocs} from '@/api/file'
 import { useHomeStore } from '@/store/home';
 const homeStore = useHomeStore();
-const isActive = ref(1)
-//假数据，后期更改
+const activeTab = ref(1) 
+const recentFileData = ref([])
+const sharedFileData = ref([])
 const router = useRouter()
 const route = useRoute()
-const fileData =ref([
-])
+
 const handleAdd = ()=>{
  const baseId=sessionStorage.getItem('defaultKnowledgeId')
     addFile({
@@ -104,32 +122,58 @@ const handleAdd = ()=>{
       console.log(err)
     })
 }
+
 const handleDelete = ()=>{
 
 }
+
 //点击文件新开页面
 const handleClick = async(row)=>{
    const url = router.resolve({name:'content',params:{insertedId:row._id}})
    window.open(url.href,'_blank')
 }
-onMounted(()=>{
-  
-  const userId=sessionStorage.getItem('userId')
- getRecentFile(userId).then(res=>{
-  res.data.data.forEach(item=>{
-    item.recentlyOpen[0].recentlyOpenTime = changeTime(item.recentlyOpen[0].recentlyOpenTime)
-  })
-  fileData.value = res.data.data
- }).catch(err=>{
 
- })
- 
+// 切换标签
+const switchTab = (tabIndex) => {
+  activeTab.value = tabIndex
+  if (tabIndex === 2 && sharedFileData.value.length === 0) {
+    loadSharedDocs()
+  }
+}
+
+// 加载共享文档
+const loadSharedDocs = () => {
+  const userId = sessionStorage.getItem('userId')
+  getSharedDocs(userId).then(res => {
+    sharedFileData.value = res.data.data
+  }).catch(err => {
+    console.error('获取共享文档失败:', err)
+  })
+}
+
+onMounted(()=>{
+  const userId = sessionStorage.getItem('userId')
+  
+  // 获取最近访问文件
+  getRecentFile(userId).then(res=>{
+    res.data.data.forEach(item=>{
+      if(item.recentlyOpen && item.recentlyOpen.length > 0) {
+        item.recentlyOpen[0].recentlyOpenTime = changeTime(item.recentlyOpen[0].recentlyOpenTime)
+      }
+    })
+    recentFileData.value = res.data.data
+  }).catch(err=>{
+    console.error('获取最近访问文件失败:', err)
+  })
 })
+
 //时间转换函数
 const changeTime = (time)=>{
-  const inputDate = new Date(time)
-    const now = new Date();
+  if (!time) return ''
   
+  const inputDate = new Date(time)
+  const now = new Date();
+
   // 校验日期是否合法
   if (isNaN(inputDate.getTime())) {
     return "无效时间";
@@ -229,7 +273,7 @@ height: 48px;
   height: 48px;
   display: flex;
   align-items: center;
-  .recent{
+  .recent, .shared {
     width: 72px;
     height: 28px;
     font-size: 16px;
@@ -244,7 +288,6 @@ height: 48px;
     }
   }
 }
-
   }
   .list{
     .right{
@@ -278,5 +321,4 @@ height: 48px;
 .el-table__body tr:hover td {
   cursor: pointer;
 }
-
 </style>
