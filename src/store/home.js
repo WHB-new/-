@@ -18,6 +18,7 @@ getFileList(){
     console.log(res)
     if (res.data.code === 200) {
       this.fileList = res.data.data
+      
       //替换为纯文本，方便查询
       this.fileList.forEach(item=>{
         item.content = JSON.parse(item.content).ops[0].insert.replace(/\n/g, "")
