@@ -32,11 +32,11 @@ const routes = [
         component: () => import('@/views/Knowledges/Edit/Edit.vue'),
         props: true
       },
-      {
-        path: '/recycle',
-        name: 'recycle',
-        component: () => import('@/views/Recycler/index.vue')
-      }
+      // {
+      //   path: '/recycle',
+      //   name: 'recycle',
+      //   component: () => import('@/views/Recycler/index.vue')
+      // }
     ]
   },
    {

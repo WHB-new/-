@@ -38,7 +38,7 @@
             @click="handleMenuClick('knowledges')">知识库</el-menu-item>
         </RouterLink>
           <!-- 新增回收站菜单项 -->
-          <RouterLink to="/Recycle">
+          <!-- <RouterLink to="/Recycle">
           <el-menu-item :index="'recycle'" :class="{ 'is-active': activeIndex === 'recycle' }"
             @click="handleMenuClick('recycle')">
             <div style="display:flex;align-items:center">
@@ -49,7 +49,7 @@
               <div class="txt">回收站</div>
             </div>
           </el-menu-item>
-        </RouterLink>
+        </RouterLink> -->
       </el-menu>
       <div class="file">
         <div class="file-header">
