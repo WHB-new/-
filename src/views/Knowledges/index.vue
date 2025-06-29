@@ -140,7 +140,7 @@ name:[{required:true,message:'请输入名称',trigger:'blur'}],
 })
 const ownerId = ref(null)
 onMounted(()=>{
-  ownerId.value = sessionStorage.getItem('defaultKnowledgeId')
+  ownerId.value = sessionStorage.getItem('userId')
 })
 const handleAddFile = ()=>{
   const baseId=sessionStorage.getItem('defaultKnowledgeId')
@@ -213,7 +213,7 @@ onMounted(async () => {
   if (!ownerId.value) {
     await temphandle();
   }
-  await knowledgeStore.fetchKnowledgeList(ownerId.value);
+  await knowledgeStore.fetchKnowledgeList(sessionStorage.getItem('userId'));
 });
 
 // 过滤后的知识库
