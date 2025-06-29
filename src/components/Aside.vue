@@ -55,7 +55,7 @@
           </div>
         </div>
         <div class="file-list">
-          <div class="li" v-for="(item, index) in homeStore.fileList" :key="item._id" @click="handleEnterFile(item._id, index)"
+          <div class="li" v-for="(item, index) in homeStore.fileList" :key="item._id" @click="handleEnterFile(item._id, index,item)"
             :class="{ active: activeIndex === `file-${item._id}` }">
             <div class="left">
               <div style="width: 20px;height: 20px;"></div>
@@ -245,9 +245,12 @@ homeStore.fileList.forEach((item)=>{
 })
 }
 // 处理文件点击
-const handleEnterFile = async (id, index) => {
+const handleEnterFile = async (id, index,item) => {
   activeIndex.value = `file-${id}`
   const userId = sessionStorage.getItem('userId')
+  localStorage.setItem(`title${id}`,JSON.stringify({title:item.title,
+    name:`用户${item.ownerId.slice(item.ownerId.length-6)}`
+  }))
   const res = await fileListDetail(id,userId)
   router.push({
     name: 'content',

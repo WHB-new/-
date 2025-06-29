@@ -71,11 +71,24 @@
     </div>
      <!-- v-show="homeStore.isShowHistory" -->
     <div class="content">
+      <div class="content-header">
+        <div style="height: 28px;"></div>
+
+        <div class="title">
+        {{title}}
+        </div>
+        <div class="info">
+          <div class="icon">
+            <svg t="1751187966181" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3252" width="20" height="20"><path d="M512 993.962667A481.962667 481.962667 0 1 1 993.962667 512 482.304 482.304 0 0 1 512 993.962667z" fill="#03ad82" p-id="3253"></path><path d="M512 60.074667A451.925333 451.925333 0 1 1 60.074667 512 451.925333 451.925333 0 0 1 512 60.074667M512 0a512 512 0 1 0 512 512A512 512 0 0 0 512 0z" fill="#03ad82" p-id="3254"></path><path d="M794.282667 755.029333a145.749333 145.749333 0 0 0-10.922667-13.653333 87.04 87.04 0 0 0-11.946667-11.264l-10.581333-8.192a34.133333 34.133333 0 0 0-8.192-4.778667L750.933333 716.8l-58.368-38.229333a247.466667 247.466667 0 0 0-27.306666-15.36l-78.848-38.229334v-37.546666a151.552 151.552 0 0 0 52.906666-53.248 178.858667 178.858667 0 0 0 20.138667-73.728v-28.672a245.76 245.76 0 0 0-2.730667-51.2l-2.389333-16.384a166.229333 166.229333 0 0 0-46.762667-113.664 140.288 140.288 0 0 0-116.053333-44.032 119.125333 119.125333 0 0 0-80.213333 45.397333 211.968 211.968 0 0 0-46.08 110.250667s-3.072 52.565333-2.730667 59.050666l2.730667 36.864a249.856 249.856 0 0 0 19.797333 73.728 130.389333 130.389333 0 0 0 53.248 53.248v37.546667l-78.506667 38.912q-8.874667 4.437333-17.408 9.898667L273.066667 716.8l-5.802667 3.413333a108.544 108.544 0 0 0-13.312 9.898667 136.533333 136.533333 0 0 0-16.725333 16.042667 95.232 95.232 0 0 0-13.312 20.138666A52.224 52.224 0 0 0 228.693333 819.2a344.064 344.064 0 0 0 74.069334 48.810667 427.349333 427.349333 0 0 0 467.626666-25.6 123.562667 123.562667 0 0 0 24.576-23.210667 50.858667 50.858667 0 0 0 10.581334-31.402667 52.224 52.224 0 0 0-3.072-17.749333 68.266667 68.266667 0 0 0-8.192-15.018667z" fill="#FFFFFF" p-id="3255"></path></svg>
+          </div>
+          <div class="name">{{name}}</div>
+        </div>
+      </div>
       <div class="content-center">
         <!-- <div class="page-header">
         
         </div> -->
-        <div class="page-children" id="children" ref="quillEditor" style="padding:0!important;margin-top:150px;" >
+        <div class="page-children" id="children" ref="quillEditor" style="padding:0!important;" >
         
         </div>
 
@@ -223,6 +236,8 @@ let ydoc
 let wsProvider
 let binding
 const historyList = ref([])
+const title = ref(``)
+const name = ref(``)
 // 控制下拉框显示
 const showDropdown = ref(false);
 const toggleDropdown = () => {
@@ -322,11 +337,13 @@ const initYjsConnection = (fileId, quillInstance) => {
         if(sessionStorage.getItem(`${route.params.insertedId}`)){
           quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
           sessionStorage.removeItem(`${route.params.insertedId}`)
+         
         }else if(yText.length ==0 || yText.lenght ==1){
           fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
             if(res.data.code == 200){
               if(Object.keys(res.data.data.content).length != 0){
                 quill.setContents(JSON.parse(res.data.data.content))
+               
               }
             }
   })
@@ -334,6 +351,9 @@ const initYjsConnection = (fileId, quillInstance) => {
    })
     wsProvider.on('status', (event) => {
       if (event.status === 'connected') {
+         title.value=JSON.parse(localStorage.getItem(`title${route.params.insertedId}`)).title
+         name.value = JSON.parse(localStorage.getItem(`title${route.params.insertedId}`)).name
+          
         if (!binding && quillInstance) {
           const quillEditor = quillInstance.quill || quillInstance
           binding = new QuillBinding(yText, quillEditor, wsProvider.awareness)
@@ -1205,6 +1225,40 @@ button:hover {
    overflow-y:scroll ;
    &::-webkit-scrollbar{
     display:none;
+   }
+   &-header{
+    padding:20px 268px 0;
+    height: 150px;
+    margin-bottom:22px;
+    .title{
+      font-size: 34px;
+      display: flex;
+      align-items: center;
+      font-family: LackHackSafariFont;
+      color:#1f2329;
+      height: 55px;
+      padding:0 12px;
+    }
+    .info{
+      padding: 12px 12px 8px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      .icon{
+        width: 20px;
+        height: 20px;
+        display: flex;
+        // justify-content: center;
+        // align-items: center;
+      }
+      .name{
+        height: 20px;
+        line-height: 20px;
+      padding:0 4px;
+      font-size: 14px;
+      color: #646473;
+      }
+    }
    }
     &-center {
       box-sizing: content-box;

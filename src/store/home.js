@@ -9,6 +9,7 @@ isShowHistory:true,
 historyList:[],
 quillData:null,
 historyIndex:0,
+
 }),
 actions:{
 getFileList(){
