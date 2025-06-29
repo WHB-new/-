@@ -39,7 +39,7 @@
     <div class="list" v-show="filteredKnowledge.length != 0">
       <div 
         v-for="item in filteredKnowledge" 
-        :key="item.id" 
+        :key="item._id" 
         class="li"
         @click="goToEdit(item.id)"
       >
@@ -140,7 +140,7 @@ name:[{required:true,message:'请输入名称',trigger:'blur'}],
 })
 const ownerId = ref(null)
 onMounted(()=>{
-  ownerId.value = sessionStorage.getItem('defaultKnowledgeId')
+  ownerId.value = sessionStorage.getItem('userId')
 })
 const handleAddFile = ()=>{
   const baseId=sessionStorage.getItem('defaultKnowledgeId')
@@ -174,8 +174,9 @@ dialogVisible.value = false
 const confirmAdd = async () => {
   try {
     await formRef.value.validate();
+    // ownerId.value
     const response = await addKnowledge({
-    ownerId: ownerId.value,
+    ownerId: sessionStorage.getItem('userId'),
     baseName: form.value.name,
     baseDesc: form.value.intro 
     });
@@ -212,7 +213,7 @@ onMounted(async () => {
   if (!ownerId.value) {
     await temphandle();
   }
-  await knowledgeStore.fetchKnowledgeList(ownerId.value);
+  await knowledgeStore.fetchKnowledgeList(sessionStorage.getItem('userId'));
 });
 
 // 过滤后的知识库
@@ -255,6 +256,7 @@ const handleDelete = async () => {
 
 // 跳转到编辑页面
 const goToEdit = (id) => {
+  console.log(id,'id是什么')
   router.push({ name: 'edit', params: { id } });
 };
 </script>
