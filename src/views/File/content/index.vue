@@ -238,6 +238,7 @@ const backToHistory = ()=>{
   sessionStorage.setItem(`${route.params.insertedId}`,JSON.stringify(quill.getContents()))
   homeStore.isShowHistory = true
   rebinding()
+  quill.enable(true)
   quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
   saveFile(route.params.insertedId,{
         content:JSON.stringify(quill.getContents())
@@ -374,6 +375,7 @@ const backContent = ()=>{
         //先变回原来页面在渲染
         //重新绑定
         rebinding()
+        quill.enable(true)
       quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
    sessionStorage.removeItem(`${route.params.insertedId}`)
    //初始化
