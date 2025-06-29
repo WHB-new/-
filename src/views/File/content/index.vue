@@ -272,7 +272,15 @@ quill.enable(true)
 //都删掉，然后自定义
     quill.off('selection-change')
     quill.off('text-change')
-   
+   quill.on('text-change',()=>{
+
+   })
+   quill.on('selection-change',(range)=>{
+   console.log(range,'看看用户选择事件')
+   })
+   quill.on('keyboard-before-input',(event)=>{
+     console.log(event.key,'看看键盘事件')
+   })
   }
 
 
@@ -529,6 +537,7 @@ onMounted(() => {
       toolbar: '#toolbar',
       cursors: true,
       keyboard: {
+        // 取消默认事件绑定
         bindings: {
           tab: false,
           enter: false,
