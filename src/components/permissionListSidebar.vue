@@ -202,6 +202,10 @@ const fetchDocPermissionList = async () => {
       ElMessage.error('您没有权限查看此文档的协作者列表');
       return false;
     }
+    console.log("这是列表");
+    
+    console.log(res.data.data);
+    
     // 渲染数据
     collaborators.value = res.data.data.map(p => ({
       id: p.userId,
