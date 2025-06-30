@@ -85,8 +85,9 @@
         </div>
       </div> -->
       <div class="content-center">
+        <!-- AI摘要组件，放在主要内容（编辑器）上方 -->
+        <AISummary :quill="quillForSummary" :key="route.params.insertedId" />
         <div class="page-children" id="children" ref="quillEditor" style="padding:0!important;">
-        
         </div>
 
         <!-- Quill 工具栏 -->
@@ -231,8 +232,11 @@ import { WebrtcProvider } from 'y-webrtc';
 import {saveFile,fileListDetail} from '@/api/file'
 import {addContentHistory,getContentHistory} from '@/api/content'
 import permissionListSidebar from '@/components/permissionListSidebar.vue';
+import AISummary from '@/components/AISummary.vue';
 const homeStore = useHomeStore()
 let quill
+// 为AI摘要组件创建响应式quill引用
+const quillForSummary = ref(null)
 let ydoc
 let wsProvider
 let binding
@@ -662,6 +666,9 @@ onMounted(() => {
   };
    quillToolbar = document.querySelector('#toolbar');
   quill = new Quill('#children', options);
+  
+  // 为AI摘要组件设置响应式quill引用
+  quillForSummary.value = quill
  
   nextTick(() => {
     if (route.params.insertedId) {
