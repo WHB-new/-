@@ -71,7 +71,7 @@
     </div>
      <!-- v-show="homeStore.isShowHistory" -->
     <div class="content">
-      <div class="content-header">
+      <!-- <div class="content-header">
         <div style="height: 28px;"></div>
 
         <div class="title">
@@ -83,7 +83,7 @@
           </div>
           <div class="name">{{name}}</div>
         </div>
-      </div>
+      </div> -->
       <div class="content-center">
         <div class="page-children" id="children" ref="quillEditor" style="padding:0!important;">
         
@@ -427,33 +427,17 @@ const initYjsConnection = (fileId, quillInstance) => {
       fileId,
       ydoc,
     )
-    wsProvider.on('update', update => {
-      console.log(update,'收到更新了吗')
-  Y.applyUpdate(ydoc, update) // 自动合并到本地文档
-})
+    wsProvider.on('message',(message)=>{
+      console.log(message,'收到更新')
+    })
    wsProvider.on('sync',()=>{
      //有缓存用缓存
-  //       if(sessionStorage.getItem(`${route.params.insertedId}`)){
-  //         quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
-  //         sessionStorage.removeItem(`${route.params.insertedId}`)
-         
-  //       }else if(yText.length ==0 || yText.lenght ==1){
-  //         fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
-  //           sessionStorage.setItem('permissionCode',res.data.permissionCode)
-  //           if(res.data.code == 200){
-  //             if(Object.keys(res.data.data.content).length != 0){
-  //               quill.setContents(JSON.parse(res.data.data.content))
-               
-  //             }
-  //           }
-  // })
-  //       }
         if(sessionStorage.getItem(`${route.params.insertedId}`)){
           quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
           sessionStorage.removeItem(`${route.params.insertedId}`)
          
-        }else{
-fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
+        }else if(yText.length ==0 || yText.lenght ==1){
+          fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
             sessionStorage.setItem('permissionCode',res.data.permissionCode)
             if(res.data.code == 200){
               if(Object.keys(res.data.data.content).length != 0){
@@ -463,7 +447,6 @@ fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(re
             }
   })
         }
-  
    })
     wsProvider.on('status', (event) => {
       if (event.status === 'connected') {
@@ -756,7 +739,7 @@ const handleClose = () => {
   router.push(url)
   sessionStorage.removeItem('lastUrl')
 }
-// 2. 将选中文本转换为代码块
+
 const convertToCodeBlock = () => {
   if (!quill) return
 

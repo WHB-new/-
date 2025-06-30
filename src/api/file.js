@@ -12,7 +12,7 @@ export function getFileList(baseId) {
     url: '/document/getDocByBaseId',
     method: 'get',
     params: {
-      baseId
+      baseId:'6862690cdb781fde74372a69'
     }
   })
 }
