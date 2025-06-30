@@ -371,6 +371,10 @@ const initYjsConnection = (fileId, quillInstance) => {
       fileId,
       ydoc,
     )
+    wsProvider.on('update', update => {
+      console.log(update,'收到更新了吗')
+  Y.applyUpdate(ydoc, update) // 自动合并到本地文档
+})
    wsProvider.on('sync',()=>{
      //有缓存用缓存
   //       if(sessionStorage.getItem(`${route.params.insertedId}`)){
