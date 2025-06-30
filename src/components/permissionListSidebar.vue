@@ -457,7 +457,7 @@ watch(drawerVisible, (val) => {
 }
 </style>
 
-<style>
+<style lang="scss">
 .sidebar-drawer {
   box-shadow: -2px 0 12px rgba(0, 0, 0, 0.1) !important;
   
