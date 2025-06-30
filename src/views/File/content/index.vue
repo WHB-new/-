@@ -262,50 +262,100 @@ const rebinding = ()=>{
       quillToolbar.style.display = 'none';
     }
   })
+    // 防抖
+  let timer = null
+  //当位置改变时，工具栏跟着变动
+  quill.on('text-change', (delta, oldDelta, source) => {
+    const range = quill.getSelection();
+    if (!range) return // 添加空值检查
+    const bounds = quill.getBounds(range.index, range.length);
+    if (range && range.length > 0) {
+      quillToolbar.style.top = bounds.top - 48 + 'px';
+      quillToolbar.style.left = bounds.left + 'px';
+    }
+    //简单的防抖
+    //如果在历史版本界面，则不需要保存
+    if(homeStore.isShowHistory && !sessionStorage.getItem(`${route.params.insertedId}`)){
+      console.log('触发保存了吗')
+ clearTimeout(timer)
+    timer = null
+    timer = setTimeout(()=>{
+      addContentHistory(route.params.insertedId,JSON.stringify(quill.getContents()))
+      saveFile(route.params.insertedId,{
+        content:JSON.stringify(quill.getContents())
+      }).then(res=>{
+        console.log('保存成功',res)
+      })
+    },300)
+    }
+    if(source == 'user' && modeValue.value == 'bianji'){
+       const selection = quill.getSelection();
+        if (selection && selection.length === 0) {
+            const formats = quill.getFormat(selection.index);
+            console.log(formats,selection.index,'我看看进来这里吗？')
+            if (formats.underline || formats.strike || formats.color === 'red') {
+                quill.formatText(selection.index-1, 1, {
+                    underline: false,
+                    strike: false,
+                    color: null
+                }, 'silent');
+            }
+        }
+    }
+  })
+}
+//处理修订模式函回调
+const handleReview = (e)=>{
+  console.log(e,'backspace')
+   const selection = quill.getSelection();
+         let start
+            let length
+    if ((e.key === 'Backspace' || e.key === 'Delete') && 
+        quill.hasFocus()) {  // 确保是Quill获得焦点时
+          //阻止默认事件
+           e.preventDefault();
+            e.stopImmediatePropagation();
+        if (selection.length > 0 ) {
+            start = selection.index;
+          length = selection.length
+            quill.formatText(start , length, { 
+                strike: true, 
+                color: "red" 
+            }, 'silent');
+        }else if(selection.length == 0){
+          start = selection.index
+          length = 1
+               quill.formatText(start - 1, length, { 
+                strike: true, 
+                color: "red" 
+            }, 'silent');
+                quill.setSelection(start - 1, 0, 'silent');
+        }
+    }
 }
 //改变文档模式
 const changeMode= ()=>{
+  //阅读没权限
   if(modeValue.value == 'yuedu'){
     quill.enable(false)
+     quill.off('text-change')
     quill.off('selection-change')
+     quillEditor.value.removeEventListener('keydown', handleReview, true);  // 关键：使用捕获阶段
   }else if(modeValue.value == 'bianji'){
     quill.enable(true)
+     quill.off('text-change')
     rebinding()
+    quillEditor.value.removeEventListener('keydown', handleReview, true);  // 关键：使用捕获阶段
   }else if(modeValue.value == 'xiuding'){
 quill.enable(true)
 //都删掉，然后自定义
     quill.off('selection-change')
     quill.off('text-change')
-    quill.keyboard.addBinding({
-  key: 'Backspace',
-  handler: function(range, context) {
-    console.log('Backspace 被按下', range, context);
-   const index = range.index;
-              if (index > 0) { // 确保不是文档开头
-                // 获取即将删除的字符
-                // const [leaf] = quill.getLeaf(index - 1);
-                // const charToDelete = leaf.text.charAt(leaf.text.length - 1);
-                
-                // 添加蓝色下划线样式
-                quill.formatText(index - 1, 1, {
-                  // 'text-decoration': 'underline',
-                  // 'text-decoration-color': 'blue',
-                  // 'text-decoration-thickness': '2px'
-                  underline: true,
-                  color:"red",
-                  strike: true
-                });
-                quill.setSelection(index - 1, 0);
-                return false;
-              }
-    return false;
-  }
-});
+quillEditor.value.addEventListener('keydown', handleReview, true);  // 关键：使用捕获阶段
 quill.on('text-change', (delta, oldDelta, source) => {
-  if (source === 'user') {  // 确保是用户输入触发的
+  if (source === 'user') {  
     const lastOp = delta.ops[delta.ops.length - 1];
     
-    // 如果是插入文本（insert），则添加下划线
     if (lastOp && lastOp.insert) {
       const cursorPos = quill.getSelection()?.index || 0;
       const textLength = lastOp.insert.length;
@@ -324,6 +374,8 @@ quill.on('text-change', (delta, oldDelta, source) => {
 
 
 }
+
+
 // 1. 自定义CodeMirror Block
 const BlockEmbed = Quill.import('blots/block/embed')
 const quillEditor = ref(null)
@@ -331,7 +383,7 @@ const route = useRoute()
 const router = useRouter()
 const isShowClose = ref(false)
 let quillToolbar
-const modeValue = ref('')
+const modeValue = ref('bianji')
 const backToHistory = ()=>{
   sessionStorage.setItem(`${route.params.insertedId}`,JSON.stringify(quill.getContents()))
   homeStore.isShowHistory = true
@@ -634,48 +686,7 @@ onMounted(() => {
     }
   })
 
-  // 选中的时候显示工具栏并根据选中的位置来决定工具栏位置
-  quill.on('selection-change', (range) => {
-    if (!range) return // 添加空值检查
-
-    const bounds = quill.getBounds(range.index, range.length);
-    if (range && range.length > 0) {
-      quillToolbar.style.zIndex = 6;
-      quillToolbar.style.display = 'block';
-      quillToolbar.style.top = bounds.top - 48 + 'px';
-      quillToolbar.style.left = bounds.left + 'px';
-    } else {
-      quillToolbar.style.display = 'none';
-    }
-  })
-  // 防抖
-  let timer = null
-  //当位置改变时，工具栏跟着变动
-  quill.on('text-change', (delta, oldDelta, source) => {
-    const range = quill.getSelection();
-    if (!range) return // 添加空值检查
-    const bounds = quill.getBounds(range.index, range.length);
-    if (range && range.length > 0) {
-      quillToolbar.style.top = bounds.top - 48 + 'px';
-      quillToolbar.style.left = bounds.left + 'px';
-    }
-    //简单的防抖
-    //如果在历史版本界面，则不需要保存
-    if(homeStore.isShowHistory && !sessionStorage.getItem(`${route.params.insertedId}`)){
-      console.log('触发保存了吗')
- clearTimeout(timer)
-    timer = null
-    timer = setTimeout(()=>{
-      addContentHistory(route.params.insertedId,JSON.stringify(quill.getContents()))
-      saveFile(route.params.insertedId,{
-        content:JSON.stringify(quill.getContents())
-      }).then(res=>{
-        console.log('保存成功',res)
-      })
-    },300)
-    }
-    
-  })
+ rebinding()
 
   renderCodeMirrorBlocks()
   const observer = new MutationObserver(() => {
