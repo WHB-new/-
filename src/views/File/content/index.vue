@@ -241,249 +241,249 @@ const summaryVisible = ref(false)
 // 添加页面状态管理，确保在正确的页面才执行摘要逻辑
 const isDocumentPage = ref(false)
 
-// 记录上次生成摘要时的内容hash
-let lastSummaryHash = ''
-let summaryTimer = null
-let summaryInterval = null
+// // 记录上次生成摘要时的内容hash
+// let lastSummaryHash = ''
+// let summaryTimer = null
+// let summaryInterval = null
 
-// 10秒定时器和页面切换触发摘要生成
-let summaryDelayTimer = null
-let summaryShouldGenerate = false
+// // 10秒定时器和页面切换触发摘要生成
+// let summaryDelayTimer = null
+// let summaryShouldGenerate = false
 
-// 优化AI摘要逻辑
-let summaryMonitorInterval = null
-let summaryMonitorDelayTimer = null
+// // 优化AI摘要逻辑
+// let summaryMonitorInterval = null
+// let summaryMonitorDelayTimer = null
 
-// 获取文档内容纯文本（适配后端，专门处理Quill Delta格式）
-function getEditorText() {
-  if (!quill || !isDocumentPage.value) return ''
-  const delta = quill.getContents();
-  if (delta && Array.isArray(delta.ops)) {
-    return delta.ops.map(op => typeof op.insert === 'string' ? op.insert : '').join('').trim();
-  }
-  return quill.getText().trim();
-}
+// // 获取文档内容纯文本（适配后端，专门处理Quill Delta格式）
+// function getEditorText() {
+//   if (!quill || !isDocumentPage.value) return ''
+//   const delta = quill.getContents();
+//   if (delta && Array.isArray(delta.ops)) {
+//     return delta.ops.map(op => typeof op.insert === 'string' ? op.insert : '').join('').trim();
+//   }
+//   return quill.getText().trim();
+// }
 
-// 简单hash函数
-function simpleHash(str) {
-  let hash = 0
-  for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) - hash) + str.charCodeAt(i)
-    hash |= 0
-  }
-  return hash.toString()
-}
+// // 简单hash函数
+// function simpleHash(str) {
+//   let hash = 0
+//   for (let i = 0; i < str.length; i++) {
+//     hash = ((hash << 5) - hash) + str.charCodeAt(i)
+//     hash |= 0
+//   }
+//   return hash.toString()
+// }
 
-// 获取文档摘要
-const loadDocumentSummary = async (retryCount = 0) => {
-  // 如果正在请求中，避免重复请求
-  if (summaryRequestInProgress.value) {
-    return
-  }
+// // 获取文档摘要
+// const loadDocumentSummary = async (retryCount = 0) => {
+//   // 如果正在请求中，避免重复请求
+//   if (summaryRequestInProgress.value) {
+//     return
+//   }
   
-  // 检查文档ID是否存在
-  if (!route.params.insertedId) {
-    return
-  }
+//   // 检查文档ID是否存在
+//   if (!route.params.insertedId) {
+//     return
+//   }
   
-  // 延迟检查，确保quill内容已加载
-  await nextTick()
+//   // 延迟检查，确保quill内容已加载
+//   await nextTick()
   
-  // 判断字数
-  const text = getEditorText()
+//   // 判断字数
+//   const text = getEditorText()
   
-  // 如果内容为空且未超过重试次数，则延迟重试
-  if (text.length === 0 && retryCount < 3) {
-    setTimeout(() => {
-      loadDocumentSummary(retryCount + 1)
-    }, 300)
-    return
-  }
+//   // 如果内容为空且未超过重试次数，则延迟重试
+//   if (text.length === 0 && retryCount < 3) {
+//     setTimeout(() => {
+//       loadDocumentSummary(retryCount + 1)
+//     }, 300)
+//     return
+//   }
   
-  // 字数不足50时，不加载摘要也不清空已有摘要
-  if (text.length <= 50) {
-    return
-  }
+//   // 字数不足50时，不加载摘要也不清空已有摘要
+//   if (text.length <= 50) {
+//     return
+//   }
   
-  summaryRequestInProgress.value = true
-  try {
-    const res = await getSummary(route.params.insertedId)
-    if (res.data.code === 200 && res.data.data) {
-      documentSummary.value = res.data.data.summary
-      // 记录hash
-      lastSummaryHash = simpleHash(getEditorText())
-    }
-  } catch (error) {
-    // 不显示错误提示，因为可能是首次访问
-  } finally {
-    summaryRequestInProgress.value = false
-  }
-}
+//   summaryRequestInProgress.value = true
+//   try {
+//     const res = await getSummary(route.params.insertedId)
+//     if (res.data.code === 200 && res.data.data) {
+//       documentSummary.value = res.data.data.summary
+//       // 记录hash
+//       lastSummaryHash = simpleHash(getEditorText())
+//     }
+//   } catch (error) {
+//     // 不显示错误提示，因为可能是首次访问
+//   } finally {
+//     summaryRequestInProgress.value = false
+//   }
+// }
 
-// 生成文档摘要
-const generateDocumentSummary = async (isAuto = false) => {
-  if (!isDocumentPage.value || !route.params.insertedId) return
-  if (generatingSummary.value || summaryRequestInProgress.value) {
-    return
-  }
+// // 生成文档摘要
+// const generateDocumentSummary = async (isAuto = false) => {
+//   if (!isDocumentPage.value || !route.params.insertedId) return
+//   if (generatingSummary.value || summaryRequestInProgress.value) {
+//     return
+//   }
 
-  // 判断字数
-  const text = getEditorText()
+//   // 判断字数
+//   const text = getEditorText()
 
-  if (text.length <= 50) {
-    // 只在自动生成时清空摘要和隐藏框，手动点击"更新"时不隐藏
-    if (isAuto) {
-      documentSummary.value = ''
-      summaryVisible.value = false
-    } else {
-      ElMessage.warning('内容不足50字，无法生成摘要')
-    }
-    return
-  }
+//   if (text.length <= 50) {
+//     // 只在自动生成时清空摘要和隐藏框，手动点击"更新"时不隐藏
+//     if (isAuto) {
+//       documentSummary.value = ''
+//       summaryVisible.value = false
+//     } else {
+//       ElMessage.warning('内容不足50字，无法生成摘要')
+//     }
+//     return
+//   }
 
-  generatingSummary.value = true
-  summaryRequestInProgress.value = true
+//   generatingSummary.value = true
+//   summaryRequestInProgress.value = true
 
-  try {
-    const res = await generateSummary({
-      docId: route.params.insertedId,
-      userId: sessionStorage.getItem('userId')
-    })
-    if (res.data.code === 200) {
-      documentSummary.value = res.data.data.summary
-      if (!isAuto) {
-        ElMessage.success('摘要生成成功')
-      }
-      lastSummaryHash = simpleHash(getEditorText())
-      // 手动生成时，确保摘要框显示
-      summaryVisible.value = true
-    } else {
-      if (!isAuto) {
-        ElMessage.warning(res.data.message || '摘要生成失败')
-      }
-    }
-  } catch (error) {
-    if (!isAuto) {
-      ElMessage.error('摘要生成失败')
-    }
-  } finally {
-    generatingSummary.value = false
-    summaryRequestInProgress.value = false
-  }
-}
+//   try {
+//     const res = await generateSummary({
+//       docId: route.params.insertedId,
+//       userId: sessionStorage.getItem('userId')
+//     })
+//     if (res.data.code === 200) {
+//       documentSummary.value = res.data.data.summary
+//       if (!isAuto) {
+//         ElMessage.success('摘要生成成功')
+//       }
+//       lastSummaryHash = simpleHash(getEditorText())
+//       // 手动生成时，确保摘要框显示
+//       summaryVisible.value = true
+//     } else {
+//       if (!isAuto) {
+//         ElMessage.warning(res.data.message || '摘要生成失败')
+//       }
+//     }
+//   } catch (error) {
+//     if (!isAuto) {
+//       ElMessage.error('摘要生成失败')
+//     }
+//   } finally {
+//     generatingSummary.value = false
+//     summaryRequestInProgress.value = false
+//   }
+// }
 
-// 监听编辑器内容变化，内容超过50字后5秒无操作生成摘要
-function setupSummaryAutoTrigger() {
-  if (!quill || !isDocumentPage.value) return
-  let lastText = getEditorText()
-  let lastLength = lastText.length
+// // 监听编辑器内容变化，内容超过50字后5秒无操作生成摘要
+// function setupSummaryAutoTrigger() {
+//   if (!quill || !isDocumentPage.value) return
+//   let lastText = getEditorText()
+//   let lastLength = lastText.length
   
-  quill.on('text-change', () => {
-    if (!isDocumentPage.value) return
-    const text = getEditorText()
-    const currentLength = text.length
+//   quill.on('text-change', () => {
+//     if (!isDocumentPage.value) return
+//     const text = getEditorText()
+//     const currentLength = text.length
     
-    if (currentLength > 50) {
-      summaryShouldGenerate = true
-      if (summaryDelayTimer) clearTimeout(summaryDelayTimer)
-      summaryDelayTimer = setTimeout(() => {
-        // 检查是否正在请求中，避免重复请求
-        if (!summaryRequestInProgress.value && simpleHash(text) !== lastSummaryHash) {
-          generateDocumentSummary(true)
-          summaryShouldGenerate = false
-        }
-      }, 5000) // 5秒延迟
-    } else {
-      // 少于等于50字时，不立即清空摘要，只标记需要清空
-      summaryShouldGenerate = false
-      if (summaryDelayTimer) clearTimeout(summaryDelayTimer)
-    }
-    lastText = text
-    lastLength = currentLength
-  })
-}
+//     if (currentLength > 50) {
+//       summaryShouldGenerate = true
+//       if (summaryDelayTimer) clearTimeout(summaryDelayTimer)
+//       summaryDelayTimer = setTimeout(() => {
+//         // 检查是否正在请求中，避免重复请求
+//         if (!summaryRequestInProgress.value && simpleHash(text) !== lastSummaryHash) {
+//           generateDocumentSummary(true)
+//           summaryShouldGenerate = false
+//         }
+//       }, 5000) // 5秒延迟
+//     } else {
+//       // 少于等于50字时，不立即清空摘要，只标记需要清空
+//       summaryShouldGenerate = false
+//       if (summaryDelayTimer) clearTimeout(summaryDelayTimer)
+//     }
+//     lastText = text
+//     lastLength = currentLength
+//   })
+// }
 
-// 添加更频繁的字数检测（每30秒检查一次）
-function setupFrequentCheck() {
-  if (summaryInterval) clearInterval(summaryInterval)
-  let lastTextHash = simpleHash(getEditorText())
-  summaryInterval = setInterval(() => {
-    if (!isDocumentPage.value) return
-    const text = getEditorText()
-    const currentLength = text.length
-    const currentHash = simpleHash(text)
-    // 内容不足50字，切换页面时摘要消失
-    if (currentLength <= 50) {
-      // 不生成摘要
-      return
-    }
-    // 内容有变化且超过50字，自动生成摘要
-    if (!summaryRequestInProgress.value && currentHash !== lastSummaryHash) {
-      generateDocumentSummary(true)
-    }
-    lastTextHash = currentHash
-  }, 30000) // 30秒检查一次
-}
+// // 添加更频繁的字数检测（每30秒检查一次）
+// function setupFrequentCheck() {
+//   if (summaryInterval) clearInterval(summaryInterval)
+//   let lastTextHash = simpleHash(getEditorText())
+//   summaryInterval = setInterval(() => {
+//     if (!isDocumentPage.value) return
+//     const text = getEditorText()
+//     const currentLength = text.length
+//     const currentHash = simpleHash(text)
+//     // 内容不足50字，切换页面时摘要消失
+//     if (currentLength <= 50) {
+//       // 不生成摘要
+//       return
+//     }
+//     // 内容有变化且超过50字，自动生成摘要
+//     if (!summaryRequestInProgress.value && currentHash !== lastSummaryHash) {
+//       generateDocumentSummary(true)
+//     }
+//     lastTextHash = currentHash
+//   }, 30000) // 30秒检查一次
+// }
 
-// 初始化摘要自动生成逻辑
-function initSummaryAuto() {
-  setupSummaryAutoTrigger()
-  startSummaryMonitor()
-}
+// // 初始化摘要自动生成逻辑
+// function initSummaryAuto() {
+//   setupSummaryAutoTrigger()
+//   startSummaryMonitor()
+// }
 
-// 页面切换时，如果内容不足50字，摘要消失
-onBeforeRouteLeave((to, from, next) => {
-  const text = getEditorText()
-  const currentLength = text.length
-  if (currentLength <= 50 && documentSummary.value) {
-    documentSummary.value = ''
-    summaryVisible.value = false
-  }
+// // 页面切换时，如果内容不足50字，摘要消失
+// onBeforeRouteLeave((to, from, next) => {
+//   const text = getEditorText()
+//   const currentLength = text.length
+//   if (currentLength <= 50 && documentSummary.value) {
+//     documentSummary.value = ''
+//     summaryVisible.value = false
+//   }
   
-  // 设置为非文档页面状态
-  isDocumentPage.value = false
+//   // 设置为非文档页面状态
+//   isDocumentPage.value = false
   
-  // 清理所有定时器
-  if (summaryDelayTimer) {
-    clearTimeout(summaryDelayTimer)
-    summaryDelayTimer = null
-  }
+//   // 清理所有定时器
+//   if (summaryDelayTimer) {
+//     clearTimeout(summaryDelayTimer)
+//     summaryDelayTimer = null
+//   }
   
-  if (summaryInterval) {
-    clearInterval(summaryInterval)
-    summaryInterval = null
-  }
+//   if (summaryInterval) {
+//     clearInterval(summaryInterval)
+//     summaryInterval = null
+//   }
   
-  if (summaryMonitorInterval) {
-    clearInterval(summaryMonitorInterval)
-    summaryMonitorInterval = null
-  }
+//   if (summaryMonitorInterval) {
+//     clearInterval(summaryMonitorInterval)
+//     summaryMonitorInterval = null
+//   }
   
-  if (summaryMonitorDelayTimer) {
-    clearTimeout(summaryMonitorDelayTimer)
-    summaryMonitorDelayTimer = null
-  }
+//   if (summaryMonitorDelayTimer) {
+//     clearTimeout(summaryMonitorDelayTimer)
+//     summaryMonitorDelayTimer = null
+//   }
   
-  if (currentLength > 50 && summaryShouldGenerate) {
-    generateDocumentSummary(true).then(() => {
-      summaryShouldGenerate = false
-      next()
-    })
-    return
-  }
-  next()
-})
+//   if (currentLength > 50 && summaryShouldGenerate) {
+//     generateDocumentSummary(true).then(() => {
+//       summaryShouldGenerate = false
+//       next()
+//     })
+//     return
+//   }
+//   next()
+// })
 
-// 监听摘要内容变化，控制显示动画
-watch(documentSummary, (newSummary) => {
-  if (newSummary && newSummary.length > 0) {
-    // 有摘要内容时，显示动画
-    summaryVisible.value = true
-  } else {
-    // 无摘要内容时，隐藏动画
-    summaryVisible.value = false
-  }
-}, { immediate: true })
+// // 监听摘要内容变化，控制显示动画
+// watch(documentSummary, (newSummary) => {
+//   if (newSummary && newSummary.length > 0) {
+//     // 有摘要内容时，显示动画
+//     summaryVisible.value = true
+//   } else {
+//     // 无摘要内容时，隐藏动画
+//     summaryVisible.value = false
+//   }
+// }, { immediate: true })
 
 // 控制下拉框显示
 const showDropdown = ref(false);

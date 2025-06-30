@@ -74,30 +74,30 @@ export function getSharedDocs(userId) {
   })
 }
 
-// AI摘要相关接口
-// 生成文档摘要
-export function generateSummary(data) {
-  return request({
-    url: '/summary/generate',
-    method: 'post',
-    data
-  })
-}
+// // AI摘要相关接口
+// // 生成文档摘要
+// export function generateSummary(data) {
+//   return request({
+//     url: '/summary/generate',
+//     method: 'post',
+//     data
+//   })
+// }
 
-// 获取文档摘要
-export function getSummary(docId) {
-  return request({
-    url: '/summary/getSummary',
-    method: 'get',
-    params: { docId }
-  })
-}
+// // 获取文档摘要
+// export function getSummary(docId) {
+//   return request({
+//     url: '/summary/getSummary',
+//     method: 'get',
+//     params: { docId }
+//   })
+// }
 
-// 检查并更新文档摘要
-export function checkAndUpdateSummary(data) {
-  return request({
-    url: '/summary/checkAndUpdateSummary',
-    method: 'post',
-    data
-  })
-}
+// // 检查并更新文档摘要
+// export function checkAndUpdateSummary(data) {
+//   return request({
+//     url: '/summary/checkAndUpdateSummary',
+//     method: 'post',
+//     data
+//   })
+// }
