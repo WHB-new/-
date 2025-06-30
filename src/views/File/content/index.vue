@@ -195,6 +195,9 @@
 
       </div>
     </div>
+    <!-- 权限管理 -->
+      <permissionListSidebar />
+
    
   </div>
 </template>
@@ -227,6 +230,7 @@ import { WebsocketProvider } from 'y-websocket';
 import { WebrtcProvider } from 'y-webrtc';
 import {saveFile,fileListDetail} from '@/api/file'
 import {addContentHistory,getContentHistory} from '@/api/content'
+import permissionListSidebar from '@/components/permissionListSidebar.vue';
 const homeStore = useHomeStore()
 let quill
 let ydoc

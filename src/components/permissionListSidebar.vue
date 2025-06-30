@@ -1,15 +1,16 @@
 <template>
   <!-- 协作者列表按钮 -->
-  <div 
+  <el-button 
     class="trigger-btn"
-    :style="{ top: '30%' }"
+    :style="{ top: '2.8%', left: '72%', right: 'auto', bottom: 'auto' }"
     @click="toggleSidebar"
+    plain
   >
     <span class="btn-label">协作者列表</span>
     <el-icon :size="16">
       <component :is="isCollapsed ? 'ArrowLeft' : 'ArrowRight'" />
     </el-icon>
-  </div>
+  </el-button>
 
   <!-- 协作者列表侧边栏 -->
   <el-drawer
@@ -171,9 +172,9 @@ const searchQuery = ref('')
 const showSearchResults = ref(false)
 
 // 会话获取用户的权限码(以下所有permission都是permissionCode)
-// const permission = sessionStorage.getItem('permissionCode');
+const permission = sessionStorage.getItem('permissionCode');
 const userId = sessionStorage.getItem('userId');
-const permission = "0";
+// const permission = "0";
 
 // 协作者列表数据
 const collaborators = ref([
@@ -198,10 +199,16 @@ const filterSearchResults = computed(() => {
 const fetchDocPermissionList = async () => {
     const docId = route.params.insertedId;
     const res = await getDocPermissionList(docId, permission);
-    if (res.data.code === 402) {
+    console.log(res, "a啊啊啊啊啊啊啊啊");
+    
+    if (res.data.code === 302) {
       ElMessage.error('您没有权限查看此文档的协作者列表');
       return false;
     }
+    console.log("这是列表");
+    
+    console.log(res.data.data);
+    
     // 渲染数据
     collaborators.value = res.data.data.map(p => ({
       id: p.userId,
@@ -247,6 +254,7 @@ const confirmDelete = (collaboratorId) => {
     }
   ).then(async() => {
     // 先调删除接口
+    const docId = route.params.insertedId;
     await deletePermission(collaboratorId, docId);
     collaborators.value = collaborators.value.filter(c => c.id !== collaboratorId);
     ElMessage.success('删除成功');
@@ -311,7 +319,6 @@ const addCollaborator = (friend) => {
   // 调用添加协作者接口，1：管理  2：编辑  3：阅读
   // 默认给只读
   addDocPermission(friend.id, docId, "3");
-  console.log(docId, "docId这是");
   
 
   collaborators.value.push({
@@ -351,30 +358,31 @@ watch(drawerVisible, (val) => {
 
 <style scoped lang="scss">
 .trigger-btn {
+  margin-top:-6px;
+  margin-left:-1px;
+  font-weight: bold;
+  color:#1f2329;
   position: fixed;
-  right: 0;
-  width: 80px;
-  height: 32px;
-  background: #c0df65;
-  color: white;
-  border-radius: 16px 0 0 16px;
+  width: 100px;
+  height: 35px;
+  padding: 0 14px;
+  border-radius: 9px;
+  border-style: solid;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 8px 0 12px;
-  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+  gap: 6px;
   cursor: pointer;
   z-index: 1000;
   transition: all 0.3s;
   
   .btn-label {
-    font-size: 12px;
-    font-weight: 500;
+    font-size: 14px;
+    font-weight: 450;
   }
 
   &:hover {
-    width: 90px;
-    background: #c1ce61;
+    background-color: #f5f7fa;
   }
 }
 

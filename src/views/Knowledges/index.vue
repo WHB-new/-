@@ -179,7 +179,7 @@ const confirmAdd = async () => {
     const response = await addKnowledge({
     ownerId: sessionStorage.getItem('userId'),
     baseName: form.value.name,
-    baseDesc: form.value.intro 
+    baseDesc: form.value.intro
     });
     
     if (response.data.code === 201) {
