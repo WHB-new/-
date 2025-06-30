@@ -12,7 +12,9 @@ export function getDocPermissionList(docId, permissionCode) {
 }
 
 // 授予好友文档权限
-export function addDocPermission(friendId, docId, newPermissionCode) {
+export function addDocPermission(friendId, docId, newPermissionCode) {  
+  console.log("传出的newPermissionCode是：");
+  console.log(newPermissionCode);
   return request({
     url: '/permission/addFriendDocPermission',
     method: 'post',
