@@ -272,15 +272,49 @@ quill.enable(true)
 //都删掉，然后自定义
     quill.off('selection-change')
     quill.off('text-change')
-   quill.on('text-change',()=>{
-
-   })
-   quill.on('selection-change',(range)=>{
-   console.log(range,'看看用户选择事件')
-   })
-   quill.on('keyboard-before-input',(event)=>{
-     console.log(event.key,'看看键盘事件')
-   })
+    quill.keyboard.addBinding({
+  key: 'Backspace',
+  handler: function(range, context) {
+    console.log('Backspace 被按下', range, context);
+   const index = range.index;
+              if (index > 0) { // 确保不是文档开头
+                // 获取即将删除的字符
+                // const [leaf] = quill.getLeaf(index - 1);
+                // const charToDelete = leaf.text.charAt(leaf.text.length - 1);
+                
+                // 添加蓝色下划线样式
+                quill.formatText(index - 1, 1, {
+                  // 'text-decoration': 'underline',
+                  // 'text-decoration-color': 'blue',
+                  // 'text-decoration-thickness': '2px'
+                  underline: true,
+                  color:"red",
+                  strike: true
+                });
+                quill.setSelection(index - 1, 0);
+                return false;
+              }
+    return false;
+  }
+});
+quill.on('text-change', (delta, oldDelta, source) => {
+  if (source === 'user') {  // 确保是用户输入触发的
+    const lastOp = delta.ops[delta.ops.length - 1];
+    
+    // 如果是插入文本（insert），则添加下划线
+    if (lastOp && lastOp.insert) {
+      const cursorPos = quill.getSelection()?.index || 0;
+      const textLength = lastOp.insert.length;
+      
+      // 给新插入的文本加下划线
+      quill.formatText(cursorPos - textLength, textLength, {
+        underline:true,
+        color:"red"
+      }, true);
+    }
+  }
+});
+ 
   }
 
 
