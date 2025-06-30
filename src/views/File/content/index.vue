@@ -3,8 +3,11 @@
     <div class="nav" v-show="homeStore.isShowHistory">
      <div style="display:flex;align-items:center;justify-content: space-between;box-sizing: border-box;
      width: 100%;padding:0 20px">
-       <div>
-
+       <div style="display:flex;align-items: center;height: 32px;flex:1;justify-content: flex-end;">
+      <!-- 权限管理 -->
+      <div style="margin-right:25px;margin-top:1px;">
+        <permissionListSidebar />
+      </div>
       </div>
       <div class="left">
         <div class="mode">
@@ -196,8 +199,7 @@
 
       </div>
     </div>
-    <!-- 权限管理 -->
-      <permissionListSidebar />
+   
 
    
   </div>

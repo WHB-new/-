@@ -2,7 +2,7 @@
   <!-- 协作者列表按钮 -->
   <el-button 
     class="trigger-btn"
-    :style="{ top: '2.8%', left: '72%', right: 'auto', bottom: 'auto' }"
+     style="margin:0!important;"
     @click="toggleSidebar"
     plain
   >
@@ -359,11 +359,11 @@ watch(drawerVisible, (val) => {
 
 <style scoped lang="scss">
 .trigger-btn {
-  margin-top:-6px;
-  margin-left:-1px;
+  // margin-top:-6px;
+  // margin-left:-1px;
   font-weight: bold;
   color:#1f2329;
-  position: fixed;
+  // position: fixed;
   width: 100px;
   height: 35px;
   padding: 0 14px;
@@ -372,9 +372,9 @@ watch(drawerVisible, (val) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 6px;
+  // gap: 6px;
   cursor: pointer;
-  z-index: 1000;
+  // z-index: 1000;
   transition: all 0.3s;
   
   .btn-label {
