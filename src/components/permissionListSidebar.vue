@@ -198,9 +198,9 @@ const filterSearchResults = computed(() => {
 // 获取文档内的协作者列表
 const fetchDocPermissionList = async () => {
     const docId = route.params.insertedId;
-    const permission = sessionStorage.getItem('permissionCode');
+    const userId = sessionStorage.getItem('userId');
     
-    const res = await getDocPermissionList(docId, permission);
+    const res = await getDocPermissionList(docId, userId);
     console.log(res, "这是res");
 
     

@@ -1,12 +1,12 @@
 import request from "@/utils/request";
 // 获取文档权限列表
-export function getDocPermissionList(docId, permissionCode) {
+export function getDocPermissionList(docId, userId) {
   return request({
     url: '/permission/getDocPermissions',
     method: 'get',
     params: {
-      docId,
-      permissionCode
+      userId,
+      docId
     }
   })
 }
