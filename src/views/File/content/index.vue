@@ -452,7 +452,9 @@ const initYjsConnection = (fileId, quillInstance) => {
       if (event.status === 'connected') {
          title.value=JSON.parse(localStorage.getItem(`title${route.params.insertedId}`)).title
          name.value = JSON.parse(localStorage.getItem(`title${route.params.insertedId}`)).name
-          
+          wsProvider.awareness.setLocalState({
+  name: `用户${sessionStorage.getItem('defaultKnowledgeId').slice(sessionStorage.getItem('defaultKnowledgeId').length-4)}`, // 关键字段
+})
         if (!binding && quillInstance) {
           const quillEditor = quillInstance.quill || quillInstance
           binding = new QuillBinding(yText, quillEditor, wsProvider.awareness)
