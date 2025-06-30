@@ -373,12 +373,28 @@ const initYjsConnection = (fileId, quillInstance) => {
     )
    wsProvider.on('sync',()=>{
      //有缓存用缓存
+  //       if(sessionStorage.getItem(`${route.params.insertedId}`)){
+  //         quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
+  //         sessionStorage.removeItem(`${route.params.insertedId}`)
+         
+  //       }else if(yText.length ==0 || yText.lenght ==1){
+  //         fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
+  //           sessionStorage.setItem('permissionCode',res.data.permissionCode)
+  //           if(res.data.code == 200){
+  //             if(Object.keys(res.data.data.content).length != 0){
+  //               quill.setContents(JSON.parse(res.data.data.content))
+               
+  //             }
+  //           }
+  // })
+  //       }
         if(sessionStorage.getItem(`${route.params.insertedId}`)){
           quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
           sessionStorage.removeItem(`${route.params.insertedId}`)
          
-        }else if(yText.length ==0 || yText.lenght ==1){
-          fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
+        }else{
+fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
+            sessionStorage.setItem('permissionCode',res.data.permissionCode)
             if(res.data.code == 200){
               if(Object.keys(res.data.data.content).length != 0){
                 quill.setContents(JSON.parse(res.data.data.content))
@@ -387,6 +403,7 @@ const initYjsConnection = (fileId, quillInstance) => {
             }
   })
         }
+  
    })
     wsProvider.on('status', (event) => {
       if (event.status === 'connected') {
