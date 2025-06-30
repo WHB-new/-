@@ -276,7 +276,49 @@ quill.enable(true)
 //都删掉，然后自定义
     quill.off('selection-change')
     quill.off('text-change')
-   
+    quill.keyboard.addBinding({
+  key: 'Backspace',
+  handler: function(range, context) {
+    console.log('Backspace 被按下', range, context);
+   const index = range.index;
+              if (index > 0) { // 确保不是文档开头
+                // 获取即将删除的字符
+                // const [leaf] = quill.getLeaf(index - 1);
+                // const charToDelete = leaf.text.charAt(leaf.text.length - 1);
+                
+                // 添加蓝色下划线样式
+                quill.formatText(index - 1, 1, {
+                  // 'text-decoration': 'underline',
+                  // 'text-decoration-color': 'blue',
+                  // 'text-decoration-thickness': '2px'
+                  underline: true,
+                  color:"red",
+                  strike: true
+                });
+                quill.setSelection(index - 1, 0);
+                return false;
+              }
+    return false;
+  }
+});
+quill.on('text-change', (delta, oldDelta, source) => {
+  if (source === 'user') {  // 确保是用户输入触发的
+    const lastOp = delta.ops[delta.ops.length - 1];
+    
+    // 如果是插入文本（insert），则添加下划线
+    if (lastOp && lastOp.insert) {
+      const cursorPos = quill.getSelection()?.index || 0;
+      const textLength = lastOp.insert.length;
+      
+      // 给新插入的文本加下划线
+      quill.formatText(cursorPos - textLength, textLength, {
+        underline:true,
+        color:"red"
+      }, true);
+    }
+  }
+});
+ 
   }
 
 
@@ -335,12 +377,28 @@ const initYjsConnection = (fileId, quillInstance) => {
     )
    wsProvider.on('sync',()=>{
      //有缓存用缓存
+  //       if(sessionStorage.getItem(`${route.params.insertedId}`)){
+  //         quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
+  //         sessionStorage.removeItem(`${route.params.insertedId}`)
+         
+  //       }else if(yText.length ==0 || yText.lenght ==1){
+  //         fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
+  //           sessionStorage.setItem('permissionCode',res.data.permissionCode)
+  //           if(res.data.code == 200){
+  //             if(Object.keys(res.data.data.content).length != 0){
+  //               quill.setContents(JSON.parse(res.data.data.content))
+               
+  //             }
+  //           }
+  // })
+  //       }
         if(sessionStorage.getItem(`${route.params.insertedId}`)){
           quill.setContents(JSON.parse(sessionStorage.getItem(`${route.params.insertedId}`)))
           sessionStorage.removeItem(`${route.params.insertedId}`)
          
-        }else if(yText.length ==0 || yText.lenght ==1){
-          fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
+        }else{
+fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
+            sessionStorage.setItem('permissionCode',res.data.permissionCode)
             if(res.data.code == 200){
               if(Object.keys(res.data.data.content).length != 0){
                 quill.setContents(JSON.parse(res.data.data.content))
@@ -349,6 +407,7 @@ const initYjsConnection = (fileId, quillInstance) => {
             }
   })
         }
+  
    })
     wsProvider.on('status', (event) => {
       if (event.status === 'connected') {
@@ -533,6 +592,7 @@ onMounted(() => {
       toolbar: '#toolbar',
       cursors: true,
       keyboard: {
+        // 取消默认事件绑定
         bindings: {
           tab: false,
           enter: false,
