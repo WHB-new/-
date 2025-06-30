@@ -64,6 +64,8 @@ export function updateDocument(id, data) {
   });
 }
 
+// 改成，直接传同一个知识库，调试使用
+// 已复原，出于心理问题，还是不要改了
 export function getSharedDocs(userId) {
   return request({
     url: '/document/getSharedDocs',
