@@ -172,7 +172,7 @@ const searchQuery = ref('')
 const showSearchResults = ref(false)
 
 // 会话获取用户的权限码(以下所有permission都是permissionCode)
-const permission = sessionStorage.getItem('permissionCode');
+// const permission = sessionStorage.getItem('permissionCode');
 const userId = sessionStorage.getItem('userId');
 // const permission = "0";
 
@@ -198,16 +198,16 @@ const filterSearchResults = computed(() => {
 // 获取文档内的协作者列表
 const fetchDocPermissionList = async () => {
     const docId = route.params.insertedId;
-    const res = await getDocPermissionList(docId, permission);
-    console.log(res, "a啊啊啊啊啊啊啊啊");
+    const permission = sessionStorage.getItem('permissionCode');
     
-    if (res.data.code === 302) {
+    const res = await getDocPermissionList(docId, permission);
+    console.log(res, "这是res");
+
+    
+    if (res.status === 402) {
       ElMessage.error('您没有权限查看此文档的协作者列表');
       return false;
     }
-    console.log("这是列表");
-    
-    console.log(res.data.data);
     
     // 渲染数据
     collaborators.value = res.data.data.map(p => ({
@@ -337,10 +337,11 @@ const backToCollaborators = () => {
 
 
 // 打开侧边栏
-const toggleSidebar = () => {
+const toggleSidebar = async () => {
   // 判断是否有权限查看协作者列表
-  const res = fetchDocPermissionList();
-  if (!res) {
+  const res = await fetchDocPermissionList();
+  
+  if (res == false) {
     return;
   }
   isCollapsed.value = !isCollapsed.value
