@@ -133,7 +133,11 @@ const handleDelete = ()=>{
 
 //点击文件新开页面
 const handleClick = async(row)=>{
-  console.log(row,'row')
+  sessionStorage.setItem(`title${row._id}`,JSON.stringify({
+    title:row.title,
+    name:row.ownerId.slice(row.ownerId.length-6)
+  }))
+
    const url = router.resolve({name:'content',params:{insertedId:row._id}})
    window.open(url.href,'_blank')
 }

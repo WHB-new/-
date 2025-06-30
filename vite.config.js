@@ -20,6 +20,15 @@ export default defineConfig({
       resolvers: [ElementPlusResolver()],
     }),
   ],
+  server:{
+  // proxy:{
+  //   '^/(?!@vite|src|assets|public|index.html|favicon.ico)': {
+  //     target:'',
+  //     changeOrigin:true,
+  //     // rewrite:path => path.replace(/^\/(?!@vite|src|assets|public|index.html|favicon.ico)/,'')
+  //   }
+  // }
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))

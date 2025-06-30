@@ -71,7 +71,7 @@
     </div>
      <!-- v-show="homeStore.isShowHistory" -->
     <div class="content">
-      <!-- <div class="content-header">
+      <div class="content-header">
         <div style="height: 28px;"></div>
 
         <div class="title">
@@ -83,7 +83,7 @@
           </div>
           <div class="name">{{name}}</div>
         </div>
-      </div> -->
+      </div>
       <div class="content-center">
         <div class="page-children" id="children" ref="quillEditor" style="padding:0!important;">
         
