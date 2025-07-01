@@ -25,10 +25,10 @@ import { ref, watch, nextTick, onUnmounted } from 'vue'
 import { useRoute, onBeforeRouteLeave } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { generateSummary, getSummary, deleteSummary } from '@/api/summary'
-
+import { useHomeStore } from '@/store/home'
 // 调试开关
 const DEBUG = true
-
+const homeStore = useHomeStore()
 // 组件实例计数
 let instanceCount = 0
 const currentInstanceId = ++instanceCount
