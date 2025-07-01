@@ -89,7 +89,7 @@
       </div>
       <div class="AI">
           <!-- AI摘要组件，放在主要内容（编辑器）上方 -->
-        <AISummary :quill="quillForSummary" :key="route.params.insertedId" />
+        <!-- <AISummary :quill="quillForSummary" :key="route.params.insertedId" /> -->
       </div>
       <div class="content-center">
       
