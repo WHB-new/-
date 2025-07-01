@@ -48,7 +48,7 @@
             <el-table-column property="name" :label="activeTab === 1 ? '不限归属' : '共享人'" width="356px">
               <template #default="scope">
                 <div v-if="activeTab === 1">
-                  {{ scope.row.recentlyOpen[0]?.recentlyOpenUserId || '' }}
+                  {{ `用户${scope.row.recentlyOpen[0]?.recentlyOpenUserId.slice(scope.row.recentlyOpen[0]?.recentlyOpenUserId.length-4)}`|| '' }}
                 </div>
                 <div v-else>
                   {{ scope.row.sharedBy?.username || '未知用户' }}
@@ -59,7 +59,7 @@
             <!-- 仅在最近访问标签页显示时间列 -->
             <el-table-column v-if="activeTab === 1" property="time" label="最近打开" width="356px">
               <template #default="scope">
-                {{ changeTime(scope.row.recentlyOpen[0]?.recentlyOpenTime) }}
+                {{ scope.row.recentlyOpen[0].recentlyOpenTime}}
               </template>
             </el-table-column>
             
@@ -163,7 +163,6 @@ const loadSharedDocs = () => {
 
 onMounted(()=>{
   const userId = sessionStorage.getItem('userId')
-  
   // 获取最近访问文件
   getRecentFile(userId).then(res=>{
     res.data.data.forEach(item=>{
@@ -178,50 +177,32 @@ onMounted(()=>{
 })
 
 //时间转换函数
-const changeTime = (time)=>{
-  if (!time) return ''
-  
-  const inputDate = new Date(time)
+const changeTime = (isoString)=>{
+ const date = new Date(isoString);
   const now = new Date();
-
-  // 校验日期是否合法
-  if (isNaN(inputDate.getTime())) {
-    return "无效时间";
+  
+  // 获取今天的日期（忽略时间）
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const inputDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  
+  // 计算日期差值（单位：天）
+  const diffDays = Math.floor((today - inputDate) / (1000 * 60 * 60 * 24));
+  
+  // 格式化时间部分（几时:几分）
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const timeStr = `${hours}:${minutes}`;
+  
+  if (diffDays === 0) {
+    return `今天 ${timeStr}`;
+  } else if (diffDays === 1) {
+    return `昨天 ${timeStr}`;
+  } else {
+    // 格式化日期部分（几月几号）
+    const month = date.getMonth() + 1; // 月份从0开始
+    const day = date.getDate();
+    return `${month}月${day}日 ${timeStr}`;
   }
-
-  // 获取年月日时分，忽略秒和毫秒
-  const inputYear = inputDate.getFullYear();
-  const inputMonth = inputDate.getMonth() + 1; // 月份从0开始
-  const inputDay = inputDate.getDate();
-  const inputHours = inputDate.getHours().toString().padStart(2, '0');
-  const inputMinutes = inputDate.getMinutes().toString().padStart(2, '0');
-
-  const todayYear = now.getFullYear();
-  const todayMonth = now.getMonth() + 1;
-  const todayDay = now.getDate();
-
-  // 判断是否为今天
-  if (
-    inputYear === todayYear &&
-    inputMonth === todayMonth &&
-    inputDay === todayDay
-  ) {
-    return `今天 ${inputHours}:${inputMinutes}`;
-  }
-
-  // 判断是否为昨天（考虑跨年/跨月）
-  const yesterday = new Date(now);
-  yesterday.setDate(now.getDate() - 1);
-  if (
-    inputYear === yesterday.getFullYear() &&
-    inputMonth === yesterday.getMonth() + 1 &&
-    inputDay === yesterday.getDate()
-  ) {
-    return `昨天 ${inputHours}:${inputMinutes}`;
-  }
-
-  // 更早的时间：返回 M月D日 HH:MM
-  return `${inputMonth}月${inputDay}日 ${inputHours}:${inputMinutes}`;
 }
 </script>
 
