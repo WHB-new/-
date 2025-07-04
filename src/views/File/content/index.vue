@@ -87,10 +87,13 @@
           <div class="name">{{name}}</div>
         </div>
       </div>
+      <div class="AI">
+          <!-- AI摘要组件，放在主要内容（编辑器）上方 -->
+        <!-- <AISummary :quill="quillForSummary" :key="route.params.insertedId" /> -->
+      </div>
       <div class="content-center">
-        <!-- AI摘要组件，放在主要内容（编辑器）上方 -->
-        <AISummary :quill="quillForSummary" :key="route.params.insertedId" />
-        <div class="page-children" id="children" ref="quillEditor" style="padding:0!important;">
+      
+        <div class="page-children" id="children" ref="quillEditor" style="padding:12px 0px!important;">
         </div>
 
         <!-- Quill 工具栏 -->
@@ -260,10 +263,11 @@ const rebinding = ()=>{
 
     const bounds = quill.getBounds(range.index, range.length);
     if (range && range.length > 0) {
-      quillToolbar.style.zIndex = 6;
+ quillToolbar.style.zIndex = 6;
       quillToolbar.style.display = 'block';
       quillToolbar.style.top = bounds.top - 48 + 'px';
       quillToolbar.style.left = bounds.left + 'px';
+     
     } else {
       quillToolbar.style.display = 'none';
     }
@@ -276,8 +280,9 @@ const rebinding = ()=>{
     if (!range) return // 添加空值检查
     const bounds = quill.getBounds(range.index, range.length);
     if (range && range.length > 0) {
-      quillToolbar.style.top = bounds.top - 48 + 'px';
+ quillToolbar.style.top = bounds.top - 48 + 'px';
       quillToolbar.style.left = bounds.left + 'px';
+     
     }
     //简单的防抖
     //如果在历史版本界面，则不需要保存
@@ -459,7 +464,10 @@ const initYjsConnection = (fileId, quillInstance) => {
          title.value=JSON.parse(localStorage.getItem(`title${route.params.insertedId}`)).title
          name.value = JSON.parse(localStorage.getItem(`title${route.params.insertedId}`)).name
           wsProvider.awareness.setLocalState({
-  name: `用户${sessionStorage.getItem('defaultKnowledgeId').slice(sessionStorage.getItem('defaultKnowledgeId').length-4)}`, // 关键字段
+  user:{
+    name: `用户${sessionStorage.getItem('defaultKnowledgeId').slice(sessionStorage.getItem('defaultKnowledgeId').length-4)}`, // 关键字段
+     color:`#${Math.floor(Math.random() * 0xFFFFFF).toString(16).padStart(6, '0')}`
+  }
 })
         if (!binding && quillInstance) {
           const quillEditor = quillInstance.quill || quillInstance
@@ -1290,6 +1298,7 @@ button:hover {
   }
 }
   .content {
+  position:relative;
     box-sizing: border-box;
     flex: 1;
     margin-top: 61px;
@@ -1331,8 +1340,15 @@ button:hover {
       }
     }
    }
+   .AI{
+     box-sizing: content-box;
+      min-width: 820px !important;
+      padding: 0 268px;
+      position: relative;
+   }
     &-center {
       box-sizing: content-box;
+      
       height: calc(100vh - 86px);
       min-width: 820px !important;
       padding: 0 268px;

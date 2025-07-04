@@ -48,7 +48,7 @@
             <el-table-column property="name" :label="activeTab === 1 ? '不限归属' : '共享人'" width="356px">
               <template #default="scope">
                 <div v-if="activeTab === 1">
-                  {{ scope.row.recentlyOpen[0]?.recentlyOpenUserId || '' }}
+                  {{ `用户${scope.row.recentlyOpen[0]?.recentlyOpenUserId.slice(scope.row.recentlyOpen[0]?.recentlyOpenUserId.length-4)}`|| '' }}
                 </div>
                 <div v-else>
                   {{ scope.row.sharedBy?.username || '未知用户' }}
@@ -59,7 +59,7 @@
             <!-- 仅在最近访问标签页显示时间列 -->
             <el-table-column v-if="activeTab === 1" property="time" label="最近打开" width="356px">
               <template #default="scope">
-                {{ changeTime(scope.row.recentlyOpen[0]?.recentlyOpenTime) }}
+                {{ scope.row.recentlyOpen[0].recentlyOpenTime}}
               </template>
             </el-table-column>
             
@@ -163,7 +163,6 @@ const loadSharedDocs = () => {
 
 onMounted(()=>{
   const userId = sessionStorage.getItem('userId')
-  
   // 获取最近访问文件
   getRecentFile(userId).then(res=>{
     res.data.data.forEach(item=>{
@@ -178,23 +177,32 @@ onMounted(()=>{
 })
 
 //时间转换函数
-const changeTime = (time)=>{
-// 创建 Date 对象
-const date = new Date(time);
-
-// 格式化本地时间，去掉毫秒
-const localTimeStr = date.toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
-  }).replace(/\//g, '-').replace(',', '');
-
-  console.log(localTimeStr);
-  return localTimeStr;
+const changeTime = (isoString)=>{
+ const date = new Date(isoString);
+  const now = new Date();
+  
+  // 获取今天的日期（忽略时间）
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const inputDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  
+  // 计算日期差值（单位：天）
+  const diffDays = Math.floor((today - inputDate) / (1000 * 60 * 60 * 24));
+  
+  // 格式化时间部分（几时:几分）
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const timeStr = `${hours}:${minutes}`;
+  
+  if (diffDays === 0) {
+    return `今天 ${timeStr}`;
+  } else if (diffDays === 1) {
+    return `昨天 ${timeStr}`;
+  } else {
+    // 格式化日期部分（几月几号）
+    const month = date.getMonth() + 1; // 月份从0开始
+    const day = date.getDate();
+    return `${month}月${day}日 ${timeStr}`;
+  }
 }
 </script>
 
