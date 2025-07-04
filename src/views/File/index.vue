@@ -179,49 +179,22 @@ onMounted(()=>{
 
 //时间转换函数
 const changeTime = (time)=>{
-  if (!time) return ''
-  
-  const inputDate = new Date(time)
-  const now = new Date();
+// 创建 Date 对象
+const date = new Date(time);
 
-  // 校验日期是否合法
-  if (isNaN(inputDate.getTime())) {
-    return "无效时间";
-  }
+// 格式化本地时间，去掉毫秒
+const localTimeStr = date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  }).replace(/\//g, '-').replace(',', '');
 
-  // 获取年月日时分，忽略秒和毫秒
-  const inputYear = inputDate.getFullYear();
-  const inputMonth = inputDate.getMonth() + 1; // 月份从0开始
-  const inputDay = inputDate.getDate();
-  const inputHours = inputDate.getHours().toString().padStart(2, '0');
-  const inputMinutes = inputDate.getMinutes().toString().padStart(2, '0');
-
-  const todayYear = now.getFullYear();
-  const todayMonth = now.getMonth() + 1;
-  const todayDay = now.getDate();
-
-  // 判断是否为今天
-  if (
-    inputYear === todayYear &&
-    inputMonth === todayMonth &&
-    inputDay === todayDay
-  ) {
-    return `今天 ${inputHours}:${inputMinutes}`;
-  }
-
-  // 判断是否为昨天（考虑跨年/跨月）
-  const yesterday = new Date(now);
-  yesterday.setDate(now.getDate() - 1);
-  if (
-    inputYear === yesterday.getFullYear() &&
-    inputMonth === yesterday.getMonth() + 1 &&
-    inputDay === yesterday.getDate()
-  ) {
-    return `昨天 ${inputHours}:${inputMinutes}`;
-  }
-
-  // 更早的时间：返回 M月D日 HH:MM
-  return `${inputMonth}月${inputDay}日 ${inputHours}:${inputMinutes}`;
+  console.log(localTimeStr);
+  return localTimeStr;
 }
 </script>
 
