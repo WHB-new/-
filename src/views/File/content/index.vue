@@ -237,14 +237,19 @@ import { WebrtcProvider } from 'y-webrtc';
 import {saveFile,fileListDetail} from '@/api/file'
 import {addContentHistory,getContentHistory} from '@/api/content'
 import permissionListSidebar from '@/components/permissionListSidebar.vue';
+//生成唯一id
+import {nanoid} from 'nanoid'
 import AISummary from '@/components/AISummary.vue';
 const homeStore = useHomeStore()
 let quill
+const reviewList = ref([])
 // 为AI摘要组件创建响应式quill引用
 const quillForSummary = ref(null)
 let ydoc
 let wsProvider
 let binding
+let yText
+let currentRevision = null
 const historyList = ref([])
 const title = ref(``)
 const name = ref(``)
@@ -329,7 +334,24 @@ const handleReview = (e)=>{
         if (selection.length > 0 ) {
             start = selection.index;
           length = selection.length
-            quill.formatText(start , length, { 
+          reviewList.value.push({
+            id:nanoid(),
+            type:'delete',
+            author:`用户${sessionStorage.getItem('defaultKnowledgeId').slice(sessionStorage.getItem('defaultKnowledgeId').length-4)}`,
+            status:'pending',
+            posStart:Y.createRelativePositionFromTypeIndex(
+    yText,               
+    start,            
+    0                          
+  ),
+            posEnd:Y.createRelativePositionFromTypeIndex(
+    yText,               
+    start + length,            
+    0                          
+  )
+          })
+            console.log(reviewList.value,'修订记录')
+          quill.formatText(start , length, { 
                 strike: true, 
                 color: "red" 
             }, 'silent');
@@ -366,16 +388,34 @@ quillEditor.value.addEventListener('keydown', handleReview, true);  // 关键：
 quill.on('text-change', (delta, oldDelta, source) => {
   if (source === 'user') {  
     const lastOp = delta.ops[delta.ops.length - 1];
-    
     if (lastOp && lastOp.insert) {
       const cursorPos = quill.getSelection()?.index || 0;
       const textLength = lastOp.insert.length;
+      console.log(cursorPos,textLength,'修订数据')
+      if(!currentRevision){
       
+        reviewList.value.push({
+          id:nanoid(),
+          type:'insert',
+          author:`用户${sessionStorage.getItem('defaultKnowledgeId').slice(sessionStorage.getItem('defaultKnowledgeId').length-4)}`,
+          status:'pending',
+          posStart:Y.createRelativePositionFromTypeIndex(
+            yText,               
+            cursorPos - textLength,
+            0
+          ),
+          posEnd:null,
+        })
+      }
       // 给新插入的文本加下划线
       quill.formatText(cursorPos - textLength, textLength, {
         underline:true,
         color:"red"
       }, true);
+      let timer = null
+      timer = setTimeout(()=>{
+        const posEnd = quill.getSelection().index
+      })
     }
   }
 });
@@ -432,7 +472,7 @@ const initYjsConnection = (fileId, quillInstance) => {
 
   try {
     ydoc = new Y.Doc()
-    const yText = ydoc.getText('quill')
+    yText = ydoc.getText('quill')
     wsProvider = new WebsocketProvider(
       `ws://localhost:8001/onlineEdit/${sessionStorage.getItem('userId')}`,
       fileId,
@@ -1349,7 +1389,7 @@ button:hover {
     &-center {
       box-sizing: content-box;
       
-      height: calc(100vh - 86px);
+      height: calc(100vh - 236px);
       min-width: 820px !important;
       padding: 0 268px;
       position: relative;

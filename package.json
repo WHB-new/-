@@ -17,6 +17,7 @@
     "codemirror": "^6.0.1",
     "element-plus": "^2.10.1",
     "flexsearch": "^0.8.205",
+    "nanoid": "^5.1.5",
     "normalize.css": "^8.0.1",
     "pinia": "^3.0.3",
     "quill": "^2.0.3",
