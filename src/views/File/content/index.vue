@@ -1168,52 +1168,30 @@ const renderCodeMirrorBlocks = () => {
 // 评论功能
 const drawerVisible = ref(false)
 const comments = ref([])
-// 算法实现核心: key：评论ID，value：索引范围
-let map = new Map();
-// 记录草稿评论的文本范围，主要用于草稿评论的删除
+let map;
+// 记录草稿评论的文本范围，用于草稿评论的删除及提交
 let draftRange;
 
 // 存储评论id对应dom
-const itemList = ref(new Map());
+const itemMap = ref(new Map());
 const setItemRef = (commentId, item) => {
-  itemList.value.set(commentId, item);
+  itemMap.value.set(commentId, item);
 }
 
-// 第一次提交评论的时候，获取选取起始索引和长度，存入map
 function setMap(range, commentId) {
   const l = range.index;
   const r = l + range.length - 1;
   map.set(commentId, { l, r });
 };
 
-
-// const props = defineProps({
-//   quill: {
-//     type: Object,
-//     required: true
-//   }
-// })
-
 const toggleDrawer = () => {
   drawerVisible.value = !drawerVisible.value
-  
   if (!drawerVisible.value) {
     // 如果是关闭的话就删草稿
     clearDrafts();
   }
 }
 
-// 判断是否有草稿评论，控制新增评论按钮
-// const hasDraft = () => {
-//   for (let i = 0; i < comments.value.length; i++) {
-//     console.log('是不是草稿', comments.value[i].isDraft);
-    
-//     if (comments.value[i].isDraft) return true;
-//   }
-//   return false;
-// }
-
-// 生成随机颜色
 const generateRandomColor = () => {
   const hue = Math.floor(Math.random() * 360)
   return `hsla(${hue}, 80%, 80%, 0.7)`
@@ -1221,7 +1199,6 @@ const generateRandomColor = () => {
 
 const highlightSelection = (range) => {
   if (!range || range.length === 0) return null;
-  
   const color = generateRandomColor();
   quill.formatText(
     range.index,
@@ -1245,7 +1222,6 @@ const CommentClick = () => {
 // 工具栏按钮，点击触发高亮，加载数据，生成草稿，打开侧边栏
 const CommentClickForToolbar = () => {
   draftRange = quill.getSelection();
-  // 高亮文本
   highlightSelection(draftRange);
   // 初始化评论列表
   initCommentsForToolbar();
@@ -1312,11 +1288,7 @@ const createComment = () => {
     content: '',
     isDraft: true
   }
-  console.log('创建新评论：', newComment);
-  
   comments.value.push(newComment);
-  console.log('创建新评论cccc');
-
 
   // 防止评论框流出屏幕
   nextTick(() => {
@@ -1358,8 +1330,6 @@ const submitComment = async () => {
 
 // 取消评论
 const cancelComment = () => {
-  console.log('嘿嘿1');
-  
   // 清除草稿评论
   comments.value = comments.value.filter(comment => !comment.isDraft);
   // 同样要删除对应的样式
@@ -1370,8 +1340,6 @@ const cancelComment = () => {
 
 // 过滤掉草稿评论
 const clearDrafts = () => {
-  console.log('嘿嘿2');
-
   comments.value = comments.value.filter(comment => !comment.isDraft);
   // 同样要删除对应的样式，实际只会存在一条，所以直接拿存储好的draftRange删除即可
   if (draftRange) {
@@ -1405,23 +1373,35 @@ const formatTime = (timestamp) => {
 
 // 渲染评论高度
 const renderCommentHeight = () => {
-  if (itemList.value.size != 0) {
-    itemList.value.forEach((item, commentId) => {
+  if (itemMap.value.size != 0) {
+    itemMap.value.forEach((item, commentId) => {
       map.forEach(({ l, r }, id) => {
         if (id == commentId && item) {
           const bounds = quill.getBounds(l);
-          console.log('这是item渲染', item);
-          
           item.style.top = bounds.top + 120 + 'px';
-          console.log('渲染高度', bounds.top + 120 + 'px');
-          console.log('渲染高度', item.style.top + 'px');
         }
       });
     });
+    // 合并冲突
+    mergeConflict();
   }
 }
 
-// 刷新获取map
+// 合并冲突
+const mergeConflict = () => {
+  const arr = Array.from(itemMap.value);
+  arr.sort((a, b) => a[1].style.top - b[1].style.top);
+  if (arr.length >= 2) {
+    for (let i = 0; i < arr.length - 1; i++) {
+      if (parseFloat(arr[i + 1][1].style.top) - parseFloat(arr[i][1].style.top) <= 130) {
+        for (let j = i + 1; j < arr.length; j++) {
+          arr[j][1].style.top = parseFloat(arr[i][1].style.top) + 130 + 'px';
+        }
+      }
+    }
+  }
+}
+
 // 刷新加载map映射
 const refreshMap = async (docId) => {
   const resMap = await getCommentMap(docId);
@@ -1432,35 +1412,11 @@ const refreshMap = async (docId) => {
     map = new Map();
   }
 }
-
-// 合并冲突
-const mergeConflict = () => {
-  itemList.value.forEach((item, commentId) => {
-    map.forEach(({ l, r }, id) => {
-    });
-  });
-}
-
-// 合并两个块之间的上下位置冲突
-const mergeBlocks = (block1, block2) => {
-  if (block1.offsetTop > block2.offsetTop) {
-    block1.style.top = block2.offsetTop + 'px';
-  } else {
-    block2.style.top = block1.offsetTop + 'px';
-  }
-  console.log('合并两个块之间的上下位置冲突');
-}
-
-
       
 // 同步滚动
 const handleScroll = (event) => {
   event.scrollTop = leftContainer.scrollTop;
 }
-
-// 逻辑冲突
-
-
 </script>
 <style lang="scss">
 .ql-container {
