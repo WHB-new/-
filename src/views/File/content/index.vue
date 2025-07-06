@@ -1,11 +1,11 @@
 <template>
-  <div class="container">
+  <div :class="[drawerVisible ? 'container-with-comment' : 'container']">
     <div class="nav" v-show="homeStore.isShowHistory">
      <div style="display:flex;align-items:center;justify-content: space-between;box-sizing: border-box;
      width: 100%;padding:0 20px">
        <div style="display:flex;align-items: center;height: 32px;flex:1;justify-content: flex-end;">
       <!-- 权限管理 -->
-      <div style="margin-right:25px;margin-top:1px;">
+      <div style="margin-right:25px;margin-top:1px;position: relative;top: 0.5px;left: -12px;">
         <permissionListSidebar />
       </div>
       </div>
@@ -91,13 +91,16 @@
           <!-- AI摘要组件，放在主要内容（编辑器）上方 -->
         <!-- <AISummary :quill="quillForSummary" :key="route.params.insertedId" /> -->
       </div>
+
+      
       <div class="content-center">
       
         <div class="page-children" id="children" ref="quillEditor" style="padding:12px 0px!important;">
         </div>
+        
 
         <!-- Quill 工具栏 -->
-        <div id="toolbar" style="z-index:5!important;">
+        <div id="toolbar" style="z-index:5!important;width: 460px;">
           <!-- 标题和排序 -->
           <el-select v-model="formatValue" placeholder="正文" size="small" style="width:150px;margin-bottom:10px;"
             @change="handleFormatChange">
@@ -197,8 +200,17 @@
             <el-tooltip effect="dark" content="引用" placement="top">
               <button class="ql-blockquote"></button>
             </el-tooltip>
+            <!-- 选中文本评论按钮 -->
+            <botton class="comment-icon" @mousedown="CommentClickForToolbar">
+              <el-tooltip effect="dark" content="评论" placement="top" >
+                <el-icon :size="18"><ChatDotRound />
+                </el-icon>
+              </el-tooltip>
+            </botton>
           </span>
         </div>
+
+        
 
       </div>
       <div class="review" @click="reviewVisible = true">
@@ -253,6 +265,87 @@
 
    
   </div>
+
+  <!-- 新增cxy -->
+  <!-- 评论按钮 -->
+  <div class="comment-trigger"  @mousedown="CommentClick">
+    <el-tooltip effect="dark" content="评论" placement="bottom">
+      <el-icon :size="25"><ChatDotRound /></el-icon>
+    </el-tooltip>
+  </div>
+
+  <!-- 评论侧边栏 -->
+  <div 
+  class="comment-drawer"
+  v-if="drawerVisible"
+  >
+    <div class="comment-container">
+      <div class="comment-header">
+        <h3>评论（{{ comments.length }}）</h3>
+        <el-button type="warn" @click="toggleDrawer">
+          <el-icon :size="25"><Close /></el-icon>
+        </el-button>
+      </div>
+
+      <el-scrollbar class="comment-scrollbar" style="overflow-y: auto;" @scroll="handleScroll($event)">
+        <div class="comment-list">
+          <!-- 垫一个块，高度相同好做关联高度 -->
+          <!-- <div class="comment-item" style="height: 140px;"></div> -->
+          <!-- 绑定top -->
+          <div 
+            v-for="(comment) in comments" 
+            :key="comment.id" 
+            class="comment-item"
+            :class="{ 'is-draft': comment.isDraft }"
+            :ref="(item) => setItemRef(comment.id, item)"
+          >
+            <div class="comment-user">
+              <el-avatar :size="36" :src="comment.avatar">{{ comment.user.charAt(0) }}</el-avatar>
+              <div class="user-info">
+                <span class="username">{{ comment.user }}</span>
+                <span class="time">{{ formatTime(comment.time) }}</span>
+              </div>
+              <el-button 
+                type="text" 
+                class="delete-btn"
+                @click="deleteComment(comment.id)"
+              >
+                <el-icon><Delete /></el-icon>
+              </el-button>
+            </div>
+            
+            <div class="comment-content">
+              <template v-if="comment.isDraft">
+                <el-input
+                  v-model="comment.content"
+                  type="textarea"
+                  :rows="3"
+                  placeholder="输入评论内容..."
+                  resize="none"
+                  ref="commentInput"
+                />
+                <div class="comment-actions">
+                  <el-button size="small" @click="cancelComment()">取消</el-button>
+                  <el-button 
+                    type="primary" 
+                    size="small" 
+                    @click="submitComment()"
+                    :disabled="!comment.content.trim()"
+                  >
+                    提交
+                  </el-button>
+                </div>
+              </template>
+              <template v-else>
+                <div style="word-wrap: break-word">{{ comment.content }}</div>
+              </template>
+            </div>
+          </div>
+        </div>
+      </el-scrollbar>
+    </div>
+  </div>
+
 </template>
 
 <script setup>
@@ -289,6 +382,13 @@ import permissionListSidebar from '@/components/permissionListSidebar.vue';
 import {nanoid} from 'nanoid'
 import AISummary from '@/components/AISummary.vue';
 const isTool = ref(null)
+import { 
+  ChatDotRound, 
+  Close, 
+  Delete 
+} from '@element-plus/icons-vue'
+import { addComment, getCommentList, deleteCommentById, saveCommentMap, getCommentMap } from '@/api/comment';
+
 const homeStore = useHomeStore()
 let quill
 const reviewList = ref([])
@@ -313,15 +413,29 @@ const logout = () => {
 isShow.value = true
 };
 //重新绑定
+// 新增cxy
+// 获取quill的ql-editor滚动容器
+let leftContainer;
 
 let deleteLength = 0
 const rebinding = ()=>{
+
+  // 监听quill滚动，评论动态跟随
+  leftContainer = quill.root;
+  leftContainer.addEventListener('scroll', () => {
+    // 渲染评论高度top
+    nextTick(() => {
+      renderCommentHeight();
+    })
+  });
+
+    
   quill.on('selection-change', (range) => {
     if (!range) return // 添加空值检查
 
     const bounds = quill.getBounds(range.index, range.length);
     if (range && range.length > 0) {
- quillToolbar.style.zIndex = 6;
+      quillToolbar.style.zIndex = 6;
       quillToolbar.style.display = 'block';
       quillToolbar.style.top = bounds.top - 48 + 'px';
       quillToolbar.style.left = bounds.left + 'px';
@@ -371,8 +485,115 @@ const rebinding = ()=>{
             }
         }
     }
+
+    // 新增cxy
+    // 用于任意情况下改变文本，删除评论能正确删除对应样式范围 & 存储的起始索引可用于计算评论top关联quill文本
+    // 逻辑：
+    // 1.动态维护 评论对应的文本样式索引范围：map + 双指针
+    // 2.循环不变量：l <= r，最后不符合的关联评论直接删除
+    // 3.边界问题：quill删除，会包括当前索引，如果是插入，在光标索引前插入
+
+    // 获取变化位置的索引&长度
+    let retainVal, insertLen, deleteLen;
+    delta.ops.forEach(op => {
+      // 每个op存储不同的值，索引抑或插入长度/文本，当前值为undefined时，才允许赋值
+      if (retainVal === undefined) {
+        // 若操作位置是0，quill默认给undefined，手动处理
+        retainVal = op.retain == undefined ? 0 : op.retain;
+      }
+      if (insertLen === undefined && op.insert !== undefined) {
+        // insert特殊，给回来的是字符串
+        insertLen = op.insert.length;
+      }
+      if (deleteLen === undefined) {
+        deleteLen = op.delete;
+      }      
+    })
+    console.log('监听quill插入删除', retainVal, insertLen, deleteLen);
+    const index = retainVal;
+
+    // 先判断是复制粘贴/删除/插入/
+    // 复制粘贴（先走删除再走插入）
+    if (insertLen && deleteLen) {
+      map.forEach(({l, r}, commentId) => {
+        // 删
+        if (index < l) {
+          if (index + deleteLen - 1 < l) {
+            l -= deleteLen;
+            r -= deleteLen;
+          } else if (index + deleteLen - 1 >= l) {
+            l = index;
+            r -= deleteLen;
+          }
+        } else if (index >= l && index <= r) {
+          r -= deleteLen;
+        }
+
+        // 插
+        if (index <= l) {
+          l = index == 0 ? 0 : l + insertLen;
+          r += insertLen;
+        } else if (index > l && index <= r + 1) {
+          r += insertLen;
+        }
+        if (l > r) {
+          deleteComment(commentId);
+        }
+        map.set(commentId, { l, r });
+        console.log('监听map', commentId, l, r);
+      })
+    } else if (deleteLen) {
+      // 循环map内的元素，开始更新所选文本样式范围
+      map.forEach(({l, r}, commentId) => {
+        if (index < l) {
+          // 在前面删除且不波及范围
+          if (index + deleteLen - 1 < l) {
+            l -= deleteLen;
+            r -= deleteLen;
+          } else if (index + deleteLen - 1 >= l) {
+            // 在前面删除，波及样式范围
+            // 优化：无需判断波及的长度是否覆盖样式范围，嵌套太深，双指针l < r的时候就删除该评论
+            // const len = index + op.delete - l;
+            l = index;
+            r -= deleteLen;
+          }
+        } else if (index >= l && index <= r) {
+          // 在样式范围内部删除，
+          r -= deleteLen;
+        }
+        // 最后判断，是否有已经l > r的情况，直接删除评论
+        if (l > r) {
+          deleteComment(commentId);
+        }
+        // 更新map
+        map.set(commentId, { l, r });
+        console.log('监听map', commentId, l, r);
+      })
+    } else if (insertLen) {
+      map.forEach(({l, r}, commentId) => {
+        if (index <= l) {
+          // 特殊情况，如果索引为0，仍然算为在样式范围内
+          l = index == 0 ? 0 : l + insertLen;
+          r += insertLen;
+        } else if (index > l && index <= r + 1) {
+          // 插入的边界问题，如果索引为r + 1，仍然算为在样式范围内
+          r += insertLen;
+        }
+        if (l > r) {
+          deleteComment(commentId);
+        }
+        map.set(commentId, { l, r });
+        console.log('监听map', commentId, l, r);
+      })
+    }
+
+
+
+
+
   })
 }
+
 //删除掉数组中对应ID
 const deleteItem = (item)=>{
  let res =  reviewList.value.indexOf(item)
@@ -1192,6 +1413,268 @@ const renderCodeMirrorBlocks = () => {
     block.classList.add('cm-initialized')
   })
 }
+
+
+
+
+
+// 新增cxy
+// 评论功能
+const drawerVisible = ref(false)
+const comments = ref([])
+let map;
+// 记录草稿评论的文本范围，用于草稿评论的删除及提交
+let draftRange;
+
+// 存储评论id对应dom
+const itemMap = ref(new Map());
+const setItemRef = (commentId, item) => {
+  itemMap.value.set(commentId, item);
+}
+
+function setMap(range, commentId) {
+  const l = range.index;
+  const r = l + range.length - 1;
+  map.set(commentId, { l, r });
+};
+
+const toggleDrawer = () => {
+  drawerVisible.value = !drawerVisible.value
+  if (!drawerVisible.value) {
+    // 如果是关闭的话就删草稿
+    clearDrafts();
+  }
+}
+
+const generateRandomColor = () => {
+  const hue = Math.floor(Math.random() * 360)
+  return `hsla(${hue}, 80%, 80%, 0.7)`
+}
+
+const highlightSelection = (range) => {
+  if (!range || range.length === 0) return null;
+  const color = generateRandomColor();
+  quill.formatText(
+    range.index,
+    range.length,
+    {
+      'background-color': color,
+    },
+    'user'
+  );
+    
+  return color;
+}
+
+// 仅打开关闭侧边栏，加载数据
+const CommentClick = () => {
+  // 初始化评论列表
+  initComments();
+  toggleDrawer();
+}
+
+// 工具栏按钮，点击触发高亮，加载数据，生成草稿，打开侧边栏
+const CommentClickForToolbar = () => {
+  draftRange = quill.getSelection();
+  highlightSelection(draftRange);
+  // 初始化评论列表
+  initCommentsForToolbar();
+  drawerVisible.value = true;
+}
+
+// 初始化评论列表 & map映射
+const initCommentsForToolbar = async () => {
+  // 调用获取评论接口，获取评论列表
+  const docId = route.params.insertedId;
+  const res = await getCommentList(docId);
+  comments.value = res.data.data.map(comment => ({
+    id: comment._id,
+    user: comment.nickName,
+    avatar: comment.avatar,
+    time: comment.updateTime,
+    content: comment.content,
+    isDraft: false
+  }));
+
+  // 加载map映射
+  await refreshMap(docId);
+
+  // 渲染高度top
+  nextTick(() => {
+    renderCommentHeight();
+  })
+
+  // 生成草稿评论
+  createComment();
+}
+
+const initComments = async () => {
+  // 调用获取评论接口，获取评论列表
+  const docId = route.params.insertedId;
+  const res = await getCommentList(docId);
+  comments.value = res.data.data.map(comment => ({
+    id: comment._id,
+    user: comment.nickName,
+    avatar: comment.avatar,
+    time: comment.updateTime,
+    content: comment.content,
+    isDraft: false
+  }));
+
+  // 刷新加载map映射
+  await refreshMap(docId);
+
+  // 渲染高度top
+  nextTick(() => {
+    renderCommentHeight();
+  })
+}
+
+// 创建新草稿评论
+const createComment = () => {
+  console.log('创建新评论aaaa');
+  
+  const newComment = {
+    id: 0,
+    user: '当前用户',
+    avatar: '',
+    time: Date.now(),
+    content: '',
+    isDraft: true
+  }
+  comments.value.push(newComment);
+
+  // 防止评论框流出屏幕
+  nextTick(() => {
+    const input = document.querySelector('.comment-item.is-draft textarea');
+    input.focus();
+  });
+}
+
+// 提交评论，草稿落地，调接口保存
+const submitComment = async () => {
+  let comment;
+  for (let i = 0; i < comments.value.length; i++) {
+    if (comments.value[i].isDraft) {
+      comment = comments.value[i];
+    }
+  }
+  comment.content = comment.content.trim();
+  comment.isDraft = false;
+
+  // 调用提交评论接口
+  const docId = route.params.insertedId;
+  const userId = sessionStorage.getItem('userId');
+  const content = comment.content;
+  const res = await addComment(docId, userId, content);
+  // 赋予id
+  comment.id = res.data.data;
+  // 新增映射，草稿落地
+  setMap(draftRange, comment.id);
+  // 渲染高度
+  console.log('渲染高度map', map);
+  nextTick(() => {
+    renderCommentHeight();
+  })
+  // 调保存映射接口
+  await saveCommentMap(docId, JSON.stringify(Array.from(map)));
+  // 并且清除一开始作为草稿的draftRange，否则错误删除
+  draftRange = null;
+}
+
+// 取消评论
+const cancelComment = () => {
+  // 清除草稿评论
+  comments.value = comments.value.filter(comment => !comment.isDraft);
+  // 同样要删除对应的样式
+  if (draftRange) {
+    quill.formatText(draftRange.index, draftRange.length, 'background-color', false);
+  }
+}
+
+// 过滤掉草稿评论
+const clearDrafts = () => {
+  comments.value = comments.value.filter(comment => !comment.isDraft);
+  // 同样要删除对应的样式，实际只会存在一条，所以直接拿存储好的draftRange删除即可
+  if (draftRange) {
+    quill.formatText(draftRange.index, draftRange.length, 'background-color', false);
+  }
+}
+
+// 删除评论
+const deleteComment = async (commentId) => {
+  console.log('删除评论传入id', commentId);
+
+  comments.value = comments.value.filter(comment => comment.id != commentId);
+  await deleteCommentById(commentId);
+  // 删除对应的样式
+  map.forEach(({l, r}, id) => {
+    if (id == commentId) {
+      // 根据范围获取文本区域，删除高亮quill的样式
+      console.log('监听ddd删除评论范围', l, r);
+      
+      quill.formatText(l, r - l + 1, 'background-color', false);
+    }
+  })
+  // 移出map
+  map.delete(commentId);
+}
+
+const formatTime = (timestamp) => {
+  const date = new Date(timestamp)
+  return `${date.getMonth()+1}月${date.getDate()}日 ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`
+}
+
+// 渲染评论高度
+const renderCommentHeight = () => {
+  if (itemMap.value.size != 0) {
+    itemMap.value.forEach((item, commentId) => {
+      map.forEach(({ l, r }, id) => {
+        if (id == commentId && item) {
+          const bounds = quill.getBounds(l);
+          item.style.top = bounds.top + 120 + 'px';
+        }
+      });
+    });
+    // 合并冲突
+    mergeConflict();
+  }
+}
+
+// 合并冲突
+const mergeConflict = () => {
+  const arr = Array.from(itemMap.value);
+  if (arr.length >= 2) {
+    arr.sort((a, b) => a[1].style.top - b[1].style.top);
+    for (let i = 0; i < arr.length - 1; i++) {
+      console.log(arr[i + 1][1].style.top, '合并1');
+      console.log(arr[i][1].style.top, '合并2');
+      console.log(parseFloat(arr[i + 1][1].style.top) - parseFloat(arr[i][1].style.top), '合并3');
+    
+      if (parseFloat(arr[i + 1][1].style.top) - parseFloat(arr[i][1].style.top) <= 130) {
+        for (let j = i + 1; j < arr.length; j++) {
+          arr[j][1].style.top = parseFloat(arr[i][1].style.top) + 130 + 'px';
+        }
+      }
+    }
+  }
+}
+
+// 刷新加载map映射
+const refreshMap = async (docId) => {
+  const resMap = await getCommentMap(docId);
+  if (resMap.data.data) {
+    const mapArr = JSON.parse(resMap.data.data);
+    map = new Map(mapArr);
+  } else { 
+    map = new Map();
+  }
+}
+      
+// 同步滚动
+const handleScroll = (event) => {
+  event.scrollTop = leftContainer.scrollTop;
+}
 </script>
 <style lang="scss">
 .review-list{
@@ -1292,7 +1775,7 @@ const renderCodeMirrorBlocks = () => {
 }
 
 .ql-toolbar {
-  // display:none;
+  display:none;
   border: none !important;
   border-radius: 0 !important;
 }
@@ -1498,6 +1981,7 @@ button:hover {
 
 .container {
   position: relative;
+  left: -70px;
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -1515,7 +1999,230 @@ button:hover {
   .nav {
     position: absolute;
     top: 0;
-    left: 0;
+    left: 70px;
+    height: 64px;
+    width: calc(100vw - 300px);
+    display:flex;
+    align-items: center;
+    // background-color: skyblue;
+    justify-content: space-between;
+    border-bottom: 1px solid #ddd;
+   .left{
+    display:flex;
+    align-items: center;
+    .mode{
+      margin-right:32px;
+    }
+     .avatar {
+      border-left:1px solid #ddd;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      // overflow:hidden;
+      position: relative;
+      cursor: pointer;
+      .icon {
+        width: 100%;
+        height: 100%;
+        // width: 40px;
+        // height: 40px;
+        // border-radius: 50%;
+      }
+      .unlogin{
+        position: absolute;
+        top: 50px;
+        right: 0;
+        background: white;
+        border: 1px solid #ddd;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 4px;
+        padding: 10px 10px 0 10px;
+        width: 100px;
+        height: auto;
+        justify-content: center;
+        display: flex;
+        align-content: center;
+        button {
+
+          background: none;
+          border: none;
+          cursor: pointer;
+          color: #333;
+          font-size: 14px;
+        }
+        button:hover {
+          color: rgba(80, 98, 124, 0.788);
+        }
+      }
+    }
+    .history{
+      margin-right:20px;
+      height: 32px;
+      display: flex;
+      align-items:center!important;
+      justify-content: center;
+      border:1px solid #ddd;
+      padding:10px;
+      border-radius: 8px;
+      &:hover{
+        cursor: pointer;
+      }
+      .icon{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .txt{
+        margin-left:5px;
+        font-size: 14px;
+        color:#1f2329;
+      }
+    }
+   }
+  }
+.header{
+  position: absolute;
+    top: 0;
+    left: 82px;
+    width: calc(100vw - 300px);
+  height: 64px;
+  display:flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+   border-bottom: 1px solid #ddd;
+  .back{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    &:hover{
+      height: 24px;
+      background: #f5f7fa;
+      cursor: pointer;
+    }
+    .icon{
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .txt{
+      font-size: 14px;
+      color:#1f2329
+    }
+  }
+  .center{
+    margin-right:10px;
+    display: flex;
+    align-items: center;
+    border:1px solid #ddd;
+    border-radius: 8px;
+    padding:6px 10px;
+    background-color:#aaa;
+    .txt{
+      font-size: 14px;
+      color:#fff;
+    }
+    &:hover{
+      cursor: pointer;
+    }
+  }
+}
+  .content {
+  position:relative;
+    box-sizing: border-box;
+    flex: 1;
+    margin-top: 61px;
+   overflow-y:scroll ;
+   &::-webkit-scrollbar{
+    display:none;
+   }
+   &-header{
+    padding:20px 268px 0;
+    height: 150px;
+    margin-bottom:22px;
+    .title{
+      font-size: 34px;
+      display: flex;
+      align-items: center;
+      font-family: LackHackSafariFont;
+      color:#1f2329;
+      height: 55px;
+      padding:0 12px;
+    }
+    .info{
+      padding: 12px 12px 8px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      .icon{
+        width: 20px;
+        height: 20px;
+        display: flex;
+        // justify-content: center;
+        // align-items: center;
+      }
+      .name{
+        height: 20px;
+        line-height: 20px;
+      padding:0 4px;
+      font-size: 14px;
+      color: #646473;
+      }
+    }
+   }
+   .AI{
+     box-sizing: content-box;
+      min-width: 820px !important;
+      padding: 0 268px;
+      position: relative;
+   }
+    &-center {
+      box-sizing: content-box;
+      
+      height: calc(100vh - 236px);
+      min-width: 820px !important;
+      padding: 0 268px;
+      position: relative;
+      
+      .page-header {
+        padding: 20 0 0 0;
+        margin-bottom: 22px;
+        word-break: break-word;
+        position: relative;
+      }
+
+      .page-children {
+        width: 100%;
+        overflow: hidden;
+      }
+    }
+  }
+}
+
+
+// 新增cxy
+// 左边主容器样式
+.container-with-comment {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: calc(100vw - 300px);
+
+  .close {
+    position: absolute;
+    top: 30px;
+    left: 50px;
+
+    &:hover {
+      cursor: pointer
+    }
+  }
+
+  .nav {
+    position: absolute;
+    top: 0;
+    left: -300px;
     height: 64px;
     width: calc(100vw - 300px);
     display:flex;
@@ -1645,6 +2352,7 @@ button:hover {
 }
   .content {
   position:relative;
+  left: -200px;
     box-sizing: border-box;
     flex: 1;
     margin-top: 61px;
@@ -1729,4 +2437,162 @@ button:hover {
   }
 }
 
+// 右边评论容器样式
+.comment-drawer {
+  width: 300px;
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 100;
+  background: #fff;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
+  // overflow: auto;
+  overflow-x: hidden;
+}
+
+.comment-trigger {
+  top: 9%;
+  right: 0px;
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+  transition: all 0.3s;
+  
+  &:hover {
+    background-color: #f5f7fa;
+  }
+}
+
+.comment-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--el-border-color-light);
+  
+  h3 {
+    margin: 0;
+    font-size: 16px;
+    color: var(--el-text-color-primary);
+  }
+}
+
+.comment-scrollbar {
+  flex: 1;
+  margin: 16px 0;
+  
+  :deep(.el-scrollbar__view) {
+    padding: 4px;
+  }
+}
+
+.comment-list {
+  position: relative;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  // justify-content:space-evenly;
+  // align-items: flex-end;
+  gap: 10px;
+}
+
+.comment-item {
+  top: 150px;
+  padding: 12px;
+  border-radius: 4px;
+  background-color: var(--el-bg-color);
+  position: absolute;
+  margin-top: 10px;
+  margin-bottom: 20px;
+  width: 250px;
+  border-top: 2px solid #9cd90f;
+  box-shadow: 0px 0px 3px rgba(0, 0, 0, 0.3);
+  // 添加动画提升体验
+  transition: top 0.1s ease-out, opacity 0.1s linear;
+  will-change: top;
+  // overflow: hidden;
+  
+  &.is-draft {
+    background-color: #fff8e1;
+    margin-top: 200px;
+    position: fixed;
+    margin-bottom: 100px;
+  }
+}
+
+.comment-user {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  
+  .user-info {
+    margin-left: 12px;
+    flex: 1;
+    
+    .username {
+      font-weight: 500;
+      display: block;
+    }
+    
+    .time {
+      font-size: 12px;
+      color: var(--el-text-color-secondary);
+    }
+  }
+  
+  .delete-btn {
+    margin-left: auto;
+    color: var(--el-text-color-secondary);
+  }
+}
+
+.comment-content {
+  margin-left: 48px;
+  
+  .comment-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
+}
+
+.add-comment {
+  margin-top: auto;
+  padding-top: 16px;
+  text-align: center;
+}
+
+.comment-icon {
+  position: absolute;
+  margin: 1px 0px 0px 7px;
+
+}
+</style>
+
+<style>
+.comment-drawer {
+  box-shadow: -2px 0 12px rgba(0, 0, 0, 0.1) !important;
+  
+  .el-drawer__body {
+    padding: 0 !important;
+  }
+}
+
+/* 高亮文本样式 */
+.ql-editor [style*="background-color"] {
+  border-radius: 3px;
+  padding: 0 2px;
+}
 </style>

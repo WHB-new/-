@@ -2,7 +2,7 @@
   <!-- 申请列表按钮 -->
   <div 
     class="trigger-btn apply-trigger"
-    :style="{ top: '50%' }"
+    :style="{ top: '60%' }"
     @click="toggleSidebar"
   >
     <span class="btn-label">申请列表</span>
@@ -219,14 +219,14 @@ watch(drawerVisible, (val) => {
 // 按钮
 .trigger-btn {
   position: fixed;
-  right: 0;
-  width: 80px;
-  height: 32px;
+  right: -3px;
+  width: 20px;
+  height: 100px;
   border-radius: 16px 0 0 16px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 8px 0 12px;
+  justify-content: center;
+  padding: 0 15px 0 15px;
   box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   z-index: 1000;
@@ -236,18 +236,13 @@ watch(drawerVisible, (val) => {
     font-size: 12px;
     font-weight: 500;
   }
-
-  &:hover {
-    width: 90px;
-  }
 }
 
 .apply-trigger {
-  background: var(--el-color-success);
-  color: white;
+  color: rgba(0, 0, 0, 0.675);
   
   &:hover {
-    background: var(--el-color-success-light-3);
+    background: rgba(0, 0, 0, 0.118);
   }
 }
 

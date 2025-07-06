@@ -1,7 +1,7 @@
 <template>
   <!-- 好友列表按钮 -->
   <div 
-    class="trigger-btn"
+    class="trigger-btn apply-trigger"
     :style="{ top: '40%' }"
     @click="toggleSidebar"
   >
@@ -119,16 +119,14 @@ watch(drawerVisible, (val) => {
 <style scoped lang="scss">
 .trigger-btn {
   position: fixed;
-  right: 0;
-  width: 80px;
-  height: 32px;
-  background: var(--el-color-primary);
-  color: white;
+  right: -3px;
+  width: 20px;
+  height: 100px;
   border-radius: 16px 0 0 16px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 8px 0 12px;
+  justify-content: center;
+  padding: 0 15px 0 16px;
   box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   z-index: 1000;
@@ -137,11 +135,6 @@ watch(drawerVisible, (val) => {
   .btn-label {
     font-size: 12px;
     font-weight: 500;
-  }
-
-  &:hover {
-    width: 90px;
-    background: var(--el-color-primary-light-3);
   }
 }
 
@@ -176,6 +169,14 @@ watch(drawerVisible, (val) => {
       padding: 0;
       color: var(--el-text-color-secondary);
     }
+  }
+}
+
+.apply-trigger {
+  color: rgba(0, 0, 0, 0.675);
+  
+  &:hover {
+    background: rgba(0, 0, 0, 0.118);
   }
 }
 </style>
