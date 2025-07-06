@@ -240,7 +240,7 @@
         </el-button>
       </div>
 
-      <el-scrollbar class="comment-scrollbar" style="overflow-y: auto;" @scroll="handleScroll($event)">
+      <el-scrollbar class="comment-scrollbar" style="overflow-y: auto;" ref="scrollbarRef" >
         <div class="comment-list">
           <!-- 垫一个块，高度相同好做关联高度 -->
           <!-- <div class="comment-item" style="height: 140px;"></div> -->
@@ -252,9 +252,9 @@
             :class="{ 'is-draft': comment.isDraft }"
             :ref="(item) => setItemRef(comment.id, item)"
           >
-            <div class="comment-user">
+            <div class="comment-user" >
               <el-avatar :size="36" :src="comment.avatar">{{ comment.user.charAt(0) }}</el-avatar>
-              <div class="user-info">
+              <div class="user-info" @click="transfromColor(comment.id)">
                 <span class="username">{{ comment.user }}</span>
                 <span class="time">{{ formatTime(comment.time) }}</span>
               </div>
@@ -267,15 +267,16 @@
               </el-button>
             </div>
             
-            <div class="comment-content">
+            <div class="comment-content" @click="transfromColor(comment.id)">
               <template v-if="comment.isDraft">
                 <el-input
                   v-model="comment.content"
                   type="textarea"
-                  :rows="3"
+                  :rows="1"
                   placeholder="输入评论内容..."
                   resize="none"
                   ref="commentInput"
+                  style="width: 215px; height:80px; left: -43px; "
                 />
                 <div class="comment-actions">
                   <el-button size="small" @click="cancelComment()">取消</el-button>
@@ -436,97 +437,99 @@ const rebinding = ()=>{
     // 3.边界问题：quill删除，会包括当前索引，如果是插入，在光标索引前插入
 
     // 获取变化位置的索引&长度
-    let retainVal, insertLen, deleteLen;
-    delta.ops.forEach(op => {
-      // 每个op存储不同的值，索引抑或插入长度/文本，当前值为undefined时，才允许赋值
-      if (retainVal === undefined) {
-        // 若操作位置是0，quill默认给undefined，手动处理
-        retainVal = op.retain == undefined ? 0 : op.retain;
-      }
-      if (insertLen === undefined && op.insert !== undefined) {
-        // insert特殊，给回来的是字符串
-        insertLen = op.insert.length;
-      }
-      if (deleteLen === undefined) {
-        deleteLen = op.delete;
-      }      
-    })
-    console.log('监听quill插入删除', retainVal, insertLen, deleteLen);
-    const index = retainVal;
+    if (map) {
+      let retainVal, insertLen, deleteLen;
+      delta.ops.forEach(op => {
+        // 每个op存储不同的值，索引抑或插入长度/文本，当前值为undefined时，才允许赋值
+        if (retainVal === undefined) {
+          // 若操作位置是0，quill默认给undefined，手动处理
+          retainVal = op.retain == undefined ? 0 : op.retain;
+        }
+        if (insertLen === undefined && op.insert !== undefined) {
+          // insert特殊，给回来的是字符串
+          insertLen = op.insert.length;
+        }
+        if (deleteLen === undefined) {
+          deleteLen = op.delete;
+        }      
+      })
+      console.log('监听quill插入删除', retainVal, insertLen, deleteLen);
+      const index = retainVal;
 
-    // 先判断是复制粘贴/删除/插入/
-    // 复制粘贴（先走删除再走插入）
-    if (insertLen && deleteLen) {
-      map.forEach(({l, r}, commentId) => {
-        // 删
-        if (index < l) {
-          if (index + deleteLen - 1 < l) {
-            l -= deleteLen;
-            r -= deleteLen;
-          } else if (index + deleteLen - 1 >= l) {
-            l = index;
+      // 先判断是复制粘贴/删除/插入/
+      // 复制粘贴（先走删除再走插入）
+      if (insertLen && deleteLen) {
+        map.forEach(({l, r}, commentId) => {
+          // 删
+          if (index < l) {
+            if (index + deleteLen - 1 < l) {
+              l -= deleteLen;
+              r -= deleteLen;
+            } else if (index + deleteLen - 1 >= l) {
+              l = index;
+              r -= deleteLen;
+            }
+          } else if (index >= l && index <= r) {
             r -= deleteLen;
           }
-        } else if (index >= l && index <= r) {
-          r -= deleteLen;
-        }
 
-        // 插
-        if (index <= l) {
-          l = index == 0 ? 0 : l + insertLen;
-          r += insertLen;
-        } else if (index > l && index <= r + 1) {
-          r += insertLen;
-        }
-        if (l > r) {
-          deleteComment(commentId);
-        }
-        map.set(commentId, { l, r });
-        console.log('监听map', commentId, l, r);
-      })
-    } else if (deleteLen) {
-      // 循环map内的元素，开始更新所选文本样式范围
-      map.forEach(({l, r}, commentId) => {
-        if (index < l) {
-          // 在前面删除且不波及范围
-          if (index + deleteLen - 1 < l) {
-            l -= deleteLen;
-            r -= deleteLen;
-          } else if (index + deleteLen - 1 >= l) {
-            // 在前面删除，波及样式范围
-            // 优化：无需判断波及的长度是否覆盖样式范围，嵌套太深，双指针l < r的时候就删除该评论
-            // const len = index + op.delete - l;
-            l = index;
+          // 插
+          if (index <= l) {
+            l = index == 0 ? 0 : l + insertLen;
+            r += insertLen;
+          } else if (index > l && index <= r + 1) {
+            r += insertLen;
+          }
+          if (l > r) {
+            deleteComment(commentId);
+          }
+          map.set(commentId, { l, r });
+          console.log('监听map', commentId, l, r);
+        })
+      } else if (deleteLen) {
+        // 循环map内的元素，开始更新所选文本样式范围
+        map.forEach(({l, r}, commentId) => {
+          if (index < l) {
+            // 在前面删除且不波及范围
+            if (index + deleteLen - 1 < l) {
+              l -= deleteLen;
+              r -= deleteLen;
+            } else if (index + deleteLen - 1 >= l) {
+              // 在前面删除，波及样式范围
+              // 优化：无需判断波及的长度是否覆盖样式范围，嵌套太深，双指针l < r的时候就删除该评论
+              // const len = index + op.delete - l;
+              l = index;
+              r -= deleteLen;
+            }
+          } else if (index >= l && index <= r) {
+            // 在样式范围内部删除，
             r -= deleteLen;
           }
-        } else if (index >= l && index <= r) {
-          // 在样式范围内部删除，
-          r -= deleteLen;
-        }
-        // 最后判断，是否有已经l > r的情况，直接删除评论
-        if (l > r) {
-          deleteComment(commentId);
-        }
-        // 更新map
-        map.set(commentId, { l, r });
-        console.log('监听map', commentId, l, r);
-      })
-    } else if (insertLen) {
-      map.forEach(({l, r}, commentId) => {
-        if (index <= l) {
-          // 特殊情况，如果索引为0，仍然算为在样式范围内
-          l = index == 0 ? 0 : l + insertLen;
-          r += insertLen;
-        } else if (index > l && index <= r + 1) {
-          // 插入的边界问题，如果索引为r + 1，仍然算为在样式范围内
-          r += insertLen;
-        }
-        if (l > r) {
-          deleteComment(commentId);
-        }
-        map.set(commentId, { l, r });
-        console.log('监听map', commentId, l, r);
-      })
+          // 最后判断，是否有已经l > r的情况，直接删除评论
+          if (l > r) {
+            deleteComment(commentId);
+          }
+          // 更新map
+          map.set(commentId, { l, r });
+          console.log('监听map', commentId, l, r);
+        })
+      } else if (insertLen) {
+        map.forEach(({l, r}, commentId) => {
+          if (index <= l) {
+            // 特殊情况，如果索引为0，仍然算为在样式范围内
+            l = index == 0 ? 0 : l + insertLen;
+            r += insertLen;
+          } else if (index > l && index <= r + 1) {
+            // 插入的边界问题，如果索引为r + 1，仍然算为在样式范围内
+            r += insertLen;
+          }
+          if (l > r) {
+            deleteComment(commentId);
+          }
+          map.set(commentId, { l, r });
+          console.log('监听map', commentId, l, r);
+        })
+      }
     }
 
 
@@ -1204,12 +1207,11 @@ const highlightSelection = (range) => {
     range.index,
     range.length,
     {
-      'background-color': color,
+      'background-color': `hsla(210, 80%, 50%, 1)`
+      // 'background-color': 'hsla(45, 90%, 85%, 1)'
     },
     'user'
   );
-    
-  return color;
 }
 
 // 仅打开关闭侧边栏，加载数据
@@ -1326,6 +1328,9 @@ const submitComment = async () => {
   await saveCommentMap(docId, JSON.stringify(Array.from(map)));
   // 并且清除一开始作为草稿的draftRange，否则错误删除
   draftRange = null;
+  console.log('嘻嘻删了吗');
+  
+  itemMap.value.delete('0');
 }
 
 // 取消评论
@@ -1336,6 +1341,7 @@ const cancelComment = () => {
   if (draftRange) {
     quill.formatText(draftRange.index, draftRange.length, 'background-color', false);
   }
+  itemMap.value.delete('0');
 }
 
 // 过滤掉草稿评论
@@ -1364,6 +1370,7 @@ const deleteComment = async (commentId) => {
   })
   // 移出map
   map.delete(commentId);
+  itemMap.value.delete(commentId);
 }
 
 const formatTime = (timestamp) => {
@@ -1383,23 +1390,31 @@ const renderCommentHeight = () => {
       });
     });
     // 合并冲突
-    mergeConflict();
+    nextTick(() => {
+      mergeConflict();
+    })
   }
 }
 
 // 合并冲突
 const mergeConflict = () => {
   const arr = Array.from(itemMap.value);
-  if (arr.length >= 2) {
+  console.log('嘻嘻', arr);
+  console.log('嘻嘻五', itemMap.value);
+  
+  
+  if (arr.length >= 3) {
     arr.sort((a, b) => a[1].style.top - b[1].style.top);
-    for (let i = 0; i < arr.length - 1; i++) {
-      console.log(arr[i + 1][1].style.top, '合并1');
-      console.log(arr[i][1].style.top, '合并2');
-      console.log(parseFloat(arr[i + 1][1].style.top) - parseFloat(arr[i][1].style.top), '合并3');
+    for (let i = 0; i < arr.length; i++) {
+      // console.log(arr[i + 1][1].style.top, '合并1');
+      // console.log(arr[i][1].style.top, '合并2');
+      // console.log(parseFloat(arr[i + 1][1].style.top) - parseFloat(arr[i][1].style.top), '合并3');
     
-      if (parseFloat(arr[i + 1][1].style.top) - parseFloat(arr[i][1].style.top) <= 130) {
-        for (let j = i + 1; j < arr.length; j++) {
-          arr[j][1].style.top = parseFloat(arr[i][1].style.top) + 130 + 'px';
+      for (let j = i + 1; j < arr.length; j++) {
+        if (parseFloat(arr[j][1].style.top) - parseFloat(arr[i][1].style.top) <= 130) {
+          let a = parseFloat(arr[j][1].style.top);
+          let b = 135 - (parseFloat(arr[i + 1][1].style.top) - parseFloat(arr[i][1].style.top));
+          arr[j][1].style.top = a  + b + 'px';
         }
       }
     }
@@ -1418,9 +1433,53 @@ const refreshMap = async (docId) => {
 }
       
 // 同步滚动
-const handleScroll = (event) => {
-  event.scrollTop = leftContainer.scrollTop;
+// const scrollbarRef = ref(null);
+// watch(drawerVisible, (newVal) => {
+//   if (newVal) {
+//     nextTick(() => {
+//       const rightContainer = scrollbarRef.value.wrapRef;
+//       rightContainer.addEventListener('scroll', () => {
+//         leftContainer.scrollTop = rightContainer.scrollTop * 2;
+//         // leftContainer.scrollTo(-100000);
+//       });
+//     })
+//   }
+// });
+
+
+const transfromColor = (commentId) => {
+  console.log('y于');
+  nextTick(() => {
+    const index = map.get(commentId).l;
+    const length = map.get(commentId).r - map.get(commentId).l + 1;
+
+    quill.formatText(
+      index,
+      length,
+      {
+        // 'background-color': `hsla(210, 80%, 50%, 1)`
+        'background-color': 'hsla(45, 90%, 85%, 1)'
+
+      },
+      'user'
+    );
+
+    setTimeout(() => {  
+      quill.formatText(
+        index,
+        length,
+        {
+          'background-color': `hsla(210, 80%, 50%, 1)`
+          // 'background-color': 'hsla(45, 90%, 85%, 1)'
+
+        },
+        'user'
+      );
+    }, 300);
+  });
 }
+
+  
 </script>
 <style lang="scss">
 .ql-container {
@@ -2107,6 +2166,7 @@ button:hover {
 }
 
 .comment-container {
+  // position:relative;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -2147,69 +2207,119 @@ button:hover {
 }
 
 .comment-item {
+  /* 保留原有定位和尺寸 */
   top: 150px;
-  padding: 12px;
-  border-radius: 4px;
-  background-color: var(--el-bg-color);
   position: absolute;
+  width: 250px;
   margin-top: 10px;
   margin-bottom: 20px;
-  width: 250px;
-  border-top: 2px solid #9cd90f;
-  box-shadow: 0px 0px 3px rgba(0, 0, 0, 0.3);
-  // 添加动画提升体验
-  transition: top 0.1s ease-out, opacity 0.1s linear;
-  will-change: top;
-  // overflow: hidden;
   
+  /* 优化视觉样式 - 飞书风格 */
+  padding: 8px 12px;
+  background-color: #fff;
+  border-radius: 6px;
+  border-top: 2px solid #3370ff;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+  
+  /* 保留原有动画 */
+  transition: transform 0.2s ease, box-shadow 0.2s ease, top 0.1s ease-out, opacity 0.1s linear;
+  will-change: top;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    z-index: 1;
+  }
+  
+  /* 草稿评论特殊样式 */
   &.is-draft {
-    background-color: #fff8e1;
-    margin-top: 200px;
-    position: fixed;
-    margin-bottom: 100px;
+    position: fixed !important;
+    top: 18% !important;
+    left: 90% !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 1000 !important;
+    width: 16% !important;
+    max-width: 500px !important;
+    margin: 0 !important;
+    background: #f0f7ff !important;
+    border-top-color: #a0c3ff !important;
   }
 }
 
+/* 统一调整所有评论的内部结构 */
 .comment-user {
   display: flex;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 6px; /* 减小间距 */
   
-  .user-info {
-    margin-left: 12px;
-    flex: 1;
-    
-    .username {
-      font-weight: 500;
-      display: block;
-    }
-    
-    .time {
-      font-size: 12px;
-      color: var(--el-text-color-secondary);
-    }
+  .el-avatar {
+    background-color: #3370ff;
+    color: white;
+    width: 24px !important; /* 统一头像大小 */
+    height: 24px !important;
+    line-height: 24px !important;
+    font-size: 12px !important;
   }
+  
+ .user-info {
+  margin-left: 8px;
+  margin-bottom: 3px;
+  flex: 1;
+  
+  /* 修改这里：将块级布局改为行内-flex布局 */
+  display: flex;
+  align-items: center;
+  gap: 8px; /* 添加间距 */
+  
+  .username {
+    /* 移除 display:block */
+    font-weight: 600;
+    color: #1f2329;
+    font-size: 13px;
+    line-height: 1.3;
+  }
+  
+  .time {
+    font-size: 11px;
+    color: #8f959e;
+    line-height: 1.2;
+    /* 添加以下属性保持对齐 */
+    margin-top: 1px; /* 微调垂直对齐 */
+  }
+
   
   .delete-btn {
     margin-left: auto;
-    color: var(--el-text-color-secondary);
+    color: #8f959e;
+    font-size: 12px !important;
+    padding: 2px 4px !important;
+    
+    &:hover {
+      color: #3370ff;
+    }
   }
+}
 }
 
 .comment-content {
-  margin-left: 48px;
+  margin-left: 32px; /* 减小间距以匹配小头像 */
+  padding-bottom: 12px;
+  font-size: 13px; /* 统一字号 */
+  line-height: 1.4; /* 紧凑行高 */
+  color: #1f2329;
   
   .comment-actions {
     display: flex;
     justify-content: flex-end;
-    margin-top: 8px;
+    margin-top: 6px; /* 减小间距 */
+    
+    .el-button {
+      margin-left: 6px; /* 减小间距 */
+      padding: 4px 8px !important;
+      font-size: 12px !important;
+      min-height: auto !important;
+    }
   }
-}
-
-.add-comment {
-  margin-top: auto;
-  padding-top: 16px;
-  text-align: center;
 }
 
 .comment-icon {
@@ -2217,6 +2327,16 @@ button:hover {
   margin: 1px 0px 0px 7px;
 
 }
+
+.ql-highlight {
+  background-color: #fffef0;
+}
+
+.ql-underline-for-comment {
+  text-decoration: underline;
+}
+
+
 </style>
 
 <style>
