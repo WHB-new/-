@@ -99,7 +99,7 @@
         </div>
 
         <!-- Quill 工具栏 -->
-        <div id="toolbar" style="z-index:5!important;">
+        <div id="toolbar" style="z-index:5!important;width: 460px;">
           <!-- 标题和排序 -->
           <el-select v-model="formatValue" placeholder="正文" size="small" style="width:150px;margin-bottom:10px;"
             @change="handleFormatChange">
@@ -199,6 +199,13 @@
             <el-tooltip effect="dark" content="引用" placement="top">
               <button class="ql-blockquote"></button>
             </el-tooltip>
+            <!-- 选中文本评论按钮 -->
+            <botton class="comment-icon" @mousedown="CommentClickForToolbar">
+              <el-tooltip effect="dark" content="评论" placement="top" >
+                <el-icon :size="18"><ChatDotRound />
+                </el-icon>
+              </el-tooltip>
+            </botton>
           </span>
         </div>
 
@@ -211,9 +218,9 @@
 
       <!-- 评论按钮 -->
        <!-- 新增cxy -->
-  <div class="comment-trigger"  @mousedown="CommentClick">
+  <div class="comment-trigger"  @mousedown="toggleDrawer">
     <el-tooltip effect="dark" content="评论" placement="bottom">
-      <el-icon :size="20"><ChatDotRound /></el-icon>
+      <el-icon :size="25"><ChatDotRound /></el-icon>
     </el-tooltip>
   </div>
 
@@ -287,17 +294,6 @@
           </div>
         </div>
       </el-scrollbar>
-
-      <!-- <div class="add-comment">
-        <el-button 
-          type="primary" 
-          size="small" 
-          @click="createComment"
-          :disabled="hasDraft()"
-        >
-          新增评论
-        </el-button>
-      </div> -->
     </div>
   </div>
 
@@ -458,11 +454,11 @@ const rebinding = ()=>{
         deleteLen = op.delete;
       }      
     })
-    console.log('监听ddd', retainVal, insertLen, deleteLen);
+    console.log('监听quill插入删除', retainVal, insertLen, deleteLen);
     const index = retainVal;
 
-    // 先判断是删除还是插入
-    // 特殊情况，复制粘贴（先走删除再走插入）
+    // 先判断是复制粘贴/删除/插入/
+    // 复制粘贴（先走删除再走插入）
     if (insertLen && deleteLen) {
       map.forEach(({l, r}, commentId) => {
         // 删
@@ -1203,7 +1199,6 @@ function setMap(range, commentId) {
 
 const toggleDrawer = () => {
   drawerVisible.value = !drawerVisible.value
-  console.log('监听打开侧边栏', drawerVisible);
   
   if (!drawerVisible.value) {
     // 如果是关闭的话就删草稿
@@ -1251,6 +1246,15 @@ const CommentClick = () => {
   // 高亮文本
   highlightSelection(draftRange);
   toggleDrawer();
+}
+
+const CommentClickForToolbar = () => {
+  draftRange = quill.getSelection();
+    // 初始化评论列表
+  initComments();
+  // 高亮文本
+  highlightSelection(draftRange);
+  drawerVisible.value = true;
 }
 
 // 初始化评论列表
@@ -2051,8 +2055,8 @@ button:hover {
 }
 
 .comment-trigger {
-  top:30%;
-  right: 20px;
+  top: 12%;
+  right: 0px;
   position: absolute;
   display: inline-flex;
   align-items: center;
@@ -2167,6 +2171,12 @@ button:hover {
   margin-top: auto;
   padding-top: 16px;
   text-align: center;
+}
+
+.comment-icon {
+  position: absolute;
+  margin: 1px 0px 0px 7px;
+
 }
 </style>
 
