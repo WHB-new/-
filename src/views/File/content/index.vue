@@ -1390,9 +1390,13 @@ const renderCommentHeight = () => {
 // 合并冲突
 const mergeConflict = () => {
   const arr = Array.from(itemMap.value);
-  arr.sort((a, b) => a[1].style.top - b[1].style.top);
   if (arr.length >= 2) {
+    arr.sort((a, b) => a[1].style.top - b[1].style.top);
     for (let i = 0; i < arr.length - 1; i++) {
+      console.log(arr[i + 1][1].style.top, '合并1');
+      console.log(arr[i][1].style.top, '合并2');
+      console.log(parseFloat(arr[i + 1][1].style.top) - parseFloat(arr[i][1].style.top), '合并3');
+    
       if (parseFloat(arr[i + 1][1].style.top) - parseFloat(arr[i][1].style.top) <= 130) {
         for (let j = i + 1; j < arr.length; j++) {
           arr[j][1].style.top = parseFloat(arr[i][1].style.top) + 130 + 'px';
