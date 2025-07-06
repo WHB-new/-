@@ -92,11 +92,12 @@
         <!-- <AISummary :quill="quillForSummary" :key="route.params.insertedId" /> -->
       </div>
 
-  
+      
       <div class="content-center">
       
         <div class="page-children" id="children" ref="quillEditor" style="padding:12px 0px!important;">
         </div>
+        
 
         <!-- Quill 工具栏 -->
         <div id="toolbar" style="z-index:5!important;width: 460px;">
@@ -209,6 +210,8 @@
           </span>
         </div>
 
+        
+
       </div>
     </div>
    
@@ -216,9 +219,9 @@
    
   </div>
 
-      <!-- 评论按钮 -->
-       <!-- 新增cxy -->
-  <div class="comment-trigger"  @mousedown="toggleDrawer">
+  <!-- 新增cxy -->
+  <!-- 评论按钮 -->
+  <div class="comment-trigger"  @mousedown="CommentClick">
     <el-tooltip effect="dark" content="评论" placement="bottom">
       <el-icon :size="25"><ChatDotRound /></el-icon>
     </el-tooltip>
@@ -248,7 +251,6 @@
             class="comment-item"
             :class="{ 'is-draft': comment.isDraft }"
             :ref="(item) => setItemRef(comment.id, item)"
-            :style="comment.isDraft ? {} : { top: commentTop(comment.id) + 'px' }"
           >
             <div class="comment-user">
               <el-avatar :size="36" :src="comment.avatar">{{ comment.user.charAt(0) }}</el-avatar>
@@ -334,7 +336,7 @@ import {
   Close, 
   Delete 
 } from '@element-plus/icons-vue'
-import { addComment, getCommentList, deleteCommentById } from '@/api/comment';
+import { addComment, getCommentList, deleteCommentById, saveCommentMap, getCommentMap } from '@/api/comment';
 
 const homeStore = useHomeStore()
 let quill
@@ -363,14 +365,9 @@ const rebinding = ()=>{
   // 监听quill滚动，评论动态跟随
   leftContainer = quill.root;
   leftContainer.addEventListener('scroll', () => {
-    
-    itemList.value.forEach((item, commentId) => {
-      map.forEach(({ l, r }, id) => {
-        if (id == commentId) {
-          const bounds = quill.getBounds(l);
-          item.style.top = bounds.top + 120 + 'px';
-        }
-      })
+    // 渲染评论高度top
+    nextTick(() => {
+      renderCommentHeight();
     })
   });
 
@@ -1172,7 +1169,7 @@ const renderCodeMirrorBlocks = () => {
 const drawerVisible = ref(false)
 const comments = ref([])
 // 算法实现核心: key：评论ID，value：索引范围
-const map = new Map();
+let map = new Map();
 // 记录草稿评论的文本范围，主要用于草稿评论的删除
 let draftRange;
 
@@ -1238,26 +1235,49 @@ const highlightSelection = (range) => {
   return color;
 }
 
-// 点击触发高亮，生成评论关联，打开侧边栏
+// 仅打开关闭侧边栏，加载数据
 const CommentClick = () => {
-  draftRange = quill.getSelection();
   // 初始化评论列表
   initComments();
-  // 高亮文本
-  highlightSelection(draftRange);
   toggleDrawer();
 }
 
+// 工具栏按钮，点击触发高亮，加载数据，生成草稿，打开侧边栏
 const CommentClickForToolbar = () => {
   draftRange = quill.getSelection();
-    // 初始化评论列表
-  initComments();
   // 高亮文本
   highlightSelection(draftRange);
+  // 初始化评论列表
+  initCommentsForToolbar();
   drawerVisible.value = true;
 }
 
-// 初始化评论列表
+// 初始化评论列表 & map映射
+const initCommentsForToolbar = async () => {
+  // 调用获取评论接口，获取评论列表
+  const docId = route.params.insertedId;
+  const res = await getCommentList(docId);
+  comments.value = res.data.data.map(comment => ({
+    id: comment._id,
+    user: comment.nickName,
+    avatar: comment.avatar,
+    time: comment.updateTime,
+    content: comment.content,
+    isDraft: false
+  }));
+
+  // 加载map映射
+  await refreshMap(docId);
+
+  // 渲染高度top
+  nextTick(() => {
+    renderCommentHeight();
+  })
+
+  // 生成草稿评论
+  createComment();
+}
+
 const initComments = async () => {
   // 调用获取评论接口，获取评论列表
   const docId = route.params.insertedId;
@@ -1269,10 +1289,15 @@ const initComments = async () => {
     time: comment.updateTime,
     content: comment.content,
     isDraft: false
+  }));
+
+  // 刷新加载map映射
+  await refreshMap(docId);
+
+  // 渲染高度top
+  nextTick(() => {
+    renderCommentHeight();
   })
-  );
-  // 顺便生成个草稿评论，放外面逻辑冲突会有bug没办法
-  createComment();
 }
 
 // 创建新草稿评论
@@ -1287,7 +1312,7 @@ const createComment = () => {
     content: '',
     isDraft: true
   }
-  console.log('创建的评论：', newComment);
+  console.log('创建新评论：', newComment);
   
   comments.value.push(newComment);
   console.log('创建新评论cccc');
@@ -1295,8 +1320,8 @@ const createComment = () => {
 
   // 防止评论框流出屏幕
   nextTick(() => {
-    const input = document.querySelector('.comment-item.is-draft textarea')
-    input.focus()
+    const input = document.querySelector('.comment-item.is-draft textarea');
+    input.focus();
   });
 }
 
@@ -1311,7 +1336,7 @@ const submitComment = async () => {
   comment.content = comment.content.trim();
   comment.isDraft = false;
 
-  // 调用提交接口
+  // 调用提交评论接口
   const docId = route.params.insertedId;
   const userId = sessionStorage.getItem('userId');
   const content = comment.content;
@@ -1320,12 +1345,21 @@ const submitComment = async () => {
   comment.id = res.data.data;
   // 新增映射，草稿落地
   setMap(draftRange, comment.id);
+  // 渲染高度
+  console.log('渲染高度map', map);
+  nextTick(() => {
+    renderCommentHeight();
+  })
+  // 调保存映射接口
+  await saveCommentMap(docId, JSON.stringify(Array.from(map)));
   // 并且清除一开始作为草稿的draftRange，否则错误删除
   draftRange = null;
 }
 
 // 取消评论
 const cancelComment = () => {
+  console.log('嘿嘿1');
+  
   // 清除草稿评论
   comments.value = comments.value.filter(comment => !comment.isDraft);
   // 同样要删除对应的样式
@@ -1336,6 +1370,8 @@ const cancelComment = () => {
 
 // 过滤掉草稿评论
 const clearDrafts = () => {
+  console.log('嘿嘿2');
+
   comments.value = comments.value.filter(comment => !comment.isDraft);
   // 同样要删除对应的样式，实际只会存在一条，所以直接拿存储好的draftRange删除即可
   if (draftRange) {
@@ -1367,23 +1403,62 @@ const formatTime = (timestamp) => {
   return `${date.getMonth()+1}月${date.getDate()}日 ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`
 }
 
-// 初始化评论列表时，获取评论动态高度
-const commentTop = (commentId) => {
-  if (!map.has(commentId)) return 0;
-  
-  // 获取左边文本相对容器的top
-  const bounds = quill.getBounds(map.get(commentId).l);
-  const topR = bounds.top +120;
-
-  return topR;
+// 渲染评论高度
+const renderCommentHeight = () => {
+  if (itemList.value.size != 0) {
+    itemList.value.forEach((item, commentId) => {
+      map.forEach(({ l, r }, id) => {
+        if (id == commentId && item) {
+          const bounds = quill.getBounds(l);
+          console.log('这是item渲染', item);
+          
+          item.style.top = bounds.top + 120 + 'px';
+          console.log('渲染高度', bounds.top + 120 + 'px');
+          console.log('渲染高度', item.style.top + 'px');
+        }
+      });
+    });
+  }
 }
 
+// 刷新获取map
+// 刷新加载map映射
+const refreshMap = async (docId) => {
+  const resMap = await getCommentMap(docId);
+  if (resMap.data.data) {
+    const mapArr = JSON.parse(resMap.data.data);
+    map = new Map(mapArr);
+  } else { 
+    map = new Map();
+  }
+}
+
+// 合并冲突
+const mergeConflict = () => {
+  itemList.value.forEach((item, commentId) => {
+    map.forEach(({ l, r }, id) => {
+    });
+  });
+}
+
+// 合并两个块之间的上下位置冲突
+const mergeBlocks = (block1, block2) => {
+  if (block1.offsetTop > block2.offsetTop) {
+    block1.style.top = block2.offsetTop + 'px';
+  } else {
+    block2.style.top = block1.offsetTop + 'px';
+  }
+  console.log('合并两个块之间的上下位置冲突');
+}
+
+
       
-  // 同步滚动
+// 同步滚动
 const handleScroll = (event) => {
   event.scrollTop = leftContainer.scrollTop;
 }
 
+// 逻辑冲突
 
 
 </script>
@@ -1701,7 +1776,7 @@ button:hover {
 .header{
   position: absolute;
     top: 0;
-    left: 0;
+    left: 82px;
     width: calc(100vw - 300px);
   height: 64px;
   display:flex;
@@ -2055,7 +2130,7 @@ button:hover {
 }
 
 .comment-trigger {
-  top: 12%;
+  top: 9%;
   right: 0px;
   position: absolute;
   display: inline-flex;
@@ -2112,6 +2187,7 @@ button:hover {
 }
 
 .comment-item {
+  top: 150px;
   padding: 12px;
   border-radius: 4px;
   background-color: var(--el-bg-color);
@@ -2121,6 +2197,9 @@ button:hover {
   width: 250px;
   border-top: 2px solid #9cd90f;
   box-shadow: 0px 0px 3px rgba(0, 0, 0, 0.3);
+  // 添加动画提升体验
+  transition: top 0.1s ease-out, opacity 0.1s linear;
+  will-change: top;
   // overflow: hidden;
   
   &.is-draft {

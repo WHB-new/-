@@ -98,6 +98,7 @@ import {
   Close, 
   Delete 
 } from '@element-plus/icons-vue'
+import { saveCommentMap } from '@/api/comment';
 
 const drawerVisible = ref(false)
 const comments = ref([])
