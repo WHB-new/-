@@ -201,8 +201,46 @@
         </div>
 
       </div>
+      <div class="review" @click="reviewVisible = true">
+        <div class="icon">
+          <svg t="1751795878055" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2699" width="16" height="16"><path d="M853.333333 768c35.413333 0 64-20.650667 64-55.978667V170.581333A63.978667 63.978667 0 0 0 853.333333 106.666667H170.666667C135.253333 106.666667 106.666667 135.253333 106.666667 170.581333v541.44C106.666667 747.285333 135.338667 768 170.666667 768h201.173333l110.016 117.44a42.752 42.752 0 0 0 60.586667 0.042667L651.904 768H853.333333z m-219.029333-42.666667h-6.250667l-115.797333 129.962667c-0.106667 0.106667-116.010667-129.962667-116.010667-129.962667H170.666667c-11.776 0-21.333333-1.621333-21.333334-13.312V170.581333A21.205333 21.205333 0 0 1 170.666667 149.333333h682.666666c11.776 0 21.333333 9.536 21.333334 21.248v541.44c0 11.754667-9.472 13.312-21.333334 13.312H634.304zM341.333333 490.666667a42.666667 42.666667 0 1 0 0-85.333334 42.666667 42.666667 0 0 0 0 85.333334z m170.666667 0a42.666667 42.666667 0 1 0 0-85.333334 42.666667 42.666667 0 0 0 0 85.333334z m170.666667 0a42.666667 42.666667 0 1 0 0-85.333334 42.666667 42.666667 0 0 0 0 85.333334z" fill="#3D3D3D" p-id="2700"></path></svg>
+        </div>
+      </div>
     </div>
-   
+   <el-drawer title="我是标题" v-model="reviewVisible"   :show-close="false" size="324" :close-on-click-modal="true">
+       <template #header>
+        <h2>
+          修订记录
+        </h2>
+       </template>
+       
+          <template #default>
+            <div class="review-list">
+            <div class="review-li" v-for="item in reviewList" :key="item.id">
+              <div class="review-header">
+                <div class="review-txt">修订建议</div>
+              </div>
+              <div class="review-content">
+                <div class="review-left">
+                  <div class="review-icon">
+                    <svg t="1751796985552" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3770" width="28" height="28"><path d="M512 0a512 512 0 1 0 512 512A512 512 0 0 0 512 0zM213.333 832A298.667 298.667 0 0 1 512 533.333a170.667 170.667 0 1 1 170.667-170.666A170.667 170.667 0 0 1 512 533.333 298.667 298.667 0 0 1 810.667 832z" fill="#1296db" p-id="3771"></path></svg>
+                  </div>
+                </div>
+                <div class="review-right">
+                  <div class="right-header">
+                    {{item.author}}
+                  </div>
+                  <div class="right-center">
+                    <b style="color:#1f2329"> {{item.type =='insert'?'新增':'删除'}}</b>："{{item.content}}"
+                  </div>
+                </div>
+              </div>
+              <div style="height: 20px;"></div>
+            </div>
+          </div>
+          </template>
+     
+   </el-drawer>
 
    
   </div>
@@ -245,6 +283,7 @@ let quill
 const reviewList = ref([])
 // 为AI摘要组件创建响应式quill引用
 const quillForSummary = ref(null)
+const reviewVisible = ref(false)
 let ydoc
 let wsProvider
 let binding
@@ -1081,6 +1120,60 @@ const renderCodeMirrorBlocks = () => {
 }
 </script>
 <style lang="scss">
+.review-list{
+  height:calc(100vh - 64px);
+  overflow-y:auto;
+  &::-webkit-scrollbar{
+    display: none;
+  }
+  .review-li{
+    width: 270px;
+    border:1px solid rgb(222 224 227);
+    border-radius: 6px;
+    cursor: pointer;
+    margin-bottom:30px;
+    .review-header{
+      height: 32px;
+      padding: 8px 12px 0;
+      .review-txt{
+        height: 21px;
+        padding: 0 6px 0 8px;
+        color:#646473;
+        font-size: 12px;
+       border-left:2px solid rgba(187 191 196)
+      }
+    }
+    .review-content{
+      display:flex;
+      padding:6px 12px;
+      .review-left{
+        height: 43px;
+         .review-icon{
+           width: 32px;
+           height: 32px;
+           display: flex;
+           justify-content: center;
+           align-items: center;
+         }
+      }
+      .review-right{
+        margin-left:10px;
+       .right-header{
+        font-size: 12px;
+        color:#1F2329;
+       }
+       .right-center{
+        font-size: 14px;
+       }
+      }
+    }
+  }
+}
+.el-drawer__body{
+  &::-webkit-scrollbar{
+    display:none;
+  }
+}
 .ql-container {
   border: none !important;
 }
@@ -1443,6 +1536,21 @@ button:hover {
     flex: 1;
     margin-top: 61px;
    overflow-y:scroll ;
+   .review{
+    position:absolute;
+    top:80px;
+    right:5px;
+    .icon{
+      width: 20px;
+      height: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      &:hover{
+        cursor: pointer;
+      }
+    }
+   }
    &::-webkit-scrollbar{
     display:none;
    }
