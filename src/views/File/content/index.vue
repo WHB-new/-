@@ -213,8 +213,51 @@
         
 
       </div>
+      
     </div>
-   
+   <el-drawer title="我是标题" v-model="reviewVisible"   :show-close="false" size="324" :close-on-click-modal="true">
+       <template #header>
+        <h2>
+          修订记录
+        </h2>
+       </template>
+       
+          <template #default>
+            <div class="review-list" v-if="reviewList.length > 0">
+            <div class="review-li" v-for="(item,index) in reviewList" :key="item.id" >
+              <div class="review-header">
+                <div class="review-txt">修订建议</div>
+                 <div class="tool">
+                <div class="reject" @click="handleAddorDelete(item,'reject')">
+                  <svg t="1751800649940" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4903" width="16" height="16"><path d="M563.2 512l243.712-243.712a34.304 34.304 0 1 0-51.2-51.2L512 460.8 268.288 219.648a34.304 34.304 0 0 0-51.2 51.2L460.8 512l-241.152 243.712a34.304 34.304 0 0 0 51.2 51.2L512 563.2l243.712 243.712a34.304 34.304 0 1 0 51.2-51.2z" fill="#d81e06" p-id="4904"></path></svg>
+                </div>
+                <div class="agree" @click="handleAddorDelete(item,'agree')">
+                  <svg t="1751800906284" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="6142" width="16" height="16"><path d="M853.696 216.192L424.128 679.68 233.984 471.104a56.384 56.384 0 0 0-83.2-1.216 65.792 65.792 0 0 0-1.216 88.832l232.064 254.592a1.28 1.28 0 0 0 0.448 0.384 1.728 1.728 0 0 0 0 0.512 57.216 57.216 0 0 0 12.8 9.28 64.896 64.896 0 0 0 6.4 4.224 55.104 55.104 0 0 0 22.272 4.608 56.192 56.192 0 0 0 22.016-4.48 66.304 66.304 0 0 0 6.4-4.224 52.48 52.48 0 0 0 12.8-9.024 2.176 2.176 0 0 1 0.384-0.384 1.344 1.344 0 0 1 0.448-0.512L937.6 304.64a65.984 65.984 0 0 0-0.512-88.896 56.32 56.32 0 0 0-83.392 0.448z" fill="#1afa29" p-id="6143"></path></svg>
+                </div>
+              </div>
+              </div>
+              <div class="review-content">
+                <div class="review-left">
+                  <div class="review-icon">
+                    <svg t="1751796985552" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3770" width="28" height="28"><path d="M512 0a512 512 0 1 0 512 512A512 512 0 0 0 512 0zM213.333 832A298.667 298.667 0 0 1 512 533.333a170.667 170.667 0 1 1 170.667-170.666A170.667 170.667 0 0 1 512 533.333 298.667 298.667 0 0 1 810.667 832z" fill="#1296db" p-id="3771"></path></svg>
+                  </div>
+                </div>
+                <div class="review-right">
+                  <div class="right-header">
+                    {{item.author}}
+                  </div>
+                  <div class="right-center">
+                    <b style="color:#1f2329"> {{item.type =='insert'?'新增':'删除'}}</b>："{{item.content}}"
+                  </div>
+                </div>
+              </div>
+              <div style="height: 20px;"></div>
+             
+            </div>
+          </div>
+          </template>
+     
+   </el-drawer>
 
    
   </div>
@@ -299,6 +342,17 @@
       </el-scrollbar>
     </div>
   </div>
+  <el-tooltip
+        class="box-item"
+        content="修订建议"
+        placement="bottom-end"
+      >
+      <div class="review" @click="reviewVisible = true">
+        <div class="icon">
+          <svg t="1751795878055" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2699" width="16" height="16"><path d="M853.333333 768c35.413333 0 64-20.650667 64-55.978667V170.581333A63.978667 63.978667 0 0 0 853.333333 106.666667H170.666667C135.253333 106.666667 106.666667 135.253333 106.666667 170.581333v541.44C106.666667 747.285333 135.338667 768 170.666667 768h201.173333l110.016 117.44a42.752 42.752 0 0 0 60.586667 0.042667L651.904 768H853.333333z m-219.029333-42.666667h-6.250667l-115.797333 129.962667c-0.106667 0.106667-116.010667-129.962667-116.010667-129.962667H170.666667c-11.776 0-21.333333-1.621333-21.333334-13.312V170.581333A21.205333 21.205333 0 0 1 170.666667 149.333333h682.666666c11.776 0 21.333333 9.536 21.333334 21.248v541.44c0 11.754667-9.472 13.312-21.333334 13.312H634.304zM341.333333 490.666667a42.666667 42.666667 0 1 0 0-85.333334 42.666667 42.666667 0 0 0 0 85.333334z m170.666667 0a42.666667 42.666667 0 1 0 0-85.333334 42.666667 42.666667 0 0 0 0 85.333334z m170.666667 0a42.666667 42.666667 0 1 0 0-85.333334 42.666667 42.666667 0 0 0 0 85.333334z" fill="#3D3D3D" p-id="2700"></path></svg>
+        </div>
+      </div>
+    </el-tooltip>
 
 </template>
 
@@ -312,6 +366,7 @@ import {
   Sort,
   List,
   Menu,
+  ArrowLeft,
 } from '@element-plus/icons-vue'
 // quill的css文件
 import 'quill/dist/quill.snow.css';
@@ -331,7 +386,10 @@ import { WebrtcProvider } from 'y-webrtc';
 import {saveFile,fileListDetail} from '@/api/file'
 import {addContentHistory,getContentHistory} from '@/api/content'
 import permissionListSidebar from '@/components/permissionListSidebar.vue';
+//生成唯一id
+import {nanoid} from 'nanoid'
 import AISummary from '@/components/AISummary.vue';
+const isTool = ref(null)
 import { 
   ChatDotRound, 
   Close, 
@@ -341,14 +399,19 @@ import { addComment, getCommentList, deleteCommentById, saveCommentMap, getComme
 
 const homeStore = useHomeStore()
 let quill
+const reviewList = ref([])
 // 为AI摘要组件创建响应式quill引用
 const quillForSummary = ref(null)
+const reviewVisible = ref(false)
 let ydoc
 let wsProvider
 let binding
+let yText
+let currentRevision = null
 const historyList = ref([])
 const title = ref(``)
 const name = ref(``)
+let quillContent = ''
 // 控制下拉框显示
 const showDropdown = ref(false);
 const toggleDropdown = () => {
@@ -361,6 +424,8 @@ isShow.value = true
 // 新增cxy
 // 获取quill的ql-editor滚动容器
 let leftContainer;
+
+let deleteLength = 0
 const rebinding = ()=>{
 
   // 监听quill滚动，评论动态跟随
@@ -538,12 +603,49 @@ const rebinding = ()=>{
 
   })
 }
+
+//删除掉数组中对应ID
+const deleteItem = (item)=>{
+ let res =  reviewList.value.indexOf(item)
+ reviewList.value.splice(res,1)
+}
+//处理修订记录的按钮
+const handleAddorDelete = (item,source)=>{
+  console.log(item,'修订')
+  let posStart = Y.createAbsolutePositionFromRelativePosition(item.posStart,ydoc).index
+  let posEnd = Y.createAbsolutePositionFromRelativePosition(item.posEnd,ydoc).index
+  if(item.type == 'insert'){
+if(source == 'reject'){
+   console.log(posStart,posEnd,'修订')
+quill.deleteText(posStart,posEnd-posStart)
+ deleteItem(item)
+    }
+    if(source == 'agree'){
+      quill.removeFormat(posStart,posEnd)
+      deleteItem(item)
+    }
+  }
+  if(item.type =='delete'){
+    console.log(posStart,posEnd,'修订')
+    if(source == 'reject'){
+      quill.removeFormat(posStart,posEnd-posStart)
+deleteItem(item)
+    }
+    if(source == 'agree'){
+      quill.deleteText(posStart,posEnd-posStart)
+deleteItem(item)
+    }
+  }
+}
 //处理修订模式函回调
+          let timer2 = null
+               let endPos = null
 const handleReview = (e)=>{
   console.log(e,'backspace')
    const selection = quill.getSelection();
          let start
             let length
+     
     if ((e.key === 'Backspace' || e.key === 'Delete') && 
         quill.hasFocus()) {  // 确保是Quill获得焦点时
           //阻止默认事件
@@ -552,21 +654,76 @@ const handleReview = (e)=>{
         if (selection.length > 0 ) {
             start = selection.index;
           length = selection.length
-            quill.formatText(start , length, { 
+          reviewList.value.push({
+            id:nanoid(),
+            type:'delete',
+            content:quillContent.slice(start,start + length),
+            author:`用户${sessionStorage.getItem('defaultKnowledgeId').slice(sessionStorage.getItem('defaultKnowledgeId').length-4)}`,
+            status:'pending',
+            posStart:Y.createRelativePositionFromTypeIndex(
+    yText,               
+    start,            
+    0                          
+  ),
+            posEnd:Y.createRelativePositionFromTypeIndex(
+    yText,               
+    start + length,            
+    0                          
+  )
+          })
+            console.log(reviewList.value,'修订记录')
+          quill.formatText(start , length, { 
                 strike: true, 
                 color: "red" 
             }, 'silent');
         }else if(selection.length == 0){
+          deleteLength++
+           if(!currentRevision){
+            currentRevision = true
+            endPos = selection.index
+              console.log('修订触发',endPos)
+          }
           start = selection.index
+          // sessionStorage.setItem('startPos',start)
           length = 1
+         
                quill.formatText(start - 1, length, { 
                 strike: true, 
                 color: "red" 
             }, 'silent');
                 quill.setSelection(start - 1, 0, 'silent');
+                clearTimeout(timer2)
+                timer2 = null
+                timer2 =setTimeout(()=>{
+                  console.log(quillContent.slice(endPos - deleteLength,endPos),'修订',endPos-deleteLength,endPos)
+                  reviewList.value.push({
+          id:nanoid(),
+          type:'delete',
+          author:`用户${sessionStorage.getItem('defaultKnowledgeId').slice(sessionStorage.getItem('defaultKnowledgeId').length-4)}`,
+          content:quillContent.slice(endPos - deleteLength ,endPos),
+          status:'pending',
+          posStart:Y.createRelativePositionFromTypeIndex(
+            yText,               
+            endPos - deleteLength,
+            0
+          ),
+          posEnd:Y.createRelativePositionFromTypeIndex(
+            yText,
+            endPos,
+            0
+          ),
+        })
+        currentRevision = false
+        timer2 = null
+         startPos = null
+        endPos = null
+         deleteLength = 0
+                },2000)
         }
     }
 }
+let tempContent = ''
+let isComposion = false
 //改变文档模式
 const changeMode= ()=>{
   //阅读没权限
@@ -581,28 +738,100 @@ const changeMode= ()=>{
     rebinding()
     quillEditor.value.removeEventListener('keydown', handleReview, true);  // 关键：使用捕获阶段
   }else if(modeValue.value == 'xiuding'){
+    quillContent = quill.getText()
 quill.enable(true)
 //都删掉，然后自定义
     quill.off('selection-change')
     quill.off('text-change')
+    let timer = null
+    let firstOps = null
+    let endOps = null
 quillEditor.value.addEventListener('keydown', handleReview, true);  // 关键：使用捕获阶段
 quill.on('text-change', (delta, oldDelta, source) => {
-  if (source === 'user') {  
+    quillContent = quill.getText() 
+  if (source === 'user') { 
     const lastOp = delta.ops[delta.ops.length - 1];
-    
     if (lastOp && lastOp.insert) {
+      
+      tempContent += lastOp.insert
+      console.log(tempContent,lastOp,'修订数据')
       const cursorPos = quill.getSelection()?.index || 0;
       const textLength = lastOp.insert.length;
-      
+      console.log(cursorPos,textLength,'修订数据')
+      if(!currentRevision){
+        currentRevision = true
+        firstOps = cursorPos - textLength
+      }
+  
       // 给新插入的文本加下划线
       quill.formatText(cursorPos - textLength, textLength, {
         underline:true,
         color:"red"
       }, true);
+      clearTimeout(timer)
+      timer = null
+      timer = setTimeout(()=>{
+        console.log(quillContent.slice(firstOps,firstOps + tempContent.length),'修订',firstOps,firstOps + tempContent.length)
+        reviewList.value.push({
+          content:`${quillContent.slice(firstOps,endOps)}`,
+          id:nanoid(),
+          type:'insert',
+          content:tempContent,
+          author:`用户${sessionStorage.getItem('defaultKnowledgeId').slice(sessionStorage.getItem('defaultKnowledgeId').length-4)}`,
+          status:'pending',
+          posStart:Y.createRelativePositionFromTypeIndex(
+            yText,               
+             firstOps,
+            0
+          ),
+          posEnd:Y.createRelativePositionFromTypeIndex(
+            yText,
+            firstOps + tempContent.length,
+            0
+          ),
+        })
+        currentRevision = false
+        timer = null
+         firstOps = null
+        
+         tempContent=''
+      },2000)
     }
+  
   }
 });
- 
+quillEditor.value.addEventListener('compositionstart',()=>{
+  isComposion = true
+})
+quillEditor.value.addEventListener('compositionend',()=>{
+  isComposion = false
+})
+ quill.on('selection-change', (range) => {
+  if( firstOps && tempContent.length && !isComposion && (firstOps > range.index || range.index >(firstOps + tempContent.length + 1))){
+    clearTimeout(timer)
+      reviewList.value.push({
+          id:nanoid(),
+          type:'insert',
+          content:tempContent,
+          author:`用户${sessionStorage.getItem('defaultKnowledgeId').slice(sessionStorage.getItem('defaultKnowledgeId').length-4)}`,
+          status:'pending',
+          posStart:Y.createRelativePositionFromTypeIndex(
+            yText,               
+             firstOps,
+            0
+          ),
+          posEnd:Y.createRelativePositionFromTypeIndex(
+            yText,
+            firstOps + tempContent.length,
+            0
+          ),
+        })
+        tempContent = ''
+   currentRevision = false
+        timer = null
+         firstOps = null
+      }
+ })
   }
 
 
@@ -655,7 +884,7 @@ const initYjsConnection = (fileId, quillInstance) => {
 
   try {
     ydoc = new Y.Doc()
-    const yText = ydoc.getText('quill')
+    yText = ydoc.getText('quill')
     wsProvider = new WebsocketProvider(
       `ws://localhost:8001/onlineEdit/${sessionStorage.getItem('userId')}`,
       fileId,
@@ -784,10 +1013,27 @@ const backContent = ()=>{
 }
 // 监听路由参数变化
 watch(() => route.params.insertedId, (newId, oldId) => {
-  console.log(quill,'quill还在吗')
+
+  
     nextTick(() => {
       initYjsConnection(newId, quill)
-    })
+      fileListDetail(oldId,sessionStorage.getItem('userId')).then(res=>{
+    if(res.data.code == 200){
+      let titleAndContent
+       if(Object.keys(res.data.data.content).length !=0){
+titleAndContent = `${res.data.data.title}  ${JSON.parse(res.data.data.content).ops[0].insert}`
+       }
+      titleAndContent = `${res.data.data.title}`
+      console.log(titleAndContent,'titleAndContent')
+      homeStore.searchIndex.update(
+       oldId,
+       titleAndContent
+      )
+        console.log(homeStore.searchIndex,'路由参数')
+    }
+  })
+    
+})
 }, { immediate: false })
 //切换历史版本查看的时候 编辑器也切换对应版本的内容
 watch(()=>homeStore.historyIndex,(newValue,oldValue)=>{
@@ -800,6 +1046,21 @@ watch(()=>homeStore.historyIndex,(newValue,oldValue)=>{
 })
 onBeforeRouteLeave((to,from)=>{
   console.log('onMounted文件挂载了')
+  
+   fileListDetail(from.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
+    if(res.data.code == 200){
+      let titleAndContent
+       if(Object.keys(res.data.data.content).length !=0){
+ titleAndContent = `${res.data.data.title}  ${JSON.parse(res.data.data.content).ops[0].insert}`
+       }
+       titleAndContent = `${res.data.data.title}`
+       console.log(titleAndContent,'titleAndContent')
+      homeStore.searchIndex.update(from.params.insertedId,
+       titleAndContent
+      )
+        console.log(homeStore.searchIndex,'路由参数')
+    }
+  })
    saveFile(from.params.insertedId,{
       content:JSON.stringify(quill.getContents())
     }).then((res)=>{
@@ -856,7 +1117,7 @@ const handleFormatChange = (value) => {
   }
 };
 onMounted(() => {
-  console.log('onMounted文件挂载了')
+ 
   if (sessionStorage.getItem('lastUrl')) {
     isShowClose.value = true
   }
@@ -1482,6 +1743,99 @@ const transfromColor = (commentId) => {
   
 </script>
 <style lang="scss">
+.review-list{
+  position:relative;
+  height:calc(100vh - 64px);
+  overflow-y:auto;
+  &::-webkit-scrollbar{
+    display: none;
+  }
+  .review-li{
+    width: 270px;
+    border:1px solid rgb(222 224 227);
+    border-radius: 6px;
+    cursor: pointer;
+    margin-bottom:30px;
+    
+    .review-header{
+      height: 32px;
+      padding: 8px 12px 0;
+      display:flex;
+      justify-content: space-between;
+      .review-txt{
+        height: 21px;
+        padding: 0 6px 0 8px;
+        color:#646473;
+        font-size: 12px;
+       border-left:2px solid rgba(187 191 196)
+      }
+      .tool{
+      // position:absolute;
+      width: 50px;
+      height: 21px;
+      border:1px solid #ddd;
+      justify-content: center;
+      border-radius: 11px;
+      align-items: center;
+      // top:10px;
+      // right:30px;
+      display:flex;
+      .reject{
+        width: 15px;
+        height: 15px;
+        margin-right:5px;
+        display:flex;
+        justify-content: center;
+        align-items: center;
+        &:hover{
+          cursor: pointer;
+          background-color: #d6d9dc;
+        }
+      }
+      .agree{
+         width: 15px;
+        height: 15px;
+         display:flex;
+        justify-content: center;
+        align-items: center;
+        &:hover{
+          background-color: #d6d9dc;
+          cursor: pointer;
+        }
+      }
+    }
+    }
+    .review-content{
+      display:flex;
+      padding:6px 12px;
+      .review-left{
+        height: 43px;
+         .review-icon{
+           width: 32px;
+           height: 32px;
+           display: flex;
+           justify-content: center;
+           align-items: center;
+         }
+      }
+      .review-right{
+        margin-left:10px;
+       .right-header{
+        font-size: 12px;
+        color:#1F2329;
+       }
+       .right-center{
+        font-size: 14px;
+       }
+      }
+    }
+  }
+}
+.el-drawer__body{
+  &::-webkit-scrollbar{
+    display:none;
+  }
+}
 .ql-container {
   border: none !important;
 }
@@ -2069,6 +2423,7 @@ button:hover {
     flex: 1;
     margin-top: 61px;
    overflow-y:scroll ;
+   
    &::-webkit-scrollbar{
     display:none;
    }
@@ -2133,7 +2488,24 @@ button:hover {
     }
   }
 }
-
+.review{
+    //  width: 50px;
+    //  height: 50px;
+    //  background-color: red;
+    position:absolute;
+    top:200px;
+    right:8px;
+    .icon{
+      width: 20px;
+      height: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      &:hover{
+        cursor: pointer;
+      }
+    }
+   }
 // 右边评论容器样式
 .comment-drawer {
   width: 300px;

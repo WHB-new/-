@@ -9,7 +9,7 @@ isShowHistory:true,
 historyList:[],
 quillData:null,
 historyIndex:0,
-
+searchIndex:null,
 }),
 actions:{
 getFileList(){
@@ -28,6 +28,7 @@ getFileList(){
     console.log(err)
   
   })
-}
+},
+
 }
 })
