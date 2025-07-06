@@ -219,8 +219,7 @@ let index
 //搜索函数
 const search=()=>{
   searchList.value = []
-  const result = index.search(searchValue.value)
-  console.log(result,index,homeStore.fileList,'触发了这个函数')
+  const result = homeStore.searchIndex.search(searchValue.value)
   homeStore.fileList.map(item=>{
     if(result.includes(item._id)){
       searchList.value.push(item)
@@ -285,7 +284,7 @@ const handleRename = async () => {
 const handleSearch =()=>{
 searchVisible.value = true
 //创建索引
-index = new FlexSearch.Index({
+homeStore.searchIndex = new FlexSearch.Index({
   tokenize:'reverse',//适合中英数字分词
   charset:"latin:extra",//支持特殊字符
   suggest:true,//支持建议
@@ -293,7 +292,7 @@ index = new FlexSearch.Index({
 homeStore.fileList.forEach((item)=>{
   const titleAndContent = `${item.title} ${item.content}`
   console.log('触发了这个函数',titleAndContent)
-  index.add(item._id,titleAndContent)
+  homeStore.searchIndex.add(item._id,titleAndContent)
 })
 }
 // 处理文件点击
@@ -357,6 +356,11 @@ const handleAddFile = async () => {
       name:`用户${sessionStorage.getItem('defaultKnowledgeId').slice(sessionStorage.getItem('defaultKnowledgeId').length-6)}`
     }))
     homeStore.getFileList()
+    const titleAndContent = `未命名文档`
+    homeStore.searchIndex.add(
+      res.data.insertedId,
+      titleAndContent
+    )
       router.push({
       name: 'content',
       params: {

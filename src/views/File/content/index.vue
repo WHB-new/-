@@ -782,10 +782,27 @@ const backContent = ()=>{
 }
 // 监听路由参数变化
 watch(() => route.params.insertedId, (newId, oldId) => {
-  console.log(quill,'quill还在吗')
+
+  
     nextTick(() => {
       initYjsConnection(newId, quill)
-    })
+      fileListDetail(oldId,sessionStorage.getItem('userId')).then(res=>{
+    if(res.data.code == 200){
+      let titleAndContent
+       if(Object.keys(res.data.data.content).length !=0){
+titleAndContent = `${res.data.data.title}  ${JSON.parse(res.data.data.content).ops[0].insert}`
+       }
+      titleAndContent = `${res.data.data.title}`
+      console.log(titleAndContent,'titleAndContent')
+      homeStore.searchIndex.update(
+       oldId,
+       titleAndContent
+      )
+        console.log(homeStore.searchIndex,'路由参数')
+    }
+  })
+    
+})
 }, { immediate: false })
 //切换历史版本查看的时候 编辑器也切换对应版本的内容
 watch(()=>homeStore.historyIndex,(newValue,oldValue)=>{
@@ -798,6 +815,21 @@ watch(()=>homeStore.historyIndex,(newValue,oldValue)=>{
 })
 onBeforeRouteLeave((to,from)=>{
   console.log('onMounted文件挂载了')
+  
+   fileListDetail(from.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
+    if(res.data.code == 200){
+      let titleAndContent
+       if(Object.keys(res.data.data.content).length !=0){
+ titleAndContent = `${res.data.data.title}  ${JSON.parse(res.data.data.content).ops[0].insert}`
+       }
+       titleAndContent = `${res.data.data.title}`
+       console.log(titleAndContent,'titleAndContent')
+      homeStore.searchIndex.update(from.params.insertedId,
+       titleAndContent
+      )
+        console.log(homeStore.searchIndex,'路由参数')
+    }
+  })
    saveFile(from.params.insertedId,{
       content:JSON.stringify(quill.getContents())
     }).then((res)=>{
