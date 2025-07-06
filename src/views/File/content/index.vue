@@ -319,7 +319,7 @@
                   placeholder="输入评论内容..."
                   resize="none"
                   ref="commentInput"
-                  style="width: 215px; height:80px; left: -43px; "
+                  style="width: 215px; height:40px; left: -30px; "
                 />
                 <div class="comment-actions">
                   <el-button size="small" @click="cancelComment()">取消</el-button>
