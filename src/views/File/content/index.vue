@@ -215,10 +215,18 @@
        </template>
        
           <template #default>
-            <div class="review-list">
-            <div class="review-li" v-for="item in reviewList" :key="item.id">
+            <div class="review-list" v-if="reviewList.length > 0">
+            <div class="review-li" v-for="(item,index) in reviewList" :key="item.id" >
               <div class="review-header">
                 <div class="review-txt">修订建议</div>
+                 <div class="tool">
+                <div class="reject" @click="handleAddorDelete(item,'reject')">
+                  <svg t="1751800649940" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4903" width="16" height="16"><path d="M563.2 512l243.712-243.712a34.304 34.304 0 1 0-51.2-51.2L512 460.8 268.288 219.648a34.304 34.304 0 0 0-51.2 51.2L460.8 512l-241.152 243.712a34.304 34.304 0 0 0 51.2 51.2L512 563.2l243.712 243.712a34.304 34.304 0 1 0 51.2-51.2z" fill="#d81e06" p-id="4904"></path></svg>
+                </div>
+                <div class="agree" @click="handleAddorDelete(item,'agree')">
+                  <svg t="1751800906284" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="6142" width="16" height="16"><path d="M853.696 216.192L424.128 679.68 233.984 471.104a56.384 56.384 0 0 0-83.2-1.216 65.792 65.792 0 0 0-1.216 88.832l232.064 254.592a1.28 1.28 0 0 0 0.448 0.384 1.728 1.728 0 0 0 0 0.512 57.216 57.216 0 0 0 12.8 9.28 64.896 64.896 0 0 0 6.4 4.224 55.104 55.104 0 0 0 22.272 4.608 56.192 56.192 0 0 0 22.016-4.48 66.304 66.304 0 0 0 6.4-4.224 52.48 52.48 0 0 0 12.8-9.024 2.176 2.176 0 0 1 0.384-0.384 1.344 1.344 0 0 1 0.448-0.512L937.6 304.64a65.984 65.984 0 0 0-0.512-88.896 56.32 56.32 0 0 0-83.392 0.448z" fill="#1afa29" p-id="6143"></path></svg>
+                </div>
+              </div>
               </div>
               <div class="review-content">
                 <div class="review-left">
@@ -236,6 +244,7 @@
                 </div>
               </div>
               <div style="height: 20px;"></div>
+             
             </div>
           </div>
           </template>
@@ -256,6 +265,7 @@ import {
   Sort,
   List,
   Menu,
+  ArrowLeft,
 } from '@element-plus/icons-vue'
 // quill的css文件
 import 'quill/dist/quill.snow.css';
@@ -278,6 +288,7 @@ import permissionListSidebar from '@/components/permissionListSidebar.vue';
 //生成唯一id
 import {nanoid} from 'nanoid'
 import AISummary from '@/components/AISummary.vue';
+const isTool = ref(null)
 const homeStore = useHomeStore()
 let quill
 const reviewList = ref([])
@@ -302,7 +313,7 @@ const logout = () => {
 isShow.value = true
 };
 //重新绑定
-let addLength = 0
+
 let deleteLength = 0
 const rebinding = ()=>{
   quill.on('selection-change', (range) => {
@@ -362,18 +373,48 @@ const rebinding = ()=>{
     }
   })
 }
+//删除掉数组中对应ID
+const deleteItem = (item)=>{
+ let res =  reviewList.value.indexOf(item)
+ reviewList.value.splice(res,1)
+}
+//处理修订记录的按钮
+const handleAddorDelete = (item,source)=>{
+  console.log(item,'修订')
+  let posStart = Y.createAbsolutePositionFromRelativePosition(item.posStart,ydoc).index
+  let posEnd = Y.createAbsolutePositionFromRelativePosition(item.posEnd,ydoc).index
+  if(item.type == 'insert'){
+if(source == 'reject'){
+   console.log(posStart,posEnd,'修订')
+quill.deleteText(posStart,posEnd-posStart)
+ deleteItem(item)
+    }
+    if(source == 'agree'){
+      quill.removeFormat(posStart,posEnd)
+      deleteItem(item)
+    }
+  }
+  if(item.type =='delete'){
+    console.log(posStart,posEnd,'修订')
+    if(source == 'reject'){
+      quill.removeFormat(posStart,posEnd-posStart)
+deleteItem(item)
+    }
+    if(source == 'agree'){
+      quill.deleteText(posStart,posEnd-posStart)
+deleteItem(item)
+    }
+  }
+}
 //处理修订模式函回调
           let timer2 = null
-        
+               let endPos = null
 const handleReview = (e)=>{
   console.log(e,'backspace')
    const selection = quill.getSelection();
          let start
             let length
-            let startPos = null
-            let endPos = null
-            let currentRevision = null
-         
+     
     if ((e.key === 'Backspace' || e.key === 'Delete') && 
         quill.hasFocus()) {  // 确保是Quill获得焦点时
           //阻止默认事件
@@ -382,7 +423,6 @@ const handleReview = (e)=>{
         if (selection.length > 0 ) {
             start = selection.index;
           length = selection.length
-          console.log(quillContent.slice(start,start + length),'修订')
           reviewList.value.push({
             id:nanoid(),
             type:'delete',
@@ -407,12 +447,15 @@ const handleReview = (e)=>{
             }, 'silent');
         }else if(selection.length == 0){
           deleteLength++
-          start = selection.index
-          sessionStorage.setItem('startPos',start)
-          length = 1
-          if(!currentRevision){
-            endPos = start
+           if(!currentRevision){
+            currentRevision = true
+            endPos = selection.index
+              console.log('修订触发',endPos)
           }
+          start = selection.index
+          // sessionStorage.setItem('startPos',start)
+          length = 1
+         
                quill.formatText(start - 1, length, { 
                 strike: true, 
                 color: "red" 
@@ -421,12 +464,12 @@ const handleReview = (e)=>{
                 clearTimeout(timer2)
                 timer2 = null
                 timer2 =setTimeout(()=>{
-                  console.log(quillContent.slice(endPos - deleteLength + 1,endPos + 1),'修订',endPos-deleteLength,endPos + 1)
+                  console.log(quillContent.slice(endPos - deleteLength,endPos),'修订',endPos-deleteLength,endPos)
                   reviewList.value.push({
           id:nanoid(),
           type:'delete',
           author:`用户${sessionStorage.getItem('defaultKnowledgeId').slice(sessionStorage.getItem('defaultKnowledgeId').length-4)}`,
-          content:quillContent.slice(endPos - deleteLength + 1,endPos + 1),
+          content:quillContent.slice(endPos - deleteLength ,endPos),
           status:'pending',
           posStart:Y.createRelativePositionFromTypeIndex(
             yText,               
@@ -474,18 +517,21 @@ quill.enable(true)
     let endOps = null
 quillEditor.value.addEventListener('keydown', handleReview, true);  // 关键：使用捕获阶段
 quill.on('text-change', (delta, oldDelta, source) => {
-  if (source === 'user') {  
+    quillContent = quill.getText() 
+  if (source === 'user') { 
     const lastOp = delta.ops[delta.ops.length - 1];
     if (lastOp && lastOp.insert) {
+      
       tempContent += lastOp.insert
       console.log(tempContent,lastOp,'修订数据')
       const cursorPos = quill.getSelection()?.index || 0;
       const textLength = lastOp.insert.length;
       console.log(cursorPos,textLength,'修订数据')
       if(!currentRevision){
+        currentRevision = true
         firstOps = cursorPos - textLength
       }
-      addLength++
+  
       // 给新插入的文本加下划线
       quill.formatText(cursorPos - textLength, textLength, {
         underline:true,
@@ -494,7 +540,7 @@ quill.on('text-change', (delta, oldDelta, source) => {
       clearTimeout(timer)
       timer = null
       timer = setTimeout(()=>{
-        console.log(quillContent.slice(firstOps,firstOps + addLength),'修订',firstOps,firstOps + addLength)
+        console.log(quillContent.slice(firstOps,firstOps + tempContent.length),'修订',firstOps,firstOps + tempContent.length)
         reviewList.value.push({
           content:`${quillContent.slice(firstOps,endOps)}`,
           id:nanoid(),
@@ -509,15 +555,14 @@ quill.on('text-change', (delta, oldDelta, source) => {
           ),
           posEnd:Y.createRelativePositionFromTypeIndex(
             yText,
-            firstOps + addLength,
+            firstOps + tempContent.length,
             0
           ),
         })
         currentRevision = false
         timer = null
-        console.log(reviewList.value,firstOps,addLength,'修订数据')
          firstOps = null
-         addLength = null
+        
          tempContent=''
       },2000)
     }
@@ -531,8 +576,7 @@ quillEditor.value.addEventListener('compositionend',()=>{
   isComposion = false
 })
  quill.on('selection-change', (range) => {
-  if( (firstOps > range.index || range.index >(firstOps + addLength + 1))&& firstOps && addLength && !isComposion){
-    console.log('超出范围修订数据',addLength,tempContent)
+  if( firstOps && tempContent.length && !isComposion && (firstOps > range.index || range.index >(firstOps + tempContent.length + 1))){
     clearTimeout(timer)
       reviewList.value.push({
           id:nanoid(),
@@ -547,7 +591,7 @@ quillEditor.value.addEventListener('compositionend',()=>{
           ),
           posEnd:Y.createRelativePositionFromTypeIndex(
             yText,
-            firstOps + addLength,
+            firstOps + tempContent.length,
             0
           ),
         })
@@ -555,8 +599,6 @@ quillEditor.value.addEventListener('compositionend',()=>{
    currentRevision = false
         timer = null
          firstOps = null
-     addLength = null
-     console.log(reviewList.value,firstOps,addLength,'修订数据')
       }
  })
   }
@@ -1121,6 +1163,7 @@ const renderCodeMirrorBlocks = () => {
 </script>
 <style lang="scss">
 .review-list{
+  position:relative;
   height:calc(100vh - 64px);
   overflow-y:auto;
   &::-webkit-scrollbar{
@@ -1132,9 +1175,12 @@ const renderCodeMirrorBlocks = () => {
     border-radius: 6px;
     cursor: pointer;
     margin-bottom:30px;
+    
     .review-header{
       height: 32px;
       padding: 8px 12px 0;
+      display:flex;
+      justify-content: space-between;
       .review-txt{
         height: 21px;
         padding: 0 6px 0 8px;
@@ -1142,6 +1188,41 @@ const renderCodeMirrorBlocks = () => {
         font-size: 12px;
        border-left:2px solid rgba(187 191 196)
       }
+      .tool{
+      // position:absolute;
+      width: 50px;
+      height: 21px;
+      border:1px solid #ddd;
+      justify-content: center;
+      border-radius: 11px;
+      align-items: center;
+      // top:10px;
+      // right:30px;
+      display:flex;
+      .reject{
+        width: 15px;
+        height: 15px;
+        margin-right:5px;
+        display:flex;
+        justify-content: center;
+        align-items: center;
+        &:hover{
+          cursor: pointer;
+          background-color: #d6d9dc;
+        }
+      }
+      .agree{
+         width: 15px;
+        height: 15px;
+         display:flex;
+        justify-content: center;
+        align-items: center;
+        &:hover{
+          background-color: #d6d9dc;
+          cursor: pointer;
+        }
+      }
+    }
     }
     .review-content{
       display:flex;

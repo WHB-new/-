@@ -32,10 +32,11 @@ request.interceptors.response.use(res => {
   if(status === 401){
     const refresh = sessionStorage.getItem('refreshToken')
      let res = await refreshToken(refresh)
+     let originalRequest
      if(res.status == 200){
       sessionStorage.removeItem('Authorization')
       sessionStorage.setItem('Authorization',res.data.token)
-       const originalRequest = err.config
+        originalRequest = err.config
     originalRequest.headers.Authorization = res.data.token
       //如果不是200证明refreshToken过期，则跳回登录
      }else if(res.status != 200){
