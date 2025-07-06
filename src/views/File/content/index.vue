@@ -253,6 +253,7 @@ let currentRevision = null
 const historyList = ref([])
 const title = ref(``)
 const name = ref(``)
+let quillContent = ''
 // 控制下拉框显示
 const showDropdown = ref(false);
 const toggleDropdown = () => {
@@ -262,6 +263,8 @@ const logout = () => {
 isShow.value = true
 };
 //重新绑定
+let addLength = 0
+let deleteLength = 0
 const rebinding = ()=>{
   quill.on('selection-change', (range) => {
     if (!range) return // 添加空值检查
@@ -321,11 +324,17 @@ const rebinding = ()=>{
   })
 }
 //处理修订模式函回调
+          let timer2 = null
+        
 const handleReview = (e)=>{
   console.log(e,'backspace')
    const selection = quill.getSelection();
          let start
             let length
+            let startPos = null
+            let endPos = null
+            let currentRevision = null
+         
     if ((e.key === 'Backspace' || e.key === 'Delete') && 
         quill.hasFocus()) {  // 确保是Quill获得焦点时
           //阻止默认事件
@@ -334,9 +343,11 @@ const handleReview = (e)=>{
         if (selection.length > 0 ) {
             start = selection.index;
           length = selection.length
+          console.log(quillContent.slice(start,start + length),'修订')
           reviewList.value.push({
             id:nanoid(),
             type:'delete',
+            content:quillContent.slice(start,start + length),
             author:`用户${sessionStorage.getItem('defaultKnowledgeId').slice(sessionStorage.getItem('defaultKnowledgeId').length-4)}`,
             status:'pending',
             posStart:Y.createRelativePositionFromTypeIndex(
@@ -356,16 +367,50 @@ const handleReview = (e)=>{
                 color: "red" 
             }, 'silent');
         }else if(selection.length == 0){
+          deleteLength++
           start = selection.index
+          sessionStorage.setItem('startPos',start)
           length = 1
+          if(!currentRevision){
+            endPos = start
+          }
                quill.formatText(start - 1, length, { 
                 strike: true, 
                 color: "red" 
             }, 'silent');
                 quill.setSelection(start - 1, 0, 'silent');
+                clearTimeout(timer2)
+                timer2 = null
+                timer2 =setTimeout(()=>{
+                  console.log(quillContent.slice(endPos - deleteLength + 1,endPos + 1),'修订',endPos-deleteLength,endPos + 1)
+                  reviewList.value.push({
+          id:nanoid(),
+          type:'delete',
+          author:`用户${sessionStorage.getItem('defaultKnowledgeId').slice(sessionStorage.getItem('defaultKnowledgeId').length-4)}`,
+          content:quillContent.slice(endPos - deleteLength + 1,endPos + 1),
+          status:'pending',
+          posStart:Y.createRelativePositionFromTypeIndex(
+            yText,               
+            endPos - deleteLength,
+            0
+          ),
+          posEnd:Y.createRelativePositionFromTypeIndex(
+            yText,
+            endPos,
+            0
+          ),
+        })
+        currentRevision = false
+        timer2 = null
+         startPos = null
+        endPos = null
+         deleteLength = 0
+                },2000)
         }
     }
 }
+let tempContent = ''
+let isComposion = false
 //改变文档模式
 const changeMode= ()=>{
   //阅读没权限
@@ -380,46 +425,101 @@ const changeMode= ()=>{
     rebinding()
     quillEditor.value.removeEventListener('keydown', handleReview, true);  // 关键：使用捕获阶段
   }else if(modeValue.value == 'xiuding'){
+    quillContent = quill.getText()
 quill.enable(true)
 //都删掉，然后自定义
     quill.off('selection-change')
     quill.off('text-change')
+    let timer = null
+    let firstOps = null
+    let endOps = null
 quillEditor.value.addEventListener('keydown', handleReview, true);  // 关键：使用捕获阶段
 quill.on('text-change', (delta, oldDelta, source) => {
   if (source === 'user') {  
     const lastOp = delta.ops[delta.ops.length - 1];
     if (lastOp && lastOp.insert) {
+      tempContent += lastOp.insert
+      console.log(tempContent,lastOp,'修订数据')
       const cursorPos = quill.getSelection()?.index || 0;
       const textLength = lastOp.insert.length;
       console.log(cursorPos,textLength,'修订数据')
       if(!currentRevision){
-      
-        reviewList.value.push({
-          id:nanoid(),
-          type:'insert',
-          author:`用户${sessionStorage.getItem('defaultKnowledgeId').slice(sessionStorage.getItem('defaultKnowledgeId').length-4)}`,
-          status:'pending',
-          posStart:Y.createRelativePositionFromTypeIndex(
-            yText,               
-            cursorPos - textLength,
-            0
-          ),
-          posEnd:null,
-        })
+        firstOps = cursorPos - textLength
       }
+      addLength++
       // 给新插入的文本加下划线
       quill.formatText(cursorPos - textLength, textLength, {
         underline:true,
         color:"red"
       }, true);
-      let timer = null
+      clearTimeout(timer)
+      timer = null
       timer = setTimeout(()=>{
-        const posEnd = quill.getSelection().index
-      })
+        console.log(quillContent.slice(firstOps,firstOps + addLength),'修订',firstOps,firstOps + addLength)
+        reviewList.value.push({
+          content:`${quillContent.slice(firstOps,endOps)}`,
+          id:nanoid(),
+          type:'insert',
+          content:tempContent,
+          author:`用户${sessionStorage.getItem('defaultKnowledgeId').slice(sessionStorage.getItem('defaultKnowledgeId').length-4)}`,
+          status:'pending',
+          posStart:Y.createRelativePositionFromTypeIndex(
+            yText,               
+             firstOps,
+            0
+          ),
+          posEnd:Y.createRelativePositionFromTypeIndex(
+            yText,
+            firstOps + addLength,
+            0
+          ),
+        })
+        currentRevision = false
+        timer = null
+        console.log(reviewList.value,firstOps,addLength,'修订数据')
+         firstOps = null
+         addLength = null
+         tempContent=''
+      },2000)
     }
+  
   }
 });
- 
+quillEditor.value.addEventListener('compositionstart',()=>{
+  isComposion = true
+})
+quillEditor.value.addEventListener('compositionend',()=>{
+  isComposion = false
+})
+ quill.on('selection-change', (range) => {
+  if( (firstOps > range.index || range.index >(firstOps + addLength + 1))&& firstOps && addLength && !isComposion){
+    console.log('超出范围修订数据',addLength,tempContent)
+    clearTimeout(timer)
+      reviewList.value.push({
+          id:nanoid(),
+          type:'insert',
+          content:tempContent,
+          author:`用户${sessionStorage.getItem('defaultKnowledgeId').slice(sessionStorage.getItem('defaultKnowledgeId').length-4)}`,
+          status:'pending',
+          posStart:Y.createRelativePositionFromTypeIndex(
+            yText,               
+             firstOps,
+            0
+          ),
+          posEnd:Y.createRelativePositionFromTypeIndex(
+            yText,
+            firstOps + addLength,
+            0
+          ),
+        })
+        tempContent = ''
+   currentRevision = false
+        timer = null
+         firstOps = null
+     addLength = null
+     console.log(reviewList.value,firstOps,addLength,'修订数据')
+      }
+ })
   }
 
 
@@ -673,7 +773,7 @@ const handleFormatChange = (value) => {
   }
 };
 onMounted(() => {
-  console.log('onMounted文件挂载了')
+ 
   if (sessionStorage.getItem('lastUrl')) {
     isShowClose.value = true
   }
