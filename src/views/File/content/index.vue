@@ -210,6 +210,7 @@
   </div>
 
       <!-- 评论按钮 -->
+       <!-- 新增cxy -->
   <div class="comment-trigger"  @mousedown="CommentClick">
     <el-tooltip effect="dark" content="评论" placement="bottom">
       <el-icon :size="20"><ChatDotRound /></el-icon>
@@ -358,6 +359,7 @@ const logout = () => {
 isShow.value = true
 };
 //重新绑定
+// 新增cxy
 // 获取quill的ql-editor滚动容器
 let leftContainer;
 const rebinding = ()=>{
@@ -439,6 +441,7 @@ const rebinding = ()=>{
     // 1.动态维护 评论对应的文本样式索引范围：map + 双指针
     // 2.循环不变量：l <= r，最后不符合的关联评论直接删除
     // 3.边界问题：quill删除，会包括当前索引，如果是插入，在光标索引前插入
+
     // 获取变化位置的索引&长度
     let retainVal, insertLen, deleteLen;
     delta.ops.forEach(op => {
@@ -456,10 +459,39 @@ const rebinding = ()=>{
       }      
     })
     console.log('监听ddd', retainVal, insertLen, deleteLen);
-      
     const index = retainVal;
+
     // 先判断是删除还是插入
-    if (deleteLen) {
+    // 特殊情况，复制粘贴（先走删除再走插入）
+    if (insertLen && deleteLen) {
+      map.forEach(({l, r}, commentId) => {
+        // 删
+        if (index < l) {
+          if (index + deleteLen - 1 < l) {
+            l -= deleteLen;
+            r -= deleteLen;
+          } else if (index + deleteLen - 1 >= l) {
+            l = index;
+            r -= deleteLen;
+          }
+        } else if (index >= l && index <= r) {
+          r -= deleteLen;
+        }
+
+        // 插
+        if (index <= l) {
+          l = index == 0 ? 0 : l + insertLen;
+          r += insertLen;
+        } else if (index > l && index <= r + 1) {
+          r += insertLen;
+        }
+        if (l > r) {
+          deleteComment(commentId);
+        }
+        map.set(commentId, { l, r });
+        console.log('监听map', commentId, l, r);
+      })
+    } else if (deleteLen) {
       // 循环map内的元素，开始更新所选文本样式范围
       map.forEach(({l, r}, commentId) => {
         if (index < l) {
@@ -489,17 +521,16 @@ const rebinding = ()=>{
     } else if (insertLen) {
       map.forEach(({l, r}, commentId) => {
         if (index <= l) {
-          l += insertLen;
+          // 特殊情况，如果索引为0，仍然算为在样式范围内
+          l = index == 0 ? 0 : l + insertLen;
           r += insertLen;
         } else if (index > l && index <= r + 1) {
           // 插入的边界问题，如果索引为r + 1，仍然算为在样式范围内
           r += insertLen;
         }
-        // 判断删除
         if (l > r) {
           deleteComment(commentId);
         }
-        // 更新map
         map.set(commentId, { l, r });
         console.log('监听map', commentId, l, r);
       })
@@ -1303,7 +1334,7 @@ const cancelComment = () => {
 const clearDrafts = () => {
   comments.value = comments.value.filter(comment => !comment.isDraft);
   // 同样要删除对应的样式，实际只会存在一条，所以直接拿存储好的draftRange删除即可
-  if (draftRange != null) {
+  if (draftRange) {
     quill.formatText(draftRange.index, draftRange.length, 'background-color', false);
   }
 }
@@ -1318,7 +1349,7 @@ const deleteComment = async (commentId) => {
   map.forEach(({l, r}, id) => {
     if (id == commentId) {
       // 根据范围获取文本区域，删除高亮quill的样式
-      console.log('删除评论范围', l, r);
+      console.log('监听ddd删除评论范围', l, r);
       
       quill.formatText(l, r - l + 1, 'background-color', false);
     }
@@ -1332,7 +1363,7 @@ const formatTime = (timestamp) => {
   return `${date.getMonth()+1}月${date.getDate()}日 ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`
 }
 
-// 初始化评论列表时，获取评论动态高度（有监听好像可以删掉了）
+// 初始化评论列表时，获取评论动态高度
 const commentTop = (commentId) => {
   if (!map.has(commentId)) return 0;
   
