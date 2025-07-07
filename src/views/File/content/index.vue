@@ -100,7 +100,7 @@
         
 
         <!-- Quill 工具栏 -->
-        <div id="toolbar" style="z-index:5!important;width: 460px;border-radius: 10px!important;">
+        <div id="toolbar" style="z-index:5!important;width: 470px;border-radius: 10px!important;">
           <!-- 标题和排序 -->
           <el-select v-model="formatValue" placeholder="正文" size="small" style="width:150px;margin-bottom:10px;"
             @change="handleFormatChange">
@@ -2799,16 +2799,23 @@ button:hover {
 
 .comment-icon {
   position: absolute;
-  margin: 1px 0px 0px 7px;
+  margin: -2px 0px 0px 7px;
+  padding: 2px 5px 0px 5px;
   cursor: pointer;
 }
 
-.ql-highlight {
-  background-color: #fffef0;
-}
-
-.ql-underline-for-comment {
-  text-decoration: underline;
+.ql-bold:hover,
+.ql-italic:hover,
+.ql-underline:hover,
+.ql-strike:hover,
+.ql-color:hover,
+.ql-align:hover,
+.ql-link:hover,
+.code-block:hover,
+.ql-blockquote:hover,
+.comment-icon:hover {
+  background: #f5f5f5; /* 浅灰色 */
+  border-radius: 2px;  /* 轻微圆角 */
 }
 
 
