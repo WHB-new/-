@@ -1787,7 +1787,7 @@ const transfromColor = (commentId) => {
       length,
       {
         // 'background-color': `hsla(210, 80%, 50%, 1)`
-        'background-color': 'hsla(45, 90%, 85%, 1)'
+        'background-color': 'hsla(210, 80%, 70%, 0.7)'
 
       },
       'user'
@@ -1944,8 +1944,10 @@ es.onmessage = async (event) => {
   // right:50px;
   height: 40px;
   padding: 8px;
-  background-color: rgb(252, 244, 244);
+  // background-color: rgb(252, 244, 244);
   border-radius: 8px;
+  background-color: white;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 
 .editor-container {
