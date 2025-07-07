@@ -1018,6 +1018,7 @@ watch(() => route.params.insertedId, (newId, oldId) => {
     nextTick(() => {
       initYjsConnection(newId, quill)
       fileListDetail(oldId,sessionStorage.getItem('userId')).then(res=>{
+        sessionStorage.setItem('permissionCode',res.data.permissionCode)
     if(res.data.code == 200){
       let titleAndContent
        if(Object.keys(res.data.data.content).length !=0){
@@ -1048,6 +1049,7 @@ onBeforeRouteLeave((to,from)=>{
   console.log('onMounted文件挂载了')
   
    fileListDetail(from.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
+    sessionStorage.setItem('permissionCode',res.data.permissionCode)
     if(res.data.code == 200){
       let titleAndContent
        if(Object.keys(res.data.data.content).length !=0){
