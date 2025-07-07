@@ -1960,7 +1960,6 @@ es.onmessage = async (event) => {
   border-radius: 8px;
   background-color: white;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  transition: all 1.5s;
 }
 
 .editor-container {
