@@ -353,7 +353,28 @@
         </div>
       </div>
     </el-tooltip>
-
+<el-dialog  v-model="isShow"  :before-close="dialogBeforeClose"
+  align-center
+  width="500"
+  :show-close="false">
+     <!-- <span >
+      <span><svg t="1750565873327" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2648" width="16" height="16"><path d="M1001.661867 796.544c48.896 84.906667 7.68 157.013333-87.552 157.013333H110.781867c-97.834667 0-139.050667-69.504-90.112-157.013333l401.664-666.88c48.896-87.552 128.725333-87.552 177.664 0l401.664 666.88zM479.165867 296.533333v341.333334a32 32 0 1 0 64 0v-341.333334a32 32 0 1 0-64 0z m0 469.333334v42.666666a32 32 0 1 0 64 0v-42.666666a32 32 0 1 0-64 0z" fill="#FAAD14" p-id="2649"></path></svg></span>
+      确认要退出登录吗？</span> -->
+      <div style="display:flex;align-items:center;">
+    <div style="display:flex;align-items:center;justify-content: center;margin-right:10px;">
+      <svg t="1750565873327" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2648" width="16" height="16"><path d="M1001.661867 796.544c48.896 84.906667 7.68 157.013333-87.552 157.013333H110.781867c-97.834667 0-139.050667-69.504-90.112-157.013333l401.664-666.88c48.896-87.552 128.725333-87.552 177.664 0l401.664 666.88zM479.165867 296.533333v341.333334a32 32 0 1 0 64 0v-341.333334a32 32 0 1 0-64 0z m0 469.333334v42.666666a32 32 0 1 0 64 0v-42.666666a32 32 0 1 0-64 0z" fill="#FAAD14" p-id="2649"></path></svg>
+    </div>
+    <div style="font-size: 16px;">确定要退出当前账号登录吗？</div>
+      </div>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="isShow=false">取消</el-button>
+        <el-button type="primary" @click="handleConfirm">
+          确定
+        </el-button>
+      </div>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup>
@@ -400,6 +421,7 @@ import { addComment, getCommentList, deleteCommentById, saveCommentMap, getComme
 const homeStore = useHomeStore()
 let quill
 const reviewList = ref([])
+const isShow = ref(false)
 // 为AI摘要组件创建响应式quill引用
 const quillForSummary = ref(null)
 const reviewVisible = ref(false)
@@ -418,8 +440,19 @@ const toggleDropdown = () => {
   showDropdown.value = !showDropdown.value;
 };
 const logout = () => {
+  console.log('我说了吗')
 isShow.value = true
 };
+//退出登录
+const handleConfirm = ()=>{
+  sessionStorage.removeItem('defaultKnowledgeId')
+  sessionStorage.removeItem('Authorization')
+  sessionStorage.removeItem('userId')
+  sessionStorage.removeItem('username')
+  sessionStorage.removeItem('refreshToken')
+  isShow.value = false
+  router.push('/login')
+}
 //重新绑定
 // 新增cxy
 // 获取quill的ql-editor滚动容器
