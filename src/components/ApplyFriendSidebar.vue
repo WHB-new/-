@@ -276,38 +276,66 @@ watch(drawerVisible, (val) => {
   }
 
   .list-item {
+  display: flex;
+  padding: 16px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  background: var(--el-bg-color);
+  border: 1px solid var(--el-border-color-lighter);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+
+  &:hover {
+    // background: var(--el-color-primary-light-13);
+    border-color: var(--el-color-primary-light-7);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+  }
+
+  .item-info {
+    margin-left: 16px;
+    flex: 1;
     display: flex;
-    padding: 12px;
-    margin-bottom: 8px;
-    border-radius: 4px;
-    background: var(--el-bg-color);
-    transition: background 0.3s;
-    
-    &:hover {
-      background: var(--el-color-primary-light-9);
+    flex-direction: column;
+    gap: 6px;
+
+    .name {
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--el-text-color-primary);
+      letter-spacing: 0.02em;
     }
-    
-    .item-info {
-      margin-left: 12px;
-      flex: 1;
+
+    .desc {
+      font-size: 13px;
+      color: var(--el-text-color-secondary);
+      line-height: 1.5;
+      opacity: 0.9;
+    }
+
+    .actions {
       display: flex;
-      flex-direction: column;
-      
-      .name {
-        font-weight: 500;
-        margin-bottom: 8px;
-      }
-      
-      .actions {
-        display: flex;
-        gap: 8px;
-        
-        .el-button {
-          flex: 1;
+      gap: 8px;
+      margin-top: 8px;
+
+      .el-button {
+        flex: 1;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        transition: all 0.2s;
+
+        &:hover {
+          transform: translateY(-0.8px);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        &:active {
+          transform: scale(0.98);
         }
       }
     }
   }
+}
 }
 </style>
 

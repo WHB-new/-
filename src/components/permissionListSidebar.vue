@@ -415,51 +415,71 @@ watch(drawerVisible, (val) => {
     margin-bottom: 16px;
   }
 
-  .list-item {
-    display: flex;
-    align-items: center;
-    padding: 12px;
-    margin-bottom: 8px;
-    border-radius: 4px;
-    background: var(--el-bg-color);
-    transition: background 0.3s;
+.list-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  background: var(--el-bg-color);
+  border: 1px solid var(--el-border-color-lighter);
+  transition: all 0.25s ease;
+
+  &:hover {
+    background: var(--el-color-primary-light-9);
+    border-color: var(--el-color-primary-light-5);
+  }
+
+  .item-info {
+    margin-left: 16px;
+    flex: 1;
+    
+    .name {
+      display: block;
+      font-weight: 500;
+      font-size: 14px;
+      color: var(--el-text-color-primary);
+      margin-bottom: 4px;
+    }
+    
+    .permission-tag {
+      font-size: 12px;
+      color: var(--el-text-color-secondary);
+      padding: 2px 8px;
+      background: var(--el-fill-color-light);
+      border-radius: 4px;
+      display: inline-block;
+    }
+  }
+  
+  .permission-btn {
+    margin-left: auto;
+    padding: 6px 10px;
+    color: var(--el-text-color-secondary);
+    transition: all 0.2s;
     
     &:hover {
-      background: var(--el-color-primary-light-9);
-    }
-    
-    .item-info {
-      margin-left: 12px;
-      flex: 1;
-      
-      .name {
-        display: block;
-        font-weight: 500;
-        margin-bottom: 4px;
-      }
-      
-      .permission-tag {
-        font-size: 12px;
-      }
-    }
-    
-    .permission-btn {
-      margin-left: auto;
-      padding: 0;
-      color: var(--el-text-color-secondary);
+      color: var(--el-color-primary);
+      background: var(--el-color-primary-light-8);
+      border-radius: 4px;
     }
   }
 }
 
 .selected {
-  color: var(--el-color-primary);
-  font-weight: 500;
-}
+  background: var(--el-color-primary-light-9);
+  border-color: var(--el-color-primary-light-5);
+  
+  .name {
+    color: var(--el-color-primary);
+  }
+}}
 </style>
 
 <style lang="scss">
 .sidebar-drawer {
-  box-shadow: -2px 0 12px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: -2px 0 12px rgba(0, 0, 0, 0.08) !important;
+  border-left: 1px solid var(--el-border-color-light) !important;
   
   .el-drawer__body {
     padding: 0 !important;
@@ -470,13 +490,19 @@ watch(drawerVisible, (val) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 8px 16px;
+  
+  &:hover:not(.delete-item) {
+    background: var(--el-color-primary-light-9);
+  }
 }
 
 .delete-item {
   color: var(--el-color-danger);
+  
   &:hover {
     color: var(--el-color-danger);
-    background-color: var(--el-color-danger-light-9);
+    background: var(--el-color-danger-light-9);
   }
 }
 </style>

@@ -41,7 +41,7 @@
             </el-button>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item command="delete" style="color: var(--el-color-danger);">
+                <el-dropdown-item command="delete" style="color: var(--el-color-danger);border-radius: 5px;">
                   删除好友
                 </el-dropdown-item>
               </el-dropdown-menu>
@@ -149,25 +149,46 @@ watch(drawerVisible, (val) => {
   .list-item {
     display: flex;
     align-items: center;
-    padding: 12px;
+    padding: 12px 16px;
+    margin-top: 8px;
     margin-bottom: 8px;
-    border-radius: 4px;
+    border-radius: 6px;
     background: var(--el-bg-color);
-    
+    transition: all 0.3s ease;
+    border: 1px solid var(--el-border-color-light);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+
+    &:hover {
+      background: var(--el-fill-color-light);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      border-color: var(--el-border-color);
+    }
+
     .item-info {
-      margin-left: 12px;
+      margin-left: 16px;
       flex: 1;
       
       .name {
         display: block;
         font-weight: 500;
+        font-size: 14px;
+        color: var(--el-text-color-primary);
+        margin-bottom: 2px;
       }
     }
     
     .permission-btn {
       margin-left: auto;
-      padding: 0;
+      padding: 6px 8px;
       color: var(--el-text-color-secondary);
+      border-radius: 4px;
+      transition: all 0.2s;
+      
+      &:hover {
+        color: var(--el-color-primary);
+        background: var(--el-color-primary-light-9);
+      }
     }
   }
 }
