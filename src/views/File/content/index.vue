@@ -1058,7 +1058,7 @@ watch(() => route.params.insertedId, (newId, oldId) => {
 titleAndContent = `${res.data.data.title}  ${JSON.parse(res.data.data.content).ops[0].insert}`
        }
       titleAndContent = `${res.data.data.title}`
-      console.log(titleAndContent,'titleAndContent')
+      console.log(homeStore.searchIndex,'homeStore.searchIndex')
       homeStore.searchIndex.update(
        oldId,
        titleAndContent

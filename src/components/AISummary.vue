@@ -1,7 +1,7 @@
 <template>
   <!-- AI摘要显示区域 -->
   <transition name="summary-fade" mode="out-in">
-    <div class="summary-section" v-if="summaryVisible && documentSummary" key="summary">
+    <div class="summary-section" v-if="summaryVisible && documentSummary && !isAiShow " key="summary">
       <div class="summary-header">
         <svg t="1750924024571" class="icon" viewBox="0 0 1029 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4316" width="16" height="16">
           <path d="M761.216 997.76c-144.64 0-262.4-117.76-262.4-262.4s117.76-262.4 262.4-262.4 262.4 117.76 262.4 262.4-117.76 262.4-262.4 262.4z m0-448c-102.4 0-185.6 83.2-185.6 185.6s83.2 185.6 185.6 185.6 185.6-83.2 185.6-185.6-83.328-185.6-185.6-185.6z" p-id="4317"></path>
@@ -12,6 +12,9 @@
         <el-button size="small" type="primary" @click="handleManualRegenerate" :loading="generatingSummary">
           重新生成
         </el-button>
+        <div class="close" @click="handleClose">
+          <svg t="1751899834674" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2680" width="16" height="16"><path d="M842.947458 778.116917 576.847937 512.013303 842.946434 245.883083c8.67559-8.674567 13.447267-20.208251 13.43908-32.477692-0.008186-12.232602-4.7727-23.715121-13.414521-32.332383-8.655124-8.677637-20.149922-13.450337-32.384571-13.4575-12.286838 0-23.808242 4.771677-32.474622 13.434987L512.019443 447.143876 245.88206 181.050496c-8.66331-8.66331-20.175505-13.434987-32.416294-13.434987-12.239765 0-23.75196 4.770653-32.414247 13.43294-8.66024 8.636704-13.428847 20.12434-13.437034 32.356942-0.008186 12.269441 4.76349 23.803125 13.437034 32.476669l266.135336 266.13022L181.050496 778.11794c-8.664334 8.66331-13.43601 20.173458-13.43601 32.41527 0 12.239765 4.7727 23.752983 13.437034 32.417317 8.662287 8.66331 20.173458 13.43294 32.413224 13.43294 12.240789 0 23.754007-4.770653 32.416294-13.43294l266.134313-266.100544 266.101567 266.100544c8.66331 8.66331 20.185738 13.43294 32.4429 13.43294 12.265348-0.008186 23.74889-4.771677 32.369222-13.412474C860.81643 825.081555 860.821547 795.991006 842.947458 778.116917z" fill="#272636" p-id="2681"></path></svg>
+        </div>
       </div>
       <div class="summary-content">
         {{ documentSummary }}
@@ -28,6 +31,7 @@ import { generateSummary, getSummary, deleteSummary } from '@/api/summary'
 import { useHomeStore } from '@/store/home'
 // 调试开关
 const DEBUG = true
+const isAiShow = ref(false)
 const homeStore = useHomeStore()
 // 组件实例计数
 let instanceCount = 0
@@ -36,7 +40,9 @@ const currentInstanceId = ++instanceCount
 if (DEBUG) {
   console.log(`【前端AI摘要】组件实例 ${currentInstanceId} 创建`)
 }
-
+const handleClose=  ()=>{
+  isAiShow.value = true
+}
 // 定义props
 const props = defineProps({
   quill: {
@@ -407,7 +413,7 @@ onUnmounted(() => {
 defineExpose({ generateAndSaveSummary, documentSummary })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .summary-section {
   background: #f8f9fa;
   border: 1px solid #e9ecef;
@@ -418,12 +424,24 @@ defineExpose({ generateAndSaveSummary, documentSummary })
 }
 
 .summary-header {
+  position:relative;
   display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 12px;
   font-weight: 600;
   color: #333;
+  .close{
+    position: absolute;
+    top:2px;
+    right:5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    &:hover{
+      cursor: pointer;
+    }
+  }
 }
 
 .summary-header .icon {
