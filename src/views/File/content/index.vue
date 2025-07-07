@@ -1597,8 +1597,7 @@ const submitComment = async () => {
   await saveCommentMap(docId, JSON.stringify(Array.from(map)));
   // 并且清除一开始作为草稿的draftRange，否则错误删除
   draftRange = null;
-  console.log('嘻嘻删了吗');
-  
+  // 清除dom  
   itemMap.value.delete('0');
 }
 
@@ -1638,7 +1637,7 @@ const deleteComment = async (commentId) => {
     }
   })
   // 移出map
-  map.delete(commentId);
+  map.delete(commentId.toString());
   itemMap.value.delete(commentId);
 }
 
@@ -1668,9 +1667,6 @@ const renderCommentHeight = () => {
 // 合并冲突
 const mergeConflict = () => {
   const arr = Array.from(itemMap.value);
-  console.log('嘻嘻', arr);
-  console.log('嘻嘻五', itemMap.value);
-  
   
   if (arr.length >= 3) {
     arr.sort((a, b) => a[1].style.top - b[1].style.top);
@@ -1746,6 +1742,29 @@ const transfromColor = (commentId) => {
       );
     }, 300);
   });
+}
+
+// 监听SSE消息，刷新评论数据伪协同
+const es = new EventSource('http://localhost:8000/sse/refreshCommentData');
+es.onmessage = async (event) => {
+  console.log('收到111');
+  
+  // 调用获取评论接口，获取评论列表
+  const docId = route.params.insertedId;
+  const res = await getCommentList(docId);
+  comments.value = res.data.data.map(comment => ({
+    id: comment._id,
+    user: comment.nickName,
+    avatar: comment.avatar,
+    time: comment.updateTime,
+    content: comment.content,
+    isDraft: false
+  }));
+
+  // 加载map映射
+  await refreshMap(docId);
+  // 渲染高度
+  renderCommentHeight();
 }
 
   
