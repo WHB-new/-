@@ -87,14 +87,14 @@
             <div class="right">
               <div class="fileName">{{ item.title }}</div>
               <div class="tool">
-                <div class="add">
+                <!-- <div class="add">
                   <svg t="1749800508302" class="icon" viewBox="0 0 1024 1024" version="1.1"
                     xmlns="http://www.w3.org/2000/svg" p-id="7518" width="16" height="16">
                     <path
                       d="M469.333333 469.333333V170.666667h85.333334v298.666666h298.666666v85.333334h-298.666666v298.666666h-85.333334v-298.666666H170.666667v-85.333334h298.666666z"
                       fill="#444444" p-id="7519"></path>
                   </svg>
-                </div>
+                </div> -->
                 
                   <el-dropdown placement="bottom">
       <template #default>
