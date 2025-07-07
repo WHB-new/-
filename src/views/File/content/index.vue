@@ -484,6 +484,18 @@ const rebinding = ()=>{
     } else {
       quillToolbar.style.display = 'none';
     }
+
+    leftContainer.addEventListener('scroll', () => {
+      const bounds = quill.getBounds(range.index, range.length);
+      if (range && range.length > 0 && bounds.top > 10) {
+        quillToolbar.style.zIndex = 6;
+        quillToolbar.style.display = 'block';
+        quillToolbar.style.top = bounds.top - 48 + 'px';
+        quillToolbar.style.left = bounds.left + 60 + 'px';
+      } else {
+        quillToolbar.style.display = 'none';
+      }
+    })
   })
     // 防抖
   let timer = null
@@ -1948,6 +1960,7 @@ es.onmessage = async (event) => {
   border-radius: 8px;
   background-color: white;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  transition: all 1.5s;
 }
 
 .editor-container {
@@ -2676,22 +2689,20 @@ button:hover {
 }
 
 .comment-item {
-  /* 保留原有定位和尺寸 */
   top: 150px;
   position: absolute;
   width: 250px;
   margin-top: 10px;
   margin-bottom: 20px;
+  cursor: pointer;
   
-  /* 优化视觉样式 - 飞书风格 */
   padding: 8px 12px;
   background-color: #fff;
   border-radius: 6px;
   border-top: 2px solid #3370ff;
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
   
-  /* 保留原有动画 */
-  transition: transform 0.2s ease, box-shadow 0.2s ease, top 0.1s ease-out, opacity 0.1s linear;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, top 0.08s ease-out, opacity 0.1s linear;
   will-change: top;
 
   &:hover {
@@ -2715,16 +2726,15 @@ button:hover {
   }
 }
 
-/* 统一调整所有评论的内部结构 */
 .comment-user {
   display: flex;
   align-items: center;
-  margin-bottom: 6px; /* 减小间距 */
+  margin-bottom: 6px; 
   
   .el-avatar {
     background-color: #3370ff;
     color: white;
-    width: 24px !important; /* 统一头像大小 */
+    width: 24px !important;
     height: 24px !important;
     line-height: 24px !important;
     font-size: 12px !important;
@@ -2735,13 +2745,11 @@ button:hover {
   margin-bottom: 3px;
   flex: 1;
   
-  /* 修改这里：将块级布局改为行内-flex布局 */
   display: flex;
   align-items: center;
-  gap: 8px; /* 添加间距 */
+  gap: 8px;
   
   .username {
-    /* 移除 display:block */
     font-weight: 600;
     color: #1f2329;
     font-size: 13px;
@@ -2752,8 +2760,7 @@ button:hover {
     font-size: 11px;
     color: #8f959e;
     line-height: 1.2;
-    /* 添加以下属性保持对齐 */
-    margin-top: 1px; /* 微调垂直对齐 */
+    margin-top: 1px;
   }
 
   
@@ -2771,19 +2778,19 @@ button:hover {
 }
 
 .comment-content {
-  margin-left: 32px; /* 减小间距以匹配小头像 */
+  margin-left: 32px;
   padding-bottom: 12px;
-  font-size: 13px; /* 统一字号 */
-  line-height: 1.4; /* 紧凑行高 */
+  font-size: 13px;
+  line-height: 1.4;
   color: #1f2329;
   
   .comment-actions {
     display: flex;
     justify-content: flex-end;
-    margin-top: 6px; /* 减小间距 */
+    margin-top: 6px;
     
     .el-button {
-      margin-left: 6px; /* 减小间距 */
+      margin-left: 6px;
       padding: 4px 8px !important;
       font-size: 12px !important;
       min-height: auto !important;
