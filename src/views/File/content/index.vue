@@ -935,6 +935,10 @@ const initYjsConnection = (fileId, quillInstance) => {
         }else if(yText.length ==0 || yText.lenght ==1){
           fileListDetail(route.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
             sessionStorage.setItem('permissionCode',res.data.permissionCode)
+            if (res.data.permissionCode == '3') {
+    quill.enable(false);
+    quill.off('selection-change')
+  }
             if(res.data.code == 200){
               if(Object.keys(res.data.data.content).length != 0){
                 quill.setContents(JSON.parse(res.data.data.content))
@@ -1198,12 +1202,12 @@ onMounted(() => {
   };
    quillToolbar = document.querySelector('#toolbar');
   quill = new Quill('#children', options);
-  // 只读权限
-  console.log('权限', sessionStorage.getItem('permissionCode') == '3');
+  // // 只读权限
+  // console.log('权限', sessionStorage.getItem('permissionCode') == '3');
   
-  if (sessionStorage.getItem('permissionCode') == '3') {
-    quill.enable(false);
-  }
+  // if (sessionStorage.getItem('permissionCode') == '3') {
+  //   quill.enable(false);
+  // }
   
   // 为AI摘要组件设置响应式quill引用
   quillForSummary.value = quill
