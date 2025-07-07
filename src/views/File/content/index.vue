@@ -1080,8 +1080,8 @@ watch(()=>homeStore.historyIndex,(newValue,oldValue)=>{
 })
 onBeforeRouteLeave((to,from)=>{
   console.log('onMounted文件挂载了')
-  
-   fileListDetail(from.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
+  if(sessionStorage.getItem('Authorization')){
+    fileListDetail(from.params.insertedId,sessionStorage.getItem('userId')).then(res=>{
     sessionStorage.setItem('permissionCode',res.data.permissionCode)
     if(res.data.code == 200){
       let titleAndContent
@@ -1101,6 +1101,7 @@ onBeforeRouteLeave((to,from)=>{
     }).then((res)=>{
       console.log(from,'from')
     })
+  }
 })
 //代码块
 const codeMirrorInstances = ref(new Map())
