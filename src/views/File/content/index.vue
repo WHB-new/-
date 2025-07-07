@@ -100,7 +100,7 @@
         
 
         <!-- Quill 工具栏 -->
-        <div id="toolbar" style="z-index:5!important;width: 460px;">
+        <div id="toolbar" style="z-index:5!important;width: 460px;border-radius: 10px!important;">
           <!-- 标题和排序 -->
           <el-select v-model="formatValue" placeholder="正文" size="small" style="width:150px;margin-bottom:10px;"
             @change="handleFormatChange">
@@ -446,7 +446,7 @@ const rebinding = ()=>{
       quillToolbar.style.zIndex = 6;
       quillToolbar.style.display = 'block';
       quillToolbar.style.top = bounds.top - 48 + 'px';
-      quillToolbar.style.left = bounds.left + 'px';
+      quillToolbar.style.left = bounds.left + 60 + 'px';
      
     } else {
       quillToolbar.style.display = 'none';
@@ -1880,7 +1880,8 @@ es.onmessage = async (event) => {
   // right:50px;
   height: 40px;
   padding: 8px;
-  background-color: rgb(230, 229, 229);
+  background-color: rgb(252, 244, 244);
+  border-radius: 8px;
 }
 
 .editor-container {
@@ -1932,6 +1933,9 @@ es.onmessage = async (event) => {
 }
 
 .ql-editor {
+line-height: 1.6;
+font-size: 16px;
+font-family: LackHackSafariFont;
   &::-webkit-scrollbar {
     display: none
   }
@@ -2724,7 +2728,7 @@ button:hover {
 .comment-icon {
   position: absolute;
   margin: 1px 0px 0px 7px;
-
+  cursor: pointer;
 }
 
 .ql-highlight {
