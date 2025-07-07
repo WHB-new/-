@@ -1162,6 +1162,12 @@ onMounted(() => {
   };
    quillToolbar = document.querySelector('#toolbar');
   quill = new Quill('#children', options);
+  // 只读权限
+  console.log('权限', sessionStorage.getItem('permissionCode') == '3');
+  
+  if (sessionStorage.getItem('permissionCode') == '3') {
+    quill.enable(false);
+  }
   
   // 为AI摘要组件设置响应式quill引用
   quillForSummary.value = quill
