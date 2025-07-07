@@ -1711,6 +1711,32 @@ const refreshMap = async (docId) => {
 //   }
 // });
 
+// 同步滚动
+const scrollbarRef = ref(null);
+watch(drawerVisible, (newVal) => {
+  if (newVal) {
+    nextTick(() => {
+      const rightContainer = scrollbarRef.value.wrapRef;
+      
+      const handleScroll = () => {
+        if (leftContainer && rightContainer) {
+          // 计算左侧容器的实际可用高度（总高度减去顶部预留空间）
+          const leftAvailableHeight = leftContainer.clientHeight;
+          // 右侧容器的总高度
+          const rightHeight = rightContainer.scrollHeight - rightContainer.clientHeight;
+          
+          // 根据右侧滚动比例计算左侧应滚动的距离
+          const scrollRatio = rightContainer.scrollTop / rightHeight;
+          leftContainer.scrollTop = scrollRatio * leftAvailableHeight;
+        }
+      };
+      
+      // 添加滚动事件监听器
+      rightContainer.addEventListener('scroll', handleScroll);
+    });
+  }
+});
+
 
 const transfromColor = (commentId) => {
   console.log('y于');
