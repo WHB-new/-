@@ -48,7 +48,7 @@
           <div class="card-title">{{ item.title }}</div>
           <div class="card-desc">{{ item.description || '无描述' }}</div>
           <div class="card-meta">
-            <span>{{ filteredKnowledge.length }} 个文档</span>
+            <span>{{ item.directory.length }} 个文档</span>
             <span>更新于 {{ item.updated }}</span>
           </div>
         </div>
