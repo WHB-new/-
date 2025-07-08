@@ -139,7 +139,11 @@ knowledgeFileList.value =res.data.data
 // 选择项目
 const selectItem = (item) => {
   // sessionStorage.setItem('lastUrl',window.location.href)
-  console.log(route,'route')
+
+  localStorage.setItem(`title${item._id}`,JSON.stringify({
+    name:`用户${sessionStorage.getItem('defaultKnowledgeId').slice(sessionStorage.getItem('defaultKnowledgeId').length-6)}`,
+    title:item.title,
+  }))
   const url = `/edit/${route.params.id}`
   sessionStorage.setItem('lastUrl',url)
   router.push({name:'content',params:{insertedId:item._id}})
